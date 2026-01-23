@@ -1,0 +1,80 @@
+{
+  "name": "fixture_desirae_plus_caesar_setup",
+  "description": "Test S=2: Desirae with Agnumday equipped + 2 Engravers ready for Caesar Xyz",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "hand": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20215",
+            "name": "Fiendsmith's Desirae",
+            "properly_summoned": true,
+            "equipped": [
+              {
+                "cid": "20521",
+                "name": "Fiendsmith's Agnumday",
+                "metadata": {
+                  "link_rating": 3
+                }
+              }
+            ],
+            "metadata": {
+              "summon_type": "fusion",
+              "level": 8,
+              "attribute": "LIGHT",
+              "race": "FIEND"
+            }
+          },
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {
+              "level": 6,
+              "attribute": "LIGHT",
+              "race": "FIEND"
+            }
+          },
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {
+              "level": 6,
+              "attribute": "LIGHT",
+              "race": "FIEND"
+            }
+          },
+          null,
+          null
+        ],
+        "emz": [null, null]
+      },
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": [
+        {
+          "cid": "13081",
+          "name": "D/D/D Wave High King Caesar",
+          "metadata": {
+            "summon_type": "xyz",
+            "rank": 6,
+            "attribute": "WATER",
+            "race": "FIEND",
+            "min_materials": 2
+          }
+        }
+      ]
+    },
+    "opt_used": {},
+    "normal_summon_set_used": false,
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 3,
+    "beam_width": 10,
+    "allowed_actions": ["extra_deck_summon"],
+    "prefer_longest": false
+  }
+}

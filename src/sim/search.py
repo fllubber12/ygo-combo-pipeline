@@ -377,6 +377,71 @@ def _enumerate_equip_source_link_summons(state: GameState) -> list[Action]:
     return actions
 
 
+def _enumerate_xyz_summons(state: GameState) -> list[Action]:
+    """Enumerate Xyz summons for S-tier targets like Caesar, avoiding Desirae as material."""
+    from .actions import xyz_materials_valid
+
+    # Need an open MZ for Xyz summons
+    open_mz = state.open_mz_indices()
+    if not open_mz:
+        return []
+
+    # Collect field monsters that can be Xyz material (exclude Desirae, exclude Links)
+    material_pool = []
+    for zone, idx, card in state.field_cards():
+        if card.cid == DESIRAE_CID:
+            continue
+        if is_link_monster(card):
+            continue  # Links have no Level
+        level = card.metadata.get("level")
+        if level is None:
+            continue
+        material_pool.append((zone, idx, card, int(level)))
+
+    if len(material_pool) < 2:
+        return []
+
+    actions: list[Action] = []
+    for extra_index, extra_card in enumerate(state.extra):
+        summon_type = str(extra_card.metadata.get("summon_type", "")).lower()
+        if summon_type != "xyz":
+            continue
+        xyz_rank = extra_card.metadata.get("rank")
+        if xyz_rank is None:
+            continue
+        xyz_rank = int(xyz_rank)
+        min_materials = int(extra_card.metadata.get("min_materials", 2))
+
+        # Find materials with matching Level
+        matching_materials = [
+            (zone, idx, card) for zone, idx, card, level in material_pool if level == xyz_rank
+        ]
+        if len(matching_materials) < min_materials:
+            continue
+
+        # Generate combinations of exactly min_materials
+        for combo in itertools.combinations(matching_materials, min_materials):
+            materials = [(zone, idx) for zone, idx, _ in combo]
+            material_cards = [card for _, _, card in combo]
+            if not xyz_materials_valid(material_cards, xyz_rank):
+                continue
+            actions.append(
+                Action(
+                    "extra_deck_summon",
+                    {
+                        "extra_index": extra_index,
+                        "summon_type": "xyz",
+                        "materials": materials,
+                        "min_materials": min_materials,
+                        "rank": xyz_rank,
+                    },
+                )
+            )
+
+    actions.sort(key=lambda a: (state.extra[a.params["extra_index"]].cid, tuple(a.params["materials"])))
+    return actions
+
+
 def _count_non_desirae_field_monsters(state: GameState) -> int:
     count = 0
     for _zone, _idx, card in state.field_cards():
@@ -467,7 +532,10 @@ def _equip_source_closure_pass(
             # 2) Targeted equip-source Link summons (Requiem/Sequence) avoiding Desirae mats
             link_summons = _enumerate_equip_source_link_summons(current_state)
 
-            # 2.5) Body-maker EFFECT actions (revive/special) to create the second non-Desirae material
+            # 2.5) Xyz summons for S-tier targets like Caesar
+            xyz_summons = _enumerate_xyz_summons(current_state)
+
+            # 2.6) Body-maker EFFECT actions (revive/special) to create the second non-Desirae material
             body_maker_effects = _enumerate_body_maker_effect_actions(current_state)
 
             # 3) Minimal “body maker”: summon a FIEND from hand into the first open MZ
@@ -491,9 +559,10 @@ def _equip_source_closure_pass(
                         summon_actions.append(Action("normal_summon", {"hand_index": hand_index, "mz_index": mz_index, "tribute_indices": []}))
 
             combined_actions: list[Action | EffectAction] = []
-            # Prefer: equip now > stage equip source > add body
+            # Prefer: equip now > stage equip source > xyz for S-tier > add body
             combined_actions.extend(equip_effects)
             combined_actions.extend(link_summons)
+            combined_actions.extend(xyz_summons)
             combined_actions.extend(body_maker_effects)
             combined_actions.extend(summon_actions)
 

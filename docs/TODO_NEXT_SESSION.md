@@ -1,72 +1,62 @@
-# TODO: Next Session
+# TODO: Next Session (2026-01-23)
 
-## Priority 1: Search Scoring Fix
+## CRITICAL: Hallucination Prevention
 
-### Problem
-Search stops at S=1 (Desirae + equipped link) instead of exploring S=2 (Desirae + Caesar).
+**BEFORE reasoning about any card effect:**
+1. Read `config/verified_effects.json`
+2. If card not in file, fetch from Konami DB first
+3. NEVER add restrictions not in official text
 
-### Root Cause
-`rank_key` in `src/combos/endboard_evaluator.py` uses boolean for S-tier:
-```python
-rank_key: (True, True, 3)  # (has_s, has_a, b_count)
-```
-Should count S-tier pieces instead:
-```python
-rank_key: (2, 1, 3)  # (s_count, a_count, b_count)
-```
+**Example of hallucination caught this session:**
+- Claimed Engraver e3 had "different name" restriction
+- ACTUAL: "shuffle 1 OTHER LIGHT Fiend" + "SS this card" (SS's ITSELF)
 
-### Fix Location
-- File: `src/combos/endboard_evaluator.py`
-- Change `has_s_tier` boolean to `s_tier_count` integer
-- Update comparison logic in search beam ranking
+## Completed This Session
 
----
+1. Changed rank_key from boolean to count: `(count_s, count_a, count_b)`
+2. Removed early exit in search.py when S-tier found
+3. Added `_enumerate_xyz_summons()` to closure passes
+4. Verified S=2 scoring works (pre-set fixture achieved S=2)
+5. Created `config/verified_effects.json` with Engraver (20196)
 
-## Priority 2: Engraver Resource Conflict
+## Why S=2 Not Found From Starting Hand
 
-### Problem
-With only 1 Engraver in hand, Desirae line and Caesar line are mutually exclusive:
-- **Desirae line**: Engraver used as fusion material
-- **Caesar line**: Engraver needed on field as Level 6 Xyz material
+**Root cause: Beam search greed**
+- Search finds Desirae+equip (S=1) by using Engravers as Link material
+- This consumes Engravers before Caesar Xyz path explored
+- Verified: when 2 Engravers pre-placed on field, search DOES make Caesar
 
-### Options
-1. Create fixture with 2 Engravers to test if both lines are reachable
-2. Accept that single-Engraver hands cannot achieve S=2
-3. Add alternate bodies that can substitute for Engraver in fusion
+**NOT the issue:**
+- Xyz enumeration works
+- Scoring works (S=2 > S=1)
+- Engraver e3 implementation is correct
 
-### Test Fixture
-`tests/fixtures/combo_scenarios/fixture_engraver_plus_body.json` - current S=1 result
+## Next Session Priority
 
----
+1. **Complete verified_effects.json** for all library.ydk cards
+   - Fetch each from Konami DB
+   - Quote exact text
+   - No interpretation
+
+2. **Then** decide on search fix:
+   - Option A: Multi-path exploration (keep S-1 and setup states)
+   - Option B: Potential S-tier heuristic in scoring
+   - Option C: Increase beam width significantly
+
+## Key Files Changed
+
+- `src/sim/search.py` - Added `_enumerate_xyz_summons()`, removed early exit
+- `src/combos/endboard_evaluator.py` - count_s instead of has_s
+- `config/verified_effects.json` - NEW, Engraver only so far
+
+## Test Status
+
+- 87 tests pass
+- Fixtures created: `fixture_desirae_plus_caesar_setup.json` (achieves S=2)
 
 ## Verification Commands
 
 ```bash
-# Run full test suite (expect 87 tests, 1 skipped)
 python3 -m unittest discover -s tests
-
-# Effect coverage audit (expect Missing=0)
-python3 scripts/audit_effect_coverage.py
-
-# Modeling status audit (expect Stub=0)
-python3 scripts/audit_modeling_status.py --fail
-
-# Test S-tier combo search
-python3 scripts/combos/search_combo.py \
-  --scenario tests/fixtures/combo_scenarios/fixture_engraver_plus_body.json \
-  --max-depth 15 --beam-width 20
+python3 scripts/combos/search_combo.py --scenario tests/fixtures/combo_scenarios/fixture_desirae_plus_caesar_setup.json
 ```
-
----
-
-## Session 2026-01-23 Completed
-
-- [x] Fabled Lurrie (CID 8092) discard trigger
-- [x] Kyrie GY effect: fuse ANY Fiendsmith Fusion (not just Rextremende)
-- [x] Kyrie materials: ANY LIGHT Fiend (not Fiendsmith Fusion)
-- [x] Necroquip Princess Contact Fusion
-- [x] Xyz Level matching validation
-- [x] Lacrima CT: send ANY Fiendsmith from deck (not just Paradise)
-- [x] Tract: set last_moved_to_gy for Lurrie trigger
-- [x] Fixture fixes for Caesar Rank 6
-- [x] New fixture: fixture_engraver_plus_body.json

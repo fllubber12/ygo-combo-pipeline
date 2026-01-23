@@ -1,0 +1,79 @@
+{
+  "name": "fixture_force_caesar_first",
+  "description": "2 Engravers on field, no Sequence available - must Xyz into Caesar",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "hand": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {
+              "level": 6,
+              "attribute": "LIGHT",
+              "race": "FIEND"
+            }
+          },
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {
+              "level": 6,
+              "attribute": "LIGHT",
+              "race": "FIEND"
+            }
+          },
+          {
+            "cid": "8092",
+            "name": "Fabled Lurrie",
+            "metadata": {
+              "level": 1,
+              "attribute": "LIGHT",
+              "race": "FIEND"
+            }
+          },
+          null, null
+        ],
+        "emz": [null, null]
+      },
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": [
+        {
+          "cid": "13081",
+          "name": "D/D/D Wave High King Caesar",
+          "metadata": {
+            "summon_type": "xyz",
+            "rank": 6,
+            "attribute": "WATER",
+            "race": "FIEND",
+            "min_materials": 2
+          }
+        },
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "metadata": {
+            "summon_type": "link",
+            "link_rating": 1,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "min_materials": 1
+          }
+        }
+      ]
+    },
+    "opt_used": {},
+    "normal_summon_set_used": true,
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 5,
+    "beam_width": 10,
+    "allowed_actions": ["extra_deck_summon"],
+    "prefer_longest": false
+  }
+}

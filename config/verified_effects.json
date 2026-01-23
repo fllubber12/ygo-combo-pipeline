@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "description": "Verified card effects from official sources. NEVER add effects without Lua/Konami source.",
+    "last_updated": "2026-01-23"
+  },
+  "20196": {
+    "name": "Fiendsmith Engraver",
+    "source": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=20196",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "hand",
+        "cost": "discard this card",
+        "action": "add 1 Fiendsmith Spell/Trap from deck to hand",
+        "opt": "hard_opt"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "cost": "target 1 Fiendsmith Equip Card you control and 1 monster on field",
+        "action": "send both to GY",
+        "opt": "hard_opt"
+      },
+      {
+        "id": "e3",
+        "location": "gy",
+        "cost": "shuffle 1 OTHER LIGHT Fiend monster from your GY into deck",
+        "action": "Special Summon this card (Engraver) from GY",
+        "opt": "hard_opt",
+        "restrictions": ["cannot shuffle this card itself as cost"]
+      }
+    ]
+  }
+}
