@@ -1,0 +1,39 @@
+{
+  "name": "fixture_exciton_knight_self_send",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "10942",
+            "name": "Evilswarm Exciton Knight",
+            "metadata": {
+              "summon_type": "xyz",
+              "rank": 4
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [null, null]
+      },
+      "hand": [],
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  }
+}

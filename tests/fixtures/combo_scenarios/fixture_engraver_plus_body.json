@@ -1,0 +1,201 @@
+{
+  "name": "fixture_engraver_plus_body",
+  "description": "Test S-tier line: Engraver + 1 LIGHT Fiend body + 3 inert dummies",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "hand": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {
+            "level": 6,
+            "attribute": "LIGHT",
+            "race": "FIEND"
+          }
+        },
+        {
+          "cid": "G_LIGHT_FIEND_A",
+          "name": "Generic LIGHT Fiend Body",
+          "metadata": {
+            "level": 4,
+            "attribute": "LIGHT",
+            "race": "FIEND"
+          }
+        },
+        {
+          "cid": "INERT_01",
+          "name": "Inert Card 1",
+          "metadata": {}
+        },
+        {
+          "cid": "INERT_02",
+          "name": "Inert Card 2",
+          "metadata": {}
+        },
+        {
+          "cid": "INERT_03",
+          "name": "Inert Card 3",
+          "metadata": {}
+        }
+      ],
+      "deck": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "metadata": {}
+        },
+        {
+          "cid": "20241",
+          "name": "Fiendsmith's Sanct",
+          "metadata": {}
+        },
+        {
+          "cid": "20251",
+          "name": "Fiendsmith in Paradise",
+          "metadata": {}
+        },
+        {
+          "cid": "20816",
+          "name": "Fiendsmith Kyrie",
+          "metadata": {}
+        },
+        {
+          "cid": "8092",
+          "name": "Fabled Lurrie",
+          "metadata": {
+            "level": 1,
+            "attribute": "LIGHT",
+            "race": "FIEND"
+          }
+        },
+        {
+          "cid": "20490",
+          "name": "Lacrima the Crimson Tears",
+          "metadata": {
+            "level": 4,
+            "attribute": "LIGHT",
+            "race": "FIEND"
+          }
+        }
+      ],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null]
+      },
+      "gy": [],
+      "banished": [],
+      "extra": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "metadata": {
+            "summon_type": "fusion",
+            "level": 8,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "material_attribute": "LIGHT",
+            "material_race": "FIEND",
+            "min_materials": 2
+          }
+        },
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "metadata": {
+            "summon_type": "link",
+            "link_rating": 1,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "material_attribute": "LIGHT",
+            "material_race": "FIEND",
+            "min_materials": 1
+          }
+        },
+        {
+          "cid": "20238",
+          "name": "Fiendsmith's Sequence",
+          "metadata": {
+            "summon_type": "link",
+            "link_rating": 2,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "material_attribute": "LIGHT",
+            "material_race": "FIEND",
+            "min_materials": 2
+          }
+        },
+        {
+          "cid": "20214",
+          "name": "Fiendsmith's Lacrima",
+          "metadata": {
+            "summon_type": "fusion",
+            "level": 4,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "material_attribute": "LIGHT",
+            "material_race": "FIEND",
+            "min_materials": 2
+          }
+        },
+        {
+          "cid": "20521",
+          "name": "Fiendsmith's Agnumday",
+          "metadata": {
+            "summon_type": "link",
+            "link_rating": 3,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "material_attribute": "LIGHT",
+            "material_race": "FIEND",
+            "min_materials": 2
+          }
+        },
+        {
+          "cid": "20774",
+          "name": "Fiendsmith's Rextremende",
+          "metadata": {
+            "summon_type": "fusion",
+            "level": 10,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "material_attribute": "LIGHT",
+            "material_race": "FIEND",
+            "min_materials": 2
+          }
+        },
+        {
+          "cid": "20423",
+          "name": "Necroquip Princess",
+          "metadata": {
+            "summon_type": "fusion",
+            "level": 6,
+            "attribute": "DARK",
+            "race": "FIEND",
+            "min_materials": 2
+          }
+        },
+        {
+          "cid": "13081",
+          "name": "D/D/D Wave High King Caesar",
+          "metadata": {
+            "summon_type": "xyz",
+            "rank": 6,
+            "attribute": "WATER",
+            "race": "FIEND",
+            "min_materials": 2
+          }
+        }
+      ]
+    },
+    "opt_used": {},
+    "normal_summon_set_used": false,
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 15,
+    "beam_width": 20,
+    "allowed_actions": ["normal_summon", "extra_deck_summon"],
+    "prefer_longest": false
+  }
+}

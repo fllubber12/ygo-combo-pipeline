@@ -1,0 +1,65 @@
+{
+  "name": "fixture_kyrie_gy_fuse_rextremende",
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [],
+    "zones": {
+      "gy": [
+        {
+          "cid": "20816",
+          "name": "Fiendsmith Kyrie"
+        }
+      ],
+      "extra": [
+        {
+          "cid": "20774",
+          "name": "Fiendsmith's Rextremende",
+          "metadata": {
+            "summon_type": "fusion"
+          }
+        }
+      ],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20215",
+            "name": "Fiendsmith's Desirae",
+            "metadata": {
+              "summon_type": "fusion"
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          {
+            "cid": "20238",
+            "name": "Fiendsmith's Sequence",
+            "metadata": {
+              "link_rating": 2
+            },
+            "properly_summoned": true
+          },
+          null
+        ]
+      },
+      "hand": [],
+      "deck": [],
+      "banished": []
+    },
+    "opt_used": {
+      "20215:negates_used": 99,
+      "20238:e2": true
+    },
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 10,
+    "prefer_longest": true,
+    "allowed_actions": []
+  }
+}

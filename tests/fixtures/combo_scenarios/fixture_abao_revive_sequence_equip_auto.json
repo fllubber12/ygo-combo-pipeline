@@ -1,0 +1,74 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [],
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20226",
+            "name": "Fiendsmith's Sequence",
+            "metadata": {
+              "summon_type": "link",
+              "link_rating": 2
+            },
+            "properly_summoned": true
+          },
+          null,
+          {
+            "cid": "DUMMY_1",
+            "name": "Field Filler 1"
+          },
+          {
+            "cid": "DUMMY_2",
+            "name": "Field Filler 2"
+          },
+          {
+            "cid": "DUMMY_3",
+            "name": "Field Filler 3"
+          }
+        ],
+        "emz": [
+          {
+            "cid": "20786",
+            "name": "A Bao A Qu, the Lightless Shadow",
+            "metadata": {
+              "summon_type": "link",
+              "link_rating": 3
+            },
+            "properly_summoned": true
+          },
+          null
+        ]
+      },
+      "hand": [
+        {
+          "cid": "DISCARD_1",
+          "name": "Discard Fodder"
+        }
+      ],
+      "deck": [],
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {
+            "attribute": "LIGHT",
+            "level": 4
+          }
+        }
+      ],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 2,
+    "beam_width": 10,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_abao_revive_sequence_equip_auto"
+}

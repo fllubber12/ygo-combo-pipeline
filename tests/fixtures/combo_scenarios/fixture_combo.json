@@ -1,0 +1,21 @@
+{
+  "name": "fixture_combo",
+  "starting_snapshot": {
+    "zones": {
+      "hand": ["Fiendsmith's Desirae"],
+      "field": [],
+      "gy": ["Fiendsmith in Paradise"],
+      "banished": [],
+      "deck": [],
+      "extra": []
+    }
+  },
+  "actions": [
+    {
+      "action": "move",
+      "card": "Fiendsmith's Desirae",
+      "from": "hand",
+      "to": "field"
+    }
+  ]
+}

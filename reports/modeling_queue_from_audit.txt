@@ -1,0 +1,20 @@
+Decklist CIDs: 25
+Modeled count: 11
+Stub count (excluding allowed): 13
+Missing count: 1
+Stub CIDs (excluding allowed):
+  10942 Evilswarm Exciton Knight
+  14856 Cross-Sheep
+  17806 Muckraker From the Underworld
+  19188 S:P Little Knight
+  20226 Fiendsmith's Sequence
+  20389 The Duke of Demise
+  20423 Necroquip Princess
+  20427 Aerial Eater
+  20772 Snake-Eyes Doomed Dragon
+  20786 A Bao A Qu, the Lightless Shadow
+  21624 Buio the Dawn's Light
+  21625 Luce the Dusk's Dark
+  21626 Mutiny in the Sky
+Missing CIDs:
+  13081

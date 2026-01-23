@@ -1,0 +1,39 @@
+{
+  "deck_name": "fixture_deck",
+  "format_context": {
+    "game": "TCG",
+    "banlist_id": "unknown",
+    "banlist_date": "unknown",
+    "rules": "Master Rule 5"
+  },
+  "main": [
+    {
+      "cid": "20196",
+      "name": "Fiendsmith Engraver",
+      "count": 3
+    },
+    {
+      "cid": "20816",
+      "name": "Fiendsmith Kyrie",
+      "count": 1
+    },
+    {
+      "cid": "20225",
+      "name": "Fiendsmith's Requiem",
+      "count": 1
+    },
+    {
+      "cid": "20241",
+      "name": "Fiendsmith's Sanct",
+      "count": 1
+    },
+    {
+      "cid": "20240",
+      "name": "Fiendsmith's Tract",
+      "count": 2
+    }
+  ],
+  "extra": [],
+  "side": [],
+  "unresolved": []
+}

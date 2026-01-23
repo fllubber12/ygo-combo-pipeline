@@ -1,0 +1,36 @@
+{
+  "name": "fixture_oppturn_agnumday_revive_desirae",
+  "state": {
+    "zones": {
+      "gy": [
+        {
+          "cid": "20490",
+          "name": "Fiendsmith's Lacrima"
+        },
+        {
+          "cid": "20521",
+          "name": "Fiendsmith's Agnumday",
+          "metadata": {"link_rating": 3},
+          "properly_summoned": true
+        },
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "metadata": {"from_extra": true},
+          "properly_summoned": true
+        }
+      ],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "events": ["OPP_TURN"]
+  },
+  "search": {
+    "max_depth": 2,
+    "beam_width": 10,
+    "allowed_actions": []
+  }
+}

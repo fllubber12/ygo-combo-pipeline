@@ -1,0 +1,42 @@
+{
+  "name": "fixture_a_bao_a_qu_inert",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20786",
+            "name": "A Bao A Qu, the Lightless Shadow",
+            "metadata": {
+              "summon_type": "link",
+              "link_rating": 4
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      }
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  }
+}

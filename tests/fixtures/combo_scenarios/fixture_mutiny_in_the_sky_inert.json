@@ -1,0 +1,39 @@
+{
+  "name": "fixture_mutiny_in_the_sky_inert",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "hand": [
+        {
+          "cid": "21626",
+          "name": "Mutiny in the Sky"
+        }
+      ],
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": [],
+      "field_zones": {
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      }
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  }
+}

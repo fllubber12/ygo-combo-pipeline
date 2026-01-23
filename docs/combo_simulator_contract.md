@@ -1,7 +1,7 @@
 # Combo Simulator Contract (Tier 1)
 
 ## Scope
-Tier 1 targets solitaire combo evaluation only. There is no opponent interaction, no chain stack modeling, and no live response logic. The simulator focuses on deterministic, reproducible combo lines from a fixed starting hand and deck state.
+Tier 1 targets solitaire combo evaluation only. There is no opponent interaction and no live response logic. A minimal chain model may exist for active-player legality and PSCT activation vs resolution semantics; opponent responses are out of scope. The simulator focuses on deterministic, reproducible combo lines from a fixed starting hand and deck state.
 
 ## GameState Schema
 GameState is a structured, serializable object with explicit zones and counters.
@@ -23,7 +23,7 @@ GameState is a structured, serializable object with explicit zones and counters.
 - position: attack / defense (monsters only)
 
 ### Counters / Turn State
-- normal_summon_used: boolean
+- normal_summon_set_used: boolean
 - draws_this_turn: integer
 - discards_this_turn: integer
 - search_count: integer
@@ -67,6 +67,9 @@ Tier 1 uses deterministic search with bounded exploration:
   - penalty for dead ends and excessive resource loss
 
 ## Not in Tier 1
-- Chain stack resolution
 - Opponent responses or interaction
 - Full PSCT parsing or semantic effect interpretation
+
+## Doc Precedence
+- `docs/simulation_kernel_contract.md` is the canonical kernel specification.
+- This document is a high-level overview and must not override the kernel contract.

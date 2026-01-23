@@ -1,0 +1,50 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [
+      "NECROQUIP_TRIGGER"
+    ],
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20423",
+            "name": "Necroquip Princess",
+            "metadata": {
+              "summon_type": "fusion",
+              "level": 6
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      },
+      "deck": [
+        {
+          "cid": "DISCARD_1",
+          "name": "Draw Fodder"
+        }
+      ],
+      "hand": [],
+      "gy": [],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_necroquip_draw"
+}

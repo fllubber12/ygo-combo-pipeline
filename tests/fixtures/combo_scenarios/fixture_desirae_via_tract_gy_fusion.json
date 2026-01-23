@@ -1,0 +1,50 @@
+{
+  "name": "fixture_desirae_via_tract_gy_fusion",
+  "state": {
+    "zones": {
+      "gy": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract"
+        }
+      ],
+      "hand": [
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem"
+        }
+      ],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver"
+          },
+          {
+            "cid": "20214",
+            "name": "Fiendsmith's Lacrima"
+          },
+          null,
+          null,
+          null
+        ],
+        "emz": [null, null]
+      },
+      "extra": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "metadata": {
+            "summon_type": "fusion",
+            "min_materials": 3
+          }
+        }
+      ]
+    }
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 10,
+    "allowed_actions": []
+  }
+}

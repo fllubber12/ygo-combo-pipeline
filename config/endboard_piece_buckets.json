@@ -1,0 +1,79 @@
+[
+  {
+    "kind": "card",
+    "name": "D/D/D Wave High King Caesar",
+    "aliases": ["Caesar"],
+    "bucket": "S",
+    "notes": "primary endboard target"
+  },
+  {
+    "kind": "card",
+    "name": "Fiendsmith's Desirae",
+    "aliases": [],
+    "bucket": "A",
+    "notes": "needs equip spell / links equipped to be online"
+  },
+  {
+    "kind": "card",
+    "name": "A Bao A Qu, the Lightless Shadow",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "strong secondary payoff"
+  },
+  {
+    "kind": "card",
+    "name": "Fiendsmith's Rextremende",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "support endboard piece"
+  },
+  {
+    "kind": "card",
+    "name": "S:P Little Knight",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "support endboard piece"
+  },
+  {
+    "kind": "condition",
+    "name": "Fiendsmith Kyrie in GY",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "endboard trap live in GY (either trap is good)"
+  },
+  {
+    "kind": "condition",
+    "name": "Fiendsmith in Paradise in GY",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "endboard trap live in GY; ideally Desirae remains in Extra Deck (best target)"
+  },
+  {
+    "kind": "condition",
+    "name": "Fiendsmith's Requiem in GY",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "Equip source staged (Requiem reachable for equip)."
+  },
+  {
+    "kind": "condition",
+    "name": "Fiendsmith's Sequence in GY",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "Equip source staged (Sequence reachable for equip)."
+  },
+  {
+    "kind": "card",
+    "name": "Fiendsmith's Requiem",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "Equip source on field (can be moved to GY / equipped)."
+  },
+  {
+    "kind": "card",
+    "name": "Fiendsmith's Sequence",
+    "aliases": [],
+    "bucket": "B",
+    "notes": "Equip source on field (can be moved to GY / equipped)."
+  }
+]

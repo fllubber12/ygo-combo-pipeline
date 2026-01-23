@@ -158,6 +158,10 @@ All downstream systems (deck odds, hand-trap resilience sims, combo search) MUST
 - Official text + metadata live in the Card Library only.
 - Any human judgments (Starter/Extender/Brick tags, “engine” membership, combo notes, choke points, etc.) MUST live in a separate curated layer (e.g., card_tags.*) keyed by CID.
 
+### Canonical Location
+- The canonical clean card library lives at `data_processed/Fiendsmith_Master_Card_Library_CLEAN.xlsx` and `data_processed/Fiendsmith_Master_Card_Library_CLEAN.json`.
+- Root-level wrapper scripts are convenience entrypoints only; they must not redefine canonical data paths.
+
 ### Update & Release Procedure
 1. Run the population script (reproducible) against the current spreadsheet.
 2. Cache HTML per CID.

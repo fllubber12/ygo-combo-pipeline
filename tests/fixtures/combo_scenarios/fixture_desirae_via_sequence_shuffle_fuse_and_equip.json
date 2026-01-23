@@ -1,0 +1,62 @@
+{
+  "name": "fixture_desirae_via_sequence_shuffle_fuse_and_equip",
+  "state": {
+    "zones": {
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver"
+        },
+        {
+          "cid": "G_LIGHT_FIEND_A",
+          "name": "Light Fiend A",
+          "metadata": {
+            "attribute": "LIGHT",
+            "race": "FIEND"
+          }
+        },
+        {
+          "cid": "G_LIGHT_FIEND_B",
+          "name": "Light Fiend B",
+          "metadata": {
+            "attribute": "LIGHT",
+            "race": "FIEND"
+          }
+        }
+      ],
+      "extra": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "metadata": {
+            "summon_type": "fusion",
+            "min_materials": 3
+          }
+        }
+      ],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [
+          {
+            "cid": "20238",
+            "name": "Fiendsmith's Sequence",
+            "metadata": {
+              "link_rating": 2
+            },
+            "properly_summoned": true
+          },
+          null
+        ]
+      }
+    },
+    "opt_used": {
+      "20215:negates_used": 99
+    }
+  },
+  "search": {
+    "max_depth": 2,
+    "beam_width": 10,
+    "allowed_actions": [],
+    "prefer_longest": true
+  }
+}

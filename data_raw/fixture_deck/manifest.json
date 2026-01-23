@@ -1,0 +1,12 @@
+{
+  "deck_name": "fixture_deck",
+  "input_file": "/Users/zacharyhartley/Desktop/Testing/tests/fixtures/sample_deck.txt",
+  "input_sha256": "1ccf8b3d228d54b4de85628eaea611980d8bdaa6af3af888db3d6a45b91630a5",
+  "format": "plain_text",
+  "parsed_counts": {
+    "main": 8,
+    "extra": 0,
+    "side": 0
+  },
+  "created_at": "2026-01-20T05:55:36.401040Z"
+}

@@ -1,0 +1,45 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [
+      "BUIO_TRIGGER"
+    ],
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver"
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      },
+      "hand": [
+        {
+          "cid": "21624",
+          "name": "Buio the Dawn's Light"
+        }
+      ],
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_buio_hand_ss"
+}

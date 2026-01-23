@@ -1,0 +1,69 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [
+      "MUTINY_FUSION_TRIGGER"
+    ],
+    "zones": {
+      "hand": [
+        {
+          "cid": "21626",
+          "name": "Mutiny in the Sky"
+        }
+      ],
+      "gy": [
+        {
+          "cid": "20427",
+          "name": "Aerial Eater",
+          "metadata": {
+            "summon_type": "fusion",
+            "level": 6
+          },
+          "properly_summoned": true
+        },
+        {
+          "cid": "21624",
+          "name": "Buio the Dawn's Light",
+          "metadata": {
+            "level": 3,
+            "race": "FIEND"
+          }
+        }
+      ],
+      "extra": [
+        {
+          "cid": "21625",
+          "name": "Luce the Dusk's Dark",
+          "metadata": {
+            "summon_type": "fusion",
+            "level": 8
+          }
+        }
+      ],
+      "field_zones": {
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      },
+      "deck": [],
+      "banished": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_mutiny_fusion"
+}

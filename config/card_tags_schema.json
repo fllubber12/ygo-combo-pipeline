@@ -1,0 +1,179 @@
+{
+  "schema_version": "1.1",
+  "required_files": [
+    "card_tags.xlsx",
+    "card_tags.jsonl"
+  ],
+  "multi_value_delimiters": [
+    ";"
+  ],
+  "columns": [
+    {
+      "name": "CID",
+      "type": "string",
+      "required": true,
+      "required_value": true
+    },
+    {
+      "name": "Name (Official formatting)",
+      "type": "string",
+      "required": true,
+      "required_value": true
+    },
+    {
+      "name": "Role",
+      "type": "string",
+      "required": true,
+      "required_value": false,
+      "multi_value": true,
+      "vocab": "Role"
+    },
+    {
+      "name": "OPT",
+      "type": "string",
+      "required": true,
+      "required_value": false,
+      "multi_value": false,
+      "vocab": "OPT"
+    },
+    {
+      "name": "Lock",
+      "type": "string",
+      "required": true,
+      "required_value": false,
+      "multi_value": true,
+      "vocab": "Lock"
+    },
+    {
+      "name": "Primary Actions",
+      "type": "string",
+      "required": true,
+      "required_value": false,
+      "multi_value": true,
+      "vocab": "Primary Actions"
+    },
+    {
+      "name": "Resource Delta",
+      "type": "string",
+      "required": true,
+      "required_value": false,
+      "multi_value": true,
+      "vocab": "Resource Delta"
+    },
+    {
+      "name": "Combo Relevance Notes",
+      "type": "string",
+      "required": true,
+      "required_value": false,
+      "psct_check": true
+    },
+    {
+      "name": "Role_Suggested",
+      "type": "string",
+      "required": false,
+      "required_value": false,
+      "multi_value": true,
+      "vocab": "Role"
+    },
+    {
+      "name": "OPT_Suggested",
+      "type": "string",
+      "required": false,
+      "required_value": false,
+      "multi_value": false,
+      "vocab": "OPT"
+    },
+    {
+      "name": "PrimaryActions_Suggested",
+      "type": "string",
+      "required": false,
+      "required_value": false,
+      "multi_value": true,
+      "vocab": "Primary Actions"
+    },
+    {
+      "name": "Locks_Suggested",
+      "type": "string",
+      "required": false,
+      "required_value": false,
+      "multi_value": true,
+      "vocab": "Lock"
+    },
+    {
+      "name": "NeedsReview",
+      "type": "boolean",
+      "required": false,
+      "required_value": false,
+      "multi_value": false,
+      "vocab": "NeedsReview"
+    }
+  ],
+  "vocab": {
+    "Role": [
+      "Starter",
+      "Extender",
+      "Searcher",
+      "Enabler",
+      "Payoff",
+      "Brick",
+      "Garnet"
+    ],
+    "OPT": [
+      "Hard OPT",
+      "Soft OPT",
+      "None"
+    ],
+    "Primary Actions": [
+      "Search",
+      "Add-to-hand",
+      "Send-to-GY",
+      "Summon",
+      "Special Summon",
+      "Mill",
+      "Draw",
+      "Place S/T",
+      "Recycle",
+      "Negate",
+      "Pop",
+      "Destroy",
+      "Banish",
+      "Bounce"
+    ],
+    "Lock": [
+      "Fiend lock",
+      "Extra Deck lock",
+      "Attribute lock",
+      "Type lock",
+      "Level lock",
+      "Rank lock",
+      "Link lock",
+      "Archetype lock",
+      "Summon lock",
+      "Battle lock",
+      "Effect lock",
+      "Activation lock"
+    ],
+    "Resource Delta": [
+      "+Hand",
+      "+Field",
+      "+GY",
+      "+Banished",
+      "+Extra Deck",
+      "-Hand",
+      "-Field",
+      "-GY",
+      "-Banished",
+      "-Extra Deck"
+    ],
+    "NeedsReview": [
+      "TRUE",
+      "FALSE"
+    ]
+  },
+  "notes": {
+    "multi_value_format": "Use semicolon-separated values (e.g., 'Starter; Searcher').",
+    "case_insensitive": true,
+    "jsonl_format": "One JSON object per line. Order must match XLSX row order by CID.",
+    "suggested_fields": "Suggested fields are machine-generated and must be reviewed; do not treat them as final tags."
+  }
+}

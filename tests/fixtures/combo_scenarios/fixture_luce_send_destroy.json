@@ -1,0 +1,66 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [
+      "LUCE_TRIGGER"
+    ],
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "21625",
+            "name": "Luce the Dusk's Dark",
+            "metadata": {
+              "summon_type": "fusion",
+              "level": 8
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          {
+            "cid": "OPP_CARD_1",
+            "name": "Opponent Card"
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
+      },
+      "deck": [
+        {
+          "cid": "21624",
+          "name": "Buio the Dawn's Light",
+          "metadata": {
+            "race": "FIEND"
+          }
+        }
+      ],
+      "hand": [],
+      "gy": [],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_luce_send_destroy"
+}

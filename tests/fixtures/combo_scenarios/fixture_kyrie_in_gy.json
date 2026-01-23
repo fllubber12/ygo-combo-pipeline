@@ -1,0 +1,37 @@
+{
+  "name": "fixture_kyrie_in_gy",
+  "state": {
+    "zones": {
+      "hand": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver"
+        },
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract"
+        }
+      ],
+      "field": [],
+      "gy": [],
+      "banished": [],
+      "deck": [
+        {
+          "cid": "20816",
+          "name": "Fiendsmith Kyrie"
+        },
+        {
+          "cid": "20214",
+          "name": "Fiendsmith's Lacrima"
+        }
+      ],
+      "extra": []
+    },
+    "normal_summon_set_used": false
+  },
+  "search": {
+    "max_depth": 2,
+    "beam_width": 50,
+    "allowed_actions": []
+  }
+}

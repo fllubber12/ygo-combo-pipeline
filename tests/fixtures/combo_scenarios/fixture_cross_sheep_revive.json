@@ -1,0 +1,54 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [
+      "CROSS_SHEEP_TRIGGER"
+    ],
+    "zones": {
+      "gy": [
+        {
+          "cid": "21624",
+          "name": "Buio the Dawn's Light",
+          "metadata": {
+            "level": 3,
+            "race": "FIEND"
+          }
+        }
+      ],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "14856",
+            "name": "Cross-Sheep",
+            "metadata": {
+              "summon_type": "link",
+              "link_rating": 2
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      },
+      "hand": [],
+      "deck": [],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_cross_sheep_revive"
+}

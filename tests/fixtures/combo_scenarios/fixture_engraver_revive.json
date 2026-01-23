@@ -1,0 +1,28 @@
+{
+  "name": "fixture_engraver_revive",
+  "state": {
+    "zones": {
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver"
+        },
+        {
+          "cid": "20214",
+          "name": "Fiendsmith's Lacrima"
+        }
+      ],
+      "deck": [],
+      "hand": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null]
+      }
+    }
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 20,
+    "allowed_actions": []
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "fixture_rextremende_recover_from_gy",
+  "state": {
+    "zones": {
+      "gy": [
+        {
+          "cid": "20774",
+          "name": "Fiendsmith's Rextremende",
+          "metadata": {"summon_type": "fusion"}
+        }
+      ],
+      "banished": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract"
+        }
+      ]
+    },
+    "last_moved_to_gy": ["20774"],
+    "phase": "Main Phase 1"
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": []
+  }
+}

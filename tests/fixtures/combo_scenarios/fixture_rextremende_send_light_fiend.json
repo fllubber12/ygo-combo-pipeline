@@ -1,0 +1,40 @@
+{
+  "name": "fixture_rextremende_send_light_fiend",
+  "state": {
+    "zones": {
+      "hand": [
+        {
+          "cid": "DISCARD_1",
+          "name": "Discard Fodder"
+        }
+      ],
+      "deck": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver"
+        }
+      ],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20774",
+            "name": "Fiendsmith's Rextremende",
+            "metadata": {"summon_type": "fusion"},
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [null, null]
+      }
+    },
+    "phase": "Main Phase 1"
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": []
+  }
+}

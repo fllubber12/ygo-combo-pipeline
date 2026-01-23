@@ -1,0 +1,54 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [],
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20215",
+            "name": "Fiendsmith's Desirae",
+            "metadata": {
+              "summon_type": "fusion"
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      },
+      "hand": [],
+      "deck": [],
+      "gy": [
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "metadata": {
+            "link_rating": 1,
+            "summon_type": "link"
+          },
+          "properly_summoned": true
+        }
+      ],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {
+      "20215:negates_used": 0
+    },
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 0,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_desirae_equip_closure_s"
+}

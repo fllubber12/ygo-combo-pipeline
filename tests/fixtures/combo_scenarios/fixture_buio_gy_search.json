@@ -1,0 +1,49 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [
+      "BUIO_GY_TRIGGER"
+    ],
+    "zones": {
+      "gy": [
+        {
+          "cid": "21624",
+          "name": "Buio the Dawn's Light"
+        }
+      ],
+      "deck": [
+        {
+          "cid": "21626",
+          "name": "Mutiny in the Sky"
+        }
+      ],
+      "field_zones": {
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      },
+      "hand": [],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": [
+      "21624"
+    ]
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_buio_gy_search"
+}

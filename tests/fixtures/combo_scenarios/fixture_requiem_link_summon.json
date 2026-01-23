@@ -1,0 +1,35 @@
+{
+  "name": "fixture_requiem_link_summon",
+  "state": {
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "name": "Material A"
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [null, null]
+      },
+      "extra": [
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "metadata": {
+            "summon_type": "link",
+            "link_rating": 1,
+            "min_materials": 1
+          }
+        }
+      ]
+    }
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 10,
+    "allowed_actions": ["extra_deck_summon"]
+  }
+}

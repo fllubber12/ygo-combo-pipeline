@@ -1,0 +1,32 @@
+{
+  "name": "fixture_desirae_requiem_link1_one_mat_closure_s",
+  "state": {
+    "zones": {
+      "field_zones": {
+        "mz": [
+          { "cid": "20215", "name": "Fiendsmith's Desirae" },
+          { "cid": "20389", "name": "The Duke of Demise" },
+          null,
+          null,
+          null
+        ],
+        "emz": [null, null]
+      },
+      "extra": [
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "metadata": {
+            "summon_type": "link",
+            "link_rating": 1
+          }
+        }
+      ]
+    }
+  },
+  "search": {
+    "max_depth": 0,
+    "beam_width": 10,
+    "allowed_actions": []
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "fixture_search_combo",
+  "description": "Test Xyz summon with 2 Level 6 monsters for Caesar (Rank 6)",
+  "state": {
+    "zones": {
+      "hand": [],
+      "field_zones": {
+        "mz": [
+          {
+            "name": "Material A",
+            "metadata": {"level": 6}
+          },
+          {
+            "name": "Material B",
+            "metadata": {"level": 6}
+          },
+          null,
+          null,
+          null
+        ],
+        "emz": [null, null]
+      },
+      "gy": [],
+      "banished": [],
+      "deck": [],
+      "extra": [
+        {
+          "name": "D/D/D Wave High King Caesar",
+          "metadata": {
+            "summon_type": "xyz",
+            "min_materials": 2,
+            "rank": 6
+          }
+        }
+      ]
+    },
+    "normal_summon_set_used": false
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": ["extra_deck_summon"]
+  }
+}

@@ -1,0 +1,431 @@
+{
+  "equip_action_ids": [],
+  "equip_actions_available": 0,
+  "evaluation": {
+    "achieved": [
+      {
+        "bucket": "A",
+        "kind": "card",
+        "name": "Fiendsmith's Desirae",
+        "notes": "needs equip spell / links equipped to be online",
+        "zone": "field"
+      },
+      {
+        "bucket": "B",
+        "kind": "condition",
+        "name": "Fiendsmith in Paradise in GY",
+        "notes": "endboard trap live in GY; ideally Desirae remains in Extra Deck (best target)",
+        "zone": "gy"
+      }
+    ],
+    "rank_key": [
+      false,
+      true,
+      1
+    ],
+    "summary": "S=0 A=1 B=1"
+  },
+  "final_snapshot": {
+    "equipped_link_totals": [],
+    "zones": {
+      "banished": [],
+      "deck": [
+        "Mutiny in the Sky",
+        "Luce the Dusk's Dark",
+        "Fiendsmith's Sanct",
+        "Mutiny in the Sky",
+        "Fiendsmith's Sanct",
+        "Luce the Dusk's Dark",
+        "Mutiny in the Sky",
+        "Fiendsmith's Tract",
+        "Fiendsmith in Paradise",
+        "Fiendsmith Engraver",
+        "The Duke of Demise",
+        "Fiendsmith's Tract",
+        "Buio the Dawn's Light",
+        "Lacrima the Crimson Tears",
+        "Fiendsmith's Tract",
+        "Fiendsmith Engraver",
+        "Fiendsmith Engraver",
+        "Fiendsmith's Sanct",
+        "Luce the Dusk's Dark",
+        "Lacrima the Crimson Tears",
+        "Buio the Dawn's Light"
+      ],
+      "extra": [
+        "Fiendsmith's Lacrima",
+        "Necroquip Princess",
+        "Aerial Eater",
+        "Snake-Eyes Doomed Dragon",
+        "Fiendsmith's Rextremende",
+        "A Bao A Qu, the Lightless Shadow",
+        "Fiendsmith Kyrie",
+        "Fiendsmith's Requiem",
+        "Fiendsmith's Sequence",
+        "Fiendsmith's Sequence",
+        "Fiendsmith's Agnumday",
+        "Muckraker From the Underworld",
+        "Cross-Sheep",
+        "S:P Little Knight"
+      ],
+      "field": [
+        "The Duke of Demise",
+        "Fiendsmith's Desirae",
+        "Buio the Dawn's Light",
+        "The Duke of Demise"
+      ],
+      "gy": [
+        "Fiendsmith in Paradise",
+        "Fiendsmith in Paradise",
+        "Lacrima the Crimson Tears"
+      ],
+      "hand": []
+    }
+  },
+  "final_state_snapshot": {
+    "events": [],
+    "last_moved_to_gy": [],
+    "normal_summon_set_used": true,
+    "opt_used": {
+      "20490:e1": true,
+      "21624:e1": true
+    },
+    "phase": "Main Phase 1",
+    "restrictions": [],
+    "turn_number": 1,
+    "zones": {
+      "banished": [],
+      "deck": [
+        {
+          "cid": "21626",
+          "metadata": {},
+          "name": "Mutiny in the Sky",
+          "properly_summoned": false
+        },
+        {
+          "cid": "21625",
+          "metadata": {},
+          "name": "Luce the Dusk's Dark",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20241",
+          "metadata": {},
+          "name": "Fiendsmith's Sanct",
+          "properly_summoned": false
+        },
+        {
+          "cid": "21626",
+          "metadata": {},
+          "name": "Mutiny in the Sky",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20241",
+          "metadata": {},
+          "name": "Fiendsmith's Sanct",
+          "properly_summoned": false
+        },
+        {
+          "cid": "21625",
+          "metadata": {},
+          "name": "Luce the Dusk's Dark",
+          "properly_summoned": false
+        },
+        {
+          "cid": "21626",
+          "metadata": {},
+          "name": "Mutiny in the Sky",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20240",
+          "metadata": {},
+          "name": "Fiendsmith's Tract",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20251",
+          "metadata": {},
+          "name": "Fiendsmith in Paradise",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20196",
+          "metadata": {},
+          "name": "Fiendsmith Engraver",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20389",
+          "metadata": {},
+          "name": "The Duke of Demise",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20240",
+          "metadata": {},
+          "name": "Fiendsmith's Tract",
+          "properly_summoned": false
+        },
+        {
+          "cid": "21624",
+          "metadata": {},
+          "name": "Buio the Dawn's Light",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20490",
+          "metadata": {},
+          "name": "Lacrima the Crimson Tears",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20240",
+          "metadata": {},
+          "name": "Fiendsmith's Tract",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20196",
+          "metadata": {},
+          "name": "Fiendsmith Engraver",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20196",
+          "metadata": {},
+          "name": "Fiendsmith Engraver",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20241",
+          "metadata": {},
+          "name": "Fiendsmith's Sanct",
+          "properly_summoned": false
+        },
+        {
+          "cid": "21625",
+          "metadata": {},
+          "name": "Luce the Dusk's Dark",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20490",
+          "metadata": {},
+          "name": "Lacrima the Crimson Tears",
+          "properly_summoned": false
+        },
+        {
+          "cid": "21624",
+          "metadata": {},
+          "name": "Buio the Dawn's Light",
+          "properly_summoned": false
+        }
+      ],
+      "extra": [
+        {
+          "cid": "20214",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "fusion"
+          },
+          "name": "Fiendsmith's Lacrima",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20423",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "fusion"
+          },
+          "name": "Necroquip Princess",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20427",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "fusion"
+          },
+          "name": "Aerial Eater",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20772",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "fusion"
+          },
+          "name": "Snake-Eyes Doomed Dragon",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20774",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "fusion"
+          },
+          "name": "Fiendsmith's Rextremende",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20786",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "A Bao A Qu, the Lightless Shadow",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20816",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "fusion"
+          },
+          "name": "Fiendsmith Kyrie",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20225",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "Fiendsmith's Requiem",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20238",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "Fiendsmith's Sequence",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20226",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "Fiendsmith's Sequence",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20521",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "Fiendsmith's Agnumday",
+          "properly_summoned": false
+        },
+        {
+          "cid": "17806",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "Muckraker From the Underworld",
+          "properly_summoned": false
+        },
+        {
+          "cid": "14856",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "Cross-Sheep",
+          "properly_summoned": false
+        },
+        {
+          "cid": "19188",
+          "metadata": {
+            "from_extra": true,
+            "summon_type": "link"
+          },
+          "name": "S:P Little Knight",
+          "properly_summoned": false
+        }
+      ],
+      "field_zones": {
+        "emz": [
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ],
+        "mz": [
+          {
+            "cid": "20389",
+            "metadata": {},
+            "name": "The Duke of Demise",
+            "properly_summoned": false
+          },
+          {
+            "cid": "20215",
+            "metadata": {
+              "effects_negated": true,
+              "from_extra": true,
+              "summon_type": "fusion"
+            },
+            "name": "Fiendsmith's Desirae",
+            "properly_summoned": true
+          },
+          {
+            "cid": "21624",
+            "metadata": {},
+            "name": "Buio the Dawn's Light",
+            "properly_summoned": false
+          },
+          {
+            "cid": "20389",
+            "metadata": {},
+            "name": "The Duke of Demise",
+            "properly_summoned": false
+          },
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "gy": [
+        {
+          "cid": "20251",
+          "metadata": {},
+          "name": "Fiendsmith in Paradise",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20251",
+          "metadata": {},
+          "name": "Fiendsmith in Paradise",
+          "properly_summoned": false
+        },
+        {
+          "cid": "20490",
+          "metadata": {},
+          "name": "Lacrima the Crimson Tears",
+          "properly_summoned": false
+        }
+      ],
+      "hand": []
+    }
+  },
+  "hand_index": 1,
+  "rank_key": [
+    false,
+    true,
+    1
+  ],
+  "seed": 7
+}

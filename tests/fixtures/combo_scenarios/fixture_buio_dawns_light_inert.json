@@ -1,0 +1,43 @@
+{
+  "name": "fixture_buio_dawns_light_inert",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "21624",
+            "name": "Buio the Dawn's Light",
+            "metadata": {
+              "level": 3,
+              "attribute": "DARK",
+              "race": "FIEND"
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      }
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  }
+}

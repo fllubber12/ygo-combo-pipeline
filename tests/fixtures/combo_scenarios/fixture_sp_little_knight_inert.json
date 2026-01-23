@@ -1,0 +1,42 @@
+{
+  "name": "fixture_sp_little_knight_inert",
+  "state": {
+    "phase": "Main Phase 1",
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "gy": [],
+      "banished": [],
+      "extra": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "19188",
+            "name": "S:P Little Knight",
+            "metadata": {
+              "summon_type": "link",
+              "link_rating": 2
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      }
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  }
+}

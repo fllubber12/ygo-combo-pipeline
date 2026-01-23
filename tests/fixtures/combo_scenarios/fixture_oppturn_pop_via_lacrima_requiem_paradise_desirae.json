@@ -1,0 +1,66 @@
+{
+  "name": "fixture_oppturn_pop_via_lacrima_requiem_paradise_desirae",
+  "state": {
+    "zones": {
+      "gy": [
+        {
+          "cid": "20490",
+          "name": "Fiendsmith's Lacrima"
+        },
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "properly_summoned": true
+        },
+        {
+          "cid": "G_LIGHT_FIEND_A",
+          "name": "Generic LIGHT Fiend",
+          "metadata": { "attribute": "LIGHT", "race": "FIEND" }
+        }
+      ],
+      "deck": [
+        {
+          "cid": "20251",
+          "name": "Fiendsmith in Paradise"
+        },
+        {
+          "cid": "20490",
+          "name": "Fiendsmith's Lacrima"
+        }
+      ],
+      "extra": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "metadata": {
+            "summon_type": "fusion",
+            "min_materials": 3
+          }
+        }
+      ],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null],
+        "stz": [
+          {
+            "cid": "OPP_CARD_1",
+            "name": "Opponent Card"
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "events": ["OPP_TURN", "OPP_SPECIAL_SUMMON"]
+  },
+  "search": {
+    "max_depth": 6,
+    "beam_width": 10,
+    "allowed_actions": [],
+    "prefer_longest": true
+  }
+}

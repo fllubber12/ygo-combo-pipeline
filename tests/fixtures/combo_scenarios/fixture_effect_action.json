@@ -1,0 +1,24 @@
+{
+  "name": "fixture_effect_action",
+  "state": {
+    "zones": {
+      "hand": [
+        {
+          "cid": "DEMO_EXTENDER_001",
+          "name": "Demo Extender"
+        }
+      ],
+      "field": [],
+      "gy": [],
+      "banished": [],
+      "deck": [],
+      "extra": []
+    },
+    "normal_summon_set_used": false
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": []
+  }
+}

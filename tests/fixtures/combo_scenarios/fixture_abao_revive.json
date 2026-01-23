@@ -1,0 +1,59 @@
+{
+  "state": {
+    "phase": "Main Phase 1",
+    "events": [
+      "ABAO_TRIGGER"
+    ],
+    "zones": {
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20786",
+            "name": "A Bao A Qu, the Lightless Shadow",
+            "metadata": {
+              "summon_type": "link",
+              "link_rating": 4
+            },
+            "properly_summoned": true
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
+      },
+      "hand": [
+        {
+          "cid": "DISCARD_1",
+          "name": "Discard Fodder"
+        }
+      ],
+      "gy": [
+        {
+          "cid": "21624",
+          "name": "Buio the Dawn's Light",
+          "metadata": {
+            "attribute": "DARK",
+            "race": "FIEND"
+          }
+        }
+      ],
+      "deck": [],
+      "banished": [],
+      "extra": []
+    },
+    "opt_used": {},
+    "last_moved_to_gy": []
+  },
+  "search": {
+    "max_depth": 1,
+    "beam_width": 5,
+    "allowed_actions": [],
+    "prefer_longest": true
+  },
+  "name": "fixture_abao_revive"
+}
