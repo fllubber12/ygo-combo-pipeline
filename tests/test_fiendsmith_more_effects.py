@@ -67,12 +67,12 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         report = self.run_scenario("fixture_engraver_revive")
         snapshot = load_snapshot(report)
         self.assertIn("Fiendsmith Engraver", snapshot["zones"]["field"])
-        self.assertIn("Fiendsmith's Lacrima", snapshot["zones"]["deck"])
+        self.assertIn("Fiendsmith's Lacrima", snapshot["zones"]["extra"])
 
     def test_requiem_tribute_ss(self):
         report = self.run_scenario("fixture_requiem_tribute_ss")
         snapshot = load_snapshot(report)
-        self.assertIn("Fiendsmith's Lacrima", snapshot["zones"]["field"])
+        self.assertIn("Lacrima the Crimson Tears", snapshot["zones"]["field"])
         self.assertIn("Fiendsmith's Requiem", snapshot["zones"]["gy"])
 
     def test_requiem_fail_closed_on_no_open_mz(self):
@@ -126,7 +126,8 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
                     "mz": [{"cid": "20490", "name": "Lacrima the Crimson Tears"}, None, None, None, None],
                     "emz": [None, None],
                 },
-            }
+            },
+            "pending_triggers": ["SUMMON:20490"],
         }
         state = GameState.from_snapshot(snapshot)
         actions = [
@@ -150,7 +151,8 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
                     "mz": [{"cid": "20490", "name": "Lacrima the Crimson Tears"}, None, None, None, None],
                     "emz": [None, None],
                 },
-            }
+            },
+            "pending_triggers": ["SUMMON:20490"],
         }
         state = GameState.from_snapshot(snapshot)
         actions = [
@@ -173,7 +175,8 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
                     "mz": [{"cid": "20490", "name": "Lacrima the Crimson Tears"}, None, None, None, None],
                     "emz": [None, None],
                 },
-            }
+            },
+            "pending_triggers": ["SUMMON:20490"],
         }
         state = GameState.from_snapshot(snapshot)
         actions = [
@@ -214,7 +217,7 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         snapshot = {
             "zones": {
                 "hand": [],
-                "deck": [{"cid": "20490", "name": "Fiendsmith's Lacrima"}],
+                "deck": [{"cid": "20490", "name": "Lacrima the Crimson Tears"}],
                 "gy": [],
                 "field_zones": {
                     "mz": [None, None, None, None, None],
@@ -232,7 +235,7 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         self.assertTrue(actions)
         new_state = apply_effect_action(state, actions[0])
         field_names = [card.name for card in new_state.field.mz if card]
-        self.assertIn("Fiendsmith's Lacrima", field_names)
+        self.assertIn("Lacrima the Crimson Tears", field_names)
         self.assertIn("Fiendsmith's Requiem", [card.name for card in new_state.gy])
         self.assertTrue(new_state.opt_used.get("20225:e1"))
 
@@ -247,7 +250,7 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         actions = [
             action
             for action in enumerate_effect_actions(state)
-            if action.effect_id == "gy_banish_send_desirae"
+            if action.effect_id == "paradise_gy_banish_send_fiendsmith"
         ]
         self.assertFalse(actions)
 
@@ -256,13 +259,13 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         actions = [
             action
             for action in enumerate_effect_actions(state)
-            if action.effect_id == "gy_banish_send_desirae"
+            if action.effect_id == "paradise_gy_banish_send_fiendsmith"
         ]
         self.assertTrue(actions)
         new_state = apply_effect_action(state, actions[0])
         self.assertTrue(any(card.cid == "20251" for card in new_state.banished))
         self.assertTrue(any(card.cid == "20215" for card in new_state.gy))
-        self.assertTrue(new_state.opt_used.get("20251:e1"))
+        self.assertTrue(new_state.opt_used.get("20251:e2"))
         self.assertIn("20215", new_state.last_moved_to_gy)
 
     def test_desirae_gy_trigger_requires_cost(self):
@@ -277,6 +280,7 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
                 },
             },
             "last_moved_to_gy": ["20215"],
+            "pending_triggers": ["SENT_TO_GY:20215"],
         }
         state = GameState.from_snapshot(snapshot)
         actions = [
@@ -301,6 +305,7 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
                 },
             },
             "last_moved_to_gy": ["20215"],
+            "pending_triggers": ["SENT_TO_GY:20215"],
         }
         state = GameState.from_snapshot(snapshot)
         actions = [

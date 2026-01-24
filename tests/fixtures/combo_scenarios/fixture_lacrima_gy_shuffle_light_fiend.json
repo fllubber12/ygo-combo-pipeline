@@ -28,7 +28,8 @@
       "extra": []
     },
     "opt_used": {},
-    "last_moved_to_gy": ["20214"]
+    "last_moved_to_gy": ["20214"],
+    "pending_triggers": ["SENT_TO_GY:20214"]
   },
   "search": {
     "max_depth": 1,

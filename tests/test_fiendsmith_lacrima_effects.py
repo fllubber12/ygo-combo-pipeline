@@ -7,6 +7,9 @@ from pathlib import Path
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root / "src"))
 
+from sim.effects.registry import apply_effect_action, enumerate_effect_actions  # noqa: E402
+from sim.state import GameState  # noqa: E402
+
 
 def load_snapshot(report_path: Path) -> dict:
     content = report_path.read_text(encoding="utf-8")
@@ -46,11 +49,19 @@ class TestFiendsmithLacrimaEffects(unittest.TestCase):
         self.assertIn("Fiendsmith Engraver", snapshot["zones"]["field"])
         self.assertNotIn("Fiendsmith Engraver", snapshot["zones"]["gy"])
 
-    def test_lacrima_gy_shuffle_light_fiend_fixture(self):
-        snapshot = self.run_scenario("fixture_lacrima_gy_shuffle_light_fiend")
-        self.assertIn("Fiendsmith's Sequence", snapshot["zones"]["extra"])
-        self.assertNotIn("Fiendsmith's Sequence", snapshot["zones"]["gy"])
-        self.assertIn("Fiendsmith's Lacrima", snapshot["zones"]["gy"])
+    def test_lacrima_gy_burn_fixture(self):
+        fixture = repo_root / "tests" / "fixtures" / "combo_scenarios" / "fixture_lacrima_gy_shuffle_light_fiend.json"
+        data = json.loads(fixture.read_text(encoding="utf-8"))
+        state = GameState.from_snapshot(data.get("state", {}))
+        actions = [
+            action
+            for action in enumerate_effect_actions(state)
+            if action.effect_id == "lacrima_gy_burn"
+        ]
+        self.assertTrue(actions)
+        new_state = apply_effect_action(state, actions[0])
+        self.assertIn("LACRIMA_BURN_1200", new_state.restrictions)
+        self.assertTrue(new_state.opt_used.get("20214:e2"))
 
 
 if __name__ == "__main__":

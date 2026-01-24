@@ -12,7 +12,7 @@
   "zones": {
     "hand": [],
     "field": [
-      "Fiendsmith's Lacrima"
+      "Lacrima the Crimson Tears"
     ],
     "gy": [
       "Fiendsmith's Requiem"

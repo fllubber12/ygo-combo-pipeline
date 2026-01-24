@@ -17,7 +17,8 @@
       ]
     },
     "last_moved_to_gy": ["20774"],
-    "phase": "Main Phase 1"
+    "phase": "Main Phase 1",
+    "pending_triggers": ["SENT_TO_GY:20774"]
   },
   "search": {
     "max_depth": 1,

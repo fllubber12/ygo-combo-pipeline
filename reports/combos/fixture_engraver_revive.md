@@ -16,10 +16,10 @@
     ],
     "gy": [],
     "banished": [],
-    "deck": [
+    "deck": [],
+    "extra": [
       "Fiendsmith's Lacrima"
-    ],
-    "extra": []
+    ]
   },
   "equipped_link_totals": []
 }

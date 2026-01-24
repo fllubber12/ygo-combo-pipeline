@@ -29,6 +29,7 @@ def move_card_to_gy(state: GameState, zone: str, index: int) -> None:
     if card is None:
         raise IllegalActionError("Material missing from field.")
     state.gy.append(card)
+    state.pending_triggers.append(f"SENT_TO_GY:{card.cid}")
 
 
 def tributes_required(level: int) -> int:
@@ -83,6 +84,7 @@ def apply_normal_summon(
     target_zone = tribute_indices[0] if tribute_indices else mz_index
     state.field.mz[target_zone] = summoned
     state.normal_summon_set_used = True
+    state.pending_triggers.append(f"SUMMON:{summoned.cid}")
 
 
 def apply_special_summon(state: GameState, hand_index: int, mz_index: int) -> None:
@@ -92,6 +94,7 @@ def apply_special_summon(state: GameState, hand_index: int, mz_index: int) -> No
         raise IllegalActionError("Hand index out of range.")
     card = state.hand.pop(hand_index)
     state.field.mz[mz_index] = card
+    state.pending_triggers.append(f"SUMMON:{card.cid}")
 
 
 def material_matches_requirements(
@@ -217,6 +220,10 @@ def apply_extra_deck_summon(
         material_cards.append(card)
 
     extra_card = state.extra[extra_index]
+    if extra_card.cid == "20423":
+        raise IllegalActionError("Necroquip Princess can only be Special Summoned by its contact fusion.")
+    if extra_card.cid == "20225" and state.opt_used.get("20225:spsummon_once"):
+        raise IllegalActionError("Fiendsmith's Requiem can only be Special Summoned once per turn.")
 
     if summon_type == "link":
         if link_rating is None:
@@ -249,6 +256,9 @@ def apply_extra_deck_summon(
         state.field.mz[idx] = summoned
     else:
         state.field.emz[idx] = summoned
+    state.pending_triggers.append(f"SUMMON:{summoned.cid}")
+    if summoned.cid == "20225":
+        state.opt_used["20225:spsummon_once"] = True
 
 
 def generate_actions(state: GameState, allowed: list[str]) -> list[Action]:

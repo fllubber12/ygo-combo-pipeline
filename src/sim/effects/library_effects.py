@@ -1,8 +1,18 @@
 from __future__ import annotations
 
+import itertools
+
 from ..errors import IllegalActionError, SimModelError
-from ..state import GameState, is_extra_deck_monster
-from .fiendsmith_effects import is_light_fiend_card, is_link_monster
+from ..state import GameState, can_revive_from_gy, is_extra_deck_monster, validate_revive_from_gy
+from .fiendsmith_effects import (
+    FIENDSMITH_FUSION_CIDS,
+    FIENDSMITH_LACRIMA_CID,
+    FIENDSMITH_REXTREMENDE_CID,
+    OPP_TURN_EVENT,
+    fiendsmith_fusion_materials_ok,
+    is_light_fiend_card,
+    is_link_monster,
+)
 from .types import EffectAction, EffectImpl
 
 CROSS_SHEEP_CID = "14856"
@@ -34,6 +44,11 @@ def is_fairy_or_fiend(card) -> bool:
     return "FIEND" in race or "FAIRY" in race
 
 
+def is_fiend_or_zombie(card) -> bool:
+    race = str(card.metadata.get("race", "")).upper()
+    return "FIEND" in race or "ZOMBIE" in race
+
+
 def card_level(card) -> int | None:
     value = card.metadata.get("level")
     if value is None:
@@ -47,50 +62,166 @@ def card_level(card) -> int | None:
 class CrossSheepEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "CROSS_SHEEP_TRIGGER" not in state.events:
-            return actions
         if state.opt_used.get(f"{CROSS_SHEEP_CID}:e1"):
             return actions
-        open_mz = state.open_mz_indices()
-        if not open_mz:
-            return actions
 
-        for zone, index, card in state.field_cards():
-            if card.cid != CROSS_SHEEP_CID:
-                continue
-            if not card.properly_summoned:
-                continue
-            if str(card.metadata.get("summon_type", "")).lower() != "link":
-                continue
-            for gy_index, target in enumerate(state.gy):
-                level = card_level(target)
-                if level is None or level > 4:
+        open_mz = state.open_mz_indices()
+
+        if "CROSS_SHEEP_TRIGGER" in state.events and open_mz:
+            for zone, index, card in state.field_cards():
+                if card.cid != CROSS_SHEEP_CID:
                     continue
-                for mz_index in open_mz:
-                    actions.append(
-                        EffectAction(
-                            cid=CROSS_SHEEP_CID,
-                            name=card.name,
-                            effect_id="cross_sheep_revive",
-                            params={
-                                "zone": zone,
-                                "field_index": index,
-                                "gy_index": gy_index,
-                                "mz_index": mz_index,
-                            },
-                            sort_key=(
-                                CROSS_SHEEP_CID,
-                                "cross_sheep_revive",
-                                zone,
-                                index,
-                                gy_index,
-                                mz_index,
-                            ),
+                if not card.properly_summoned:
+                    continue
+                if str(card.metadata.get("summon_type", "")).lower() != "link":
+                    continue
+                for gy_index, target in enumerate(state.gy):
+                    level = card_level(target)
+                    if level is None or level > 4:
+                        continue
+                    for mz_index in open_mz:
+                        actions.append(
+                            EffectAction(
+                                cid=CROSS_SHEEP_CID,
+                                name=card.name,
+                                effect_id="cross_sheep_revive",
+                                params={
+                                    "zone": zone,
+                                    "field_index": index,
+                                    "gy_index": gy_index,
+                                    "mz_index": mz_index,
+                                },
+                                sort_key=(
+                                    CROSS_SHEEP_CID,
+                                    "cross_sheep_revive",
+                                    zone,
+                                    index,
+                                    gy_index,
+                                    mz_index,
+                                ),
+                            )
                         )
+
+        if "CROSS_SHEEP_RITUAL" in state.events and len(state.deck) >= 2:
+            for zone, index, card in state.field_cards():
+                if card.cid != CROSS_SHEEP_CID:
+                    continue
+                if not card.properly_summoned:
+                    continue
+                if str(card.metadata.get("summon_type", "")).lower() != "link":
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=CROSS_SHEEP_CID,
+                        name=card.name,
+                        effect_id="cross_sheep_ritual_draw_discard",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            CROSS_SHEEP_CID,
+                            "cross_sheep_ritual_draw_discard",
+                            zone,
+                            index,
+                        ),
                     )
+                )
+
+        if "CROSS_SHEEP_SYNCHRO" in state.events:
+            for zone, index, card in state.field_cards():
+                if card.cid != CROSS_SHEEP_CID:
+                    continue
+                if not card.properly_summoned:
+                    continue
+                if str(card.metadata.get("summon_type", "")).lower() != "link":
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=CROSS_SHEEP_CID,
+                        name=card.name,
+                        effect_id="cross_sheep_synchro_boost",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            CROSS_SHEEP_CID,
+                            "cross_sheep_synchro_boost",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
+
+        if "CROSS_SHEEP_XYZ" in state.events:
+            for zone, index, card in state.field_cards():
+                if card.cid != CROSS_SHEEP_CID:
+                    continue
+                if not card.properly_summoned:
+                    continue
+                if str(card.metadata.get("summon_type", "")).lower() != "link":
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=CROSS_SHEEP_CID,
+                        name=card.name,
+                        effect_id="cross_sheep_xyz_debuff",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            CROSS_SHEEP_CID,
+                            "cross_sheep_xyz_debuff",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "cross_sheep_ritual_draw_discard":
+            if state.opt_used.get(f"{CROSS_SHEEP_CID}:e1"):
+                raise IllegalActionError("Cross-Sheep effect already used.")
+            if "CROSS_SHEEP_RITUAL" not in state.events:
+                raise IllegalActionError("Cross-Sheep ritual trigger not present.")
+            if len(state.deck) < 2:
+                raise IllegalActionError("Not enough cards to draw for Cross-Sheep.")
+
+            zone = action.params.get("zone")
+            field_index = action.params.get("field_index")
+            if zone not in {"mz", "emz"} or not isinstance(field_index, int):
+                raise SimModelError("Invalid params for Cross-Sheep ritual effect.")
+
+            new_state = state.clone()
+            drawn = []
+            for _ in range(2):
+                drawn.append(new_state.deck.pop(0))
+            new_state.hand.extend(drawn)
+            if len(new_state.hand) < 2:
+                raise IllegalActionError("Not enough cards to discard for Cross-Sheep.")
+            # Deterministic: discard the two most recently drawn cards.
+            for _ in range(2):
+                new_state.gy.append(new_state.hand.pop())
+            new_state.opt_used[f"{CROSS_SHEEP_CID}:e1"] = True
+            new_state.events = [evt for evt in new_state.events if evt != "CROSS_SHEEP_RITUAL"]
+            return new_state
+
+        if action.effect_id == "cross_sheep_synchro_boost":
+            if state.opt_used.get(f"{CROSS_SHEEP_CID}:e1"):
+                raise IllegalActionError("Cross-Sheep effect already used.")
+            if "CROSS_SHEEP_SYNCHRO" not in state.events:
+                raise IllegalActionError("Cross-Sheep synchro trigger not present.")
+            new_state = state.clone()
+            new_state.restrictions.append("CROSS_SHEEP_ATK_BOOST_700")
+            new_state.opt_used[f"{CROSS_SHEEP_CID}:e1"] = True
+            new_state.events = [evt for evt in new_state.events if evt != "CROSS_SHEEP_SYNCHRO"]
+            return new_state
+
+        if action.effect_id == "cross_sheep_xyz_debuff":
+            if state.opt_used.get(f"{CROSS_SHEEP_CID}:e1"):
+                raise IllegalActionError("Cross-Sheep effect already used.")
+            if "CROSS_SHEEP_XYZ" not in state.events:
+                raise IllegalActionError("Cross-Sheep xyz trigger not present.")
+            new_state = state.clone()
+            new_state.restrictions.append("CROSS_SHEEP_OPP_ATK_REDUCE_700")
+            new_state.opt_used[f"{CROSS_SHEEP_CID}:e1"] = True
+            new_state.events = [evt for evt in new_state.events if evt != "CROSS_SHEEP_XYZ"]
+            return new_state
+
         if action.effect_id != "cross_sheep_revive":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
         if state.opt_used.get(f"{CROSS_SHEEP_CID}:e1"):
@@ -145,9 +276,65 @@ class CrossSheepEffect(EffectImpl):
 class MuckrakerEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "MUCKRAKER_TRIGGER" not in state.events:
+        if "MUCKRAKER_NO_LINK_MATERIAL" not in state.restrictions:
+            for zone, index, card in state.field_cards():
+                if card.cid != MUCKRAKER_CID:
+                    continue
+                if not card.properly_summoned:
+                    continue
+                if str(card.metadata.get("summon_type", "")).lower() != "link":
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=MUCKRAKER_CID,
+                        name=card.name,
+                        effect_id="muckraker_no_link_material",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            MUCKRAKER_CID,
+                            "muckraker_no_link_material",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
+
+        if "MUCKRAKER_REPLACE_TRIGGER" in state.events and not state.opt_used.get(
+            f"{MUCKRAKER_CID}:e1"
+        ):
+            tribute_candidates = []
+            for zone, index, card in state.field_cards():
+                if is_fiend_card(card):
+                    tribute_candidates.append((zone, index, card))
+            for zone, index, card in state.field_cards():
+                if card.cid != MUCKRAKER_CID:
+                    continue
+                for tribute_zone, tribute_index, tribute_card in tribute_candidates:
+                    actions.append(
+                        EffectAction(
+                            cid=MUCKRAKER_CID,
+                            name=card.name,
+                            effect_id="muckraker_replace_destruction",
+                            params={
+                                "zone": zone,
+                                "field_index": index,
+                                "tribute_zone": tribute_zone,
+                                "tribute_index": tribute_index,
+                            },
+                            sort_key=(
+                                MUCKRAKER_CID,
+                                "muckraker_replace_destruction",
+                                zone,
+                                index,
+                                tribute_zone,
+                                tribute_index,
+                            ),
+                        )
+                    )
+
+        if "Main Phase" not in str(state.phase):
             return actions
-        if state.opt_used.get(f"{MUCKRAKER_CID}:e1"):
+        if state.opt_used.get(f"{MUCKRAKER_CID}:e2"):
             return actions
         open_mz = state.open_mz_indices()
         if not open_mz:
@@ -163,6 +350,8 @@ class MuckrakerEffect(EffectImpl):
             for hand_index, _hand_card in enumerate(state.hand):
                 for gy_index, target in enumerate(state.gy):
                     if not is_fiend_card(target):
+                        continue
+                    if target.cid == MUCKRAKER_CID:
                         continue
                     for mz_index in open_mz:
                         actions.append(
@@ -191,12 +380,51 @@ class MuckrakerEffect(EffectImpl):
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "muckraker_no_link_material":
+            zone = action.params.get("zone")
+            field_index = action.params.get("field_index")
+            if zone not in {"mz", "emz"} or not isinstance(field_index, int):
+                raise SimModelError("Invalid params for Muckraker restriction.")
+            new_state = state.clone()
+            new_state.restrictions.append("MUCKRAKER_NO_LINK_MATERIAL")
+            return new_state
+
+        if action.effect_id == "muckraker_replace_destruction":
+            if state.opt_used.get(f"{MUCKRAKER_CID}:e1"):
+                raise IllegalActionError("Muckraker replacement effect already used.")
+            if "MUCKRAKER_REPLACE_TRIGGER" not in state.events:
+                raise IllegalActionError("Muckraker replacement trigger not present.")
+
+            tribute_zone = action.params.get("tribute_zone")
+            tribute_index = action.params.get("tribute_index")
+            if tribute_zone not in {"mz", "emz"} or not isinstance(tribute_index, int):
+                raise SimModelError("Invalid params for Muckraker replacement.")
+
+            new_state = state.clone()
+            if tribute_zone == "mz":
+                if tribute_index < 0 or tribute_index >= len(new_state.field.mz):
+                    raise IllegalActionError("Tribute index out of range for Muckraker.")
+                tribute = new_state.field.mz[tribute_index]
+                new_state.field.mz[tribute_index] = None
+            else:
+                if tribute_index < 0 or tribute_index >= len(new_state.field.emz):
+                    raise IllegalActionError("Tribute index out of range for Muckraker.")
+                tribute = new_state.field.emz[tribute_index]
+                new_state.field.emz[tribute_index] = None
+            if tribute is None or not is_fiend_card(tribute):
+                raise IllegalActionError("Tribute must be a Fiend monster.")
+            new_state.gy.append(tribute)
+            new_state.opt_used[f"{MUCKRAKER_CID}:e1"] = True
+            new_state.restrictions.append("MUCKRAKER_DESTRUCTION_REPLACED")
+            new_state.events = [evt for evt in new_state.events if evt != "MUCKRAKER_REPLACE_TRIGGER"]
+            return new_state
+
         if action.effect_id != "muckraker_discard_revive":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
-        if state.opt_used.get(f"{MUCKRAKER_CID}:e1"):
+        if state.opt_used.get(f"{MUCKRAKER_CID}:e2"):
             raise IllegalActionError("Muckraker effect already used.")
-        if "MUCKRAKER_TRIGGER" not in state.events:
-            raise IllegalActionError("Muckraker trigger not present.")
+        if "Main Phase" not in str(state.phase):
+            raise IllegalActionError("Muckraker requires Main Phase.")
 
         zone = action.params.get("zone")
         field_index = action.params.get("field_index")
@@ -234,72 +462,158 @@ class MuckrakerEffect(EffectImpl):
         target = state.gy[gy_index]
         if not is_fiend_card(target):
             raise IllegalActionError("Muckraker target must be a Fiend monster.")
+        if target.cid == MUCKRAKER_CID:
+            raise IllegalActionError("Muckraker cannot revive itself.")
 
         new_state = state.clone()
         discarded = new_state.hand.pop(hand_index)
         new_state.gy.append(discarded)
         revived = new_state.gy.pop(gy_index)
         new_state.field.mz[mz_index] = revived
-        new_state.opt_used[f"{MUCKRAKER_CID}:e1"] = True
-        if "MUCKRAKER_TRIGGER" in new_state.events:
-            new_state.events = [evt for evt in new_state.events if evt != "MUCKRAKER_TRIGGER"]
+        new_state.opt_used[f"{MUCKRAKER_CID}:e2"] = True
+        new_state.restrictions.append("MUCKRAKER_NON_FIEND_SS_FORBIDDEN")
         return new_state
 
 
 class SPLittleKnightEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "SP_LITTLE_KNIGHT_TRIGGER" not in state.events:
-            return actions
-        if state.opt_used.get(f"{SP_LITTLE_KNIGHT_CID}:e1"):
-            return actions
+        if "SP_LITTLE_KNIGHT_TRIGGER" in state.events and not state.opt_used.get(
+            f"{SP_LITTLE_KNIGHT_CID}:e1"
+        ):
+            field_targets = []
+            for zone, index, card in state.field_cards():
+                field_targets.append((zone, index, card))
+            for stz_index, stz_card in enumerate(state.field.stz):
+                if stz_card:
+                    field_targets.append(("stz", stz_index, stz_card))
+            for fz_index, fz_card in enumerate(state.field.fz):
+                if fz_card:
+                    field_targets.append(("fz", fz_index, fz_card))
+            for gy_index, gy_card in enumerate(state.gy):
+                field_targets.append(("gy", gy_index, gy_card))
 
-        field_targets = []
-        for zone, index, card in state.field_cards():
-            field_targets.append((zone, index, card))
-        for stz_index, stz_card in enumerate(state.field.stz):
-            if stz_card:
-                field_targets.append(("stz", stz_index, stz_card))
-        for fz_index, fz_card in enumerate(state.field.fz):
-            if fz_card:
-                field_targets.append(("fz", fz_index, fz_card))
-        if not field_targets:
-            return actions
+            if field_targets:
+                for zone, index, card in state.field_cards():
+                    if card.cid != SP_LITTLE_KNIGHT_CID:
+                        continue
+                    if not card.properly_summoned:
+                        continue
+                    if str(card.metadata.get("summon_type", "")).lower() != "link":
+                        continue
+                    for target_zone, target_index, target_card in field_targets:
+                        if target_zone == zone and target_index == index:
+                            continue
+                        actions.append(
+                            EffectAction(
+                                cid=SP_LITTLE_KNIGHT_CID,
+                                name=card.name,
+                                effect_id="sp_little_knight_banish",
+                                params={
+                                    "zone": zone,
+                                    "field_index": index,
+                                    "target_zone": target_zone,
+                                    "target_index": target_index,
+                                },
+                                sort_key=(
+                                    SP_LITTLE_KNIGHT_CID,
+                                    "sp_little_knight_banish",
+                                    zone,
+                                    index,
+                                    target_zone,
+                                    target_index,
+                                ),
+                            )
+                        )
 
-        for zone, index, card in state.field_cards():
-            if card.cid != SP_LITTLE_KNIGHT_CID:
-                continue
-            if not card.properly_summoned:
-                continue
-            if str(card.metadata.get("summon_type", "")).lower() != "link":
-                continue
-            for target_zone, target_index, target_card in field_targets:
-                if target_zone == zone and target_index == index:
-                    continue
-                actions.append(
-                    EffectAction(
-                        cid=SP_LITTLE_KNIGHT_CID,
-                        name=card.name,
-                        effect_id="sp_little_knight_banish",
-                        params={
-                            "zone": zone,
-                            "field_index": index,
-                            "target_zone": target_zone,
-                            "target_index": target_index,
-                        },
-                        sort_key=(
-                            SP_LITTLE_KNIGHT_CID,
-                            "sp_little_knight_banish",
-                            zone,
-                            index,
-                            target_zone,
-                            target_index,
-                        ),
-                    )
-                )
+        if "SP_LITTLE_KNIGHT_QUICK" in state.events and not state.opt_used.get(
+            f"{SP_LITTLE_KNIGHT_CID}:e2"
+        ):
+            monsters = [(zone, idx, card) for zone, idx, card in state.field_cards()]
+            if len(monsters) >= 2:
+                for zone, index, card in state.field_cards():
+                    if card.cid != SP_LITTLE_KNIGHT_CID:
+                        continue
+                    if not card.properly_summoned:
+                        continue
+                    if str(card.metadata.get("summon_type", "")).lower() != "link":
+                        continue
+                    for i in range(len(monsters)):
+                        for j in range(i + 1, len(monsters)):
+                            a_zone, a_idx, _a_card = monsters[i]
+                            b_zone, b_idx, _b_card = monsters[j]
+                            actions.append(
+                                EffectAction(
+                                    cid=SP_LITTLE_KNIGHT_CID,
+                                    name=card.name,
+                                    effect_id="sp_little_knight_banish_pair",
+                                    params={
+                                        "zone": zone,
+                                        "field_index": index,
+                                        "a_zone": a_zone,
+                                        "a_index": a_idx,
+                                        "b_zone": b_zone,
+                                        "b_index": b_idx,
+                                    },
+                                    sort_key=(
+                                        SP_LITTLE_KNIGHT_CID,
+                                        "sp_little_knight_banish_pair",
+                                        zone,
+                                        index,
+                                        a_zone,
+                                        a_idx,
+                                        b_zone,
+                                        b_idx,
+                                    ),
+                                )
+                            )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "sp_little_knight_banish_pair":
+            if state.opt_used.get(f"{SP_LITTLE_KNIGHT_CID}:e2"):
+                raise IllegalActionError("S:P Little Knight effect already used.")
+            if "SP_LITTLE_KNIGHT_QUICK" not in state.events:
+                raise IllegalActionError("S:P Little Knight quick trigger not present.")
+
+            zone = action.params.get("zone")
+            field_index = action.params.get("field_index")
+            a_zone = action.params.get("a_zone")
+            a_index = action.params.get("a_index")
+            b_zone = action.params.get("b_zone")
+            b_index = action.params.get("b_index")
+            if None in (zone, field_index, a_zone, a_index, b_zone, b_index):
+                raise SimModelError("Missing params for S:P Little Knight.")
+            if zone not in {"mz", "emz"} or a_zone not in {"mz", "emz"} or b_zone not in {"mz", "emz"}:
+                raise SimModelError("Invalid zone for S:P Little Knight.")
+            if not isinstance(field_index, int) or not isinstance(a_index, int) or not isinstance(b_index, int):
+                raise SimModelError("Invalid index types for S:P Little Knight.")
+
+            if zone == "mz":
+                card = state.field.mz[field_index] if 0 <= field_index < len(state.field.mz) else None
+            else:
+                card = state.field.emz[field_index] if 0 <= field_index < len(state.field.emz) else None
+            if not card or card.cid != SP_LITTLE_KNIGHT_CID:
+                raise SimModelError("Selected field card is not S:P Little Knight.")
+            if not card.properly_summoned:
+                raise IllegalActionError("S:P Little Knight was not properly summoned.")
+
+            new_state = state.clone()
+            for target_zone, target_index in ((a_zone, a_index), (b_zone, b_index)):
+                if target_zone == "mz":
+                    target = new_state.field.mz[target_index]
+                    new_state.field.mz[target_index] = None
+                else:
+                    target = new_state.field.emz[target_index]
+                    new_state.field.emz[target_index] = None
+                if target is None:
+                    raise IllegalActionError("S:P Little Knight target missing.")
+                new_state.banished.append(target)
+            new_state.opt_used[f"{SP_LITTLE_KNIGHT_CID}:e2"] = True
+            new_state.restrictions.append("SP_LITTLE_KNIGHT_RETURN_END_PHASE")
+            new_state.events = [evt for evt in new_state.events if evt != "SP_LITTLE_KNIGHT_QUICK"]
+            return new_state
+
         if action.effect_id != "sp_little_knight_banish":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
         if state.opt_used.get(f"{SP_LITTLE_KNIGHT_CID}:e1"):
@@ -315,7 +629,7 @@ class SPLittleKnightEffect(EffectImpl):
             raise SimModelError("Missing params for S:P Little Knight.")
         if zone not in {"mz", "emz"}:
             raise SimModelError("Invalid zone for S:P Little Knight.")
-        if target_zone not in {"mz", "emz", "stz", "fz"}:
+        if target_zone not in {"mz", "emz", "stz", "fz", "gy"}:
             raise SimModelError("Invalid target zone for S:P Little Knight.")
         if not isinstance(field_index, int) or not isinstance(target_index, int):
             raise SimModelError("Invalid index types for S:P Little Knight.")
@@ -341,14 +655,20 @@ class SPLittleKnightEffect(EffectImpl):
         elif target_zone == "stz":
             target = new_state.field.stz[target_index]
             new_state.field.stz[target_index] = None
-        else:
+        elif target_zone == "fz":
             target = new_state.field.fz[target_index]
             new_state.field.fz[target_index] = None
+        else:
+            if target_index < 0 or target_index >= len(new_state.gy):
+                raise IllegalActionError("GY index out of range for S:P Little Knight.")
+            target = new_state.gy[target_index]
+            new_state.gy.pop(target_index)
 
         if target is None:
             raise IllegalActionError("S:P Little Knight target missing.")
         new_state.banished.append(target)
         new_state.opt_used[f"{SP_LITTLE_KNIGHT_CID}:e1"] = True
+        new_state.restrictions.append("SP_LITTLE_KNIGHT_NO_DIRECT_ATTACKS")
         if "SP_LITTLE_KNIGHT_TRIGGER" in new_state.events:
             new_state.events = [evt for evt in new_state.events if evt != "SP_LITTLE_KNIGHT_TRIGGER"]
         return new_state
@@ -357,64 +677,211 @@ class SPLittleKnightEffect(EffectImpl):
 class FiendsmithSequenceAltEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "SEQUENCE_20226_EQUIP" not in state.events:
-            return actions
-        if state.opt_used.get(f"{FIENDSMITH_SEQUENCE_ALT_CID}:e1"):
+        if OPP_TURN_EVENT in state.events:
             return actions
 
-        targets = []
-        for mz_index, card in enumerate(state.field.mz):
-            if not card:
-                continue
-            if not is_light_fiend_card(card):
-                continue
-            if is_link_monster(card):
-                continue
-            targets.append((mz_index, card))
-        if not targets:
-            return actions
+        sequence_entries = []
+        for index, card in enumerate(state.field.mz):
+            if card and card.cid == FIENDSMITH_SEQUENCE_ALT_CID:
+                sequence_entries.append(("mz", index, card))
+        for index, card in enumerate(state.field.emz):
+            if card and card.cid == FIENDSMITH_SEQUENCE_ALT_CID:
+                sequence_entries.append(("emz", index, card))
 
-        for zone, index, card in state.field_cards():
-            if card.cid != FIENDSMITH_SEQUENCE_ALT_CID:
-                continue
-            if str(card.metadata.get("summon_type", "")).lower() != "link":
-                continue
-            for mz_index, _target in targets:
-                actions.append(
-                    EffectAction(
-                        cid=FIENDSMITH_SEQUENCE_ALT_CID,
-                        name=card.name,
-                        effect_id="sequence_20226_equip",
-                        params={
-                            "source": zone,
-                            "source_index": index,
-                            "target_mz_index": mz_index,
-                        },
-                        sort_key=(
-                            FIENDSMITH_SEQUENCE_ALT_CID,
-                            "sequence_20226_equip",
-                            zone,
-                            index,
-                            mz_index,
-                        ),
-                    )
-                )
+        if not state.opt_used.get(f"{FIENDSMITH_SEQUENCE_ALT_CID}:e1") and "Main Phase" in state.phase:
+            open_mz = state.open_mz_indices()
+            if open_mz and sequence_entries:
+                gy_entries = list(enumerate(state.gy))
+                fusion_targets = [
+                    (idx, card)
+                    for idx, card in enumerate(state.extra)
+                    if card.cid in FIENDSMITH_FUSION_CIDS
+                ]
+                for seq_zone, seq_index, seq_card in sequence_entries:
+                    for extra_index, fusion_card in fusion_targets:
+                        required = (
+                            2
+                            if fusion_card.cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID}
+                            else 3
+                        )
+                        if len(gy_entries) < required:
+                            continue
+                        for mz_index in open_mz:
+                            for combo in itertools.combinations(gy_entries, required):
+                                gy_indices = [idx for idx, _card in combo]
+                                material_cards = [card for _idx, card in combo]
+                                if not fiendsmith_fusion_materials_ok(
+                                    fusion_card.cid, material_cards
+                                ):
+                                    continue
+                                actions.append(
+                                    EffectAction(
+                                        cid=FIENDSMITH_SEQUENCE_ALT_CID,
+                                        name=seq_card.name,
+                                        effect_id="sequence_20226_shuffle_fuse",
+                                        params={
+                                            "seq_zone": seq_zone,
+                                            "seq_index": seq_index,
+                                            "extra_index": extra_index,
+                                            "mz_index": mz_index,
+                                            "gy_indices": gy_indices,
+                                        },
+                                        sort_key=(
+                                            FIENDSMITH_SEQUENCE_ALT_CID,
+                                            "sequence_20226_shuffle_fuse",
+                                            seq_zone,
+                                            seq_index,
+                                            extra_index,
+                                            mz_index,
+                                            tuple(gy_indices),
+                                        ),
+                                    )
+                                )
+
+        if not state.opt_used.get(f"{FIENDSMITH_SEQUENCE_ALT_CID}:e2"):
+            targets = []
+            for mz_index, card in enumerate(state.field.mz):
+                if not card:
+                    continue
+                if not is_light_fiend_card(card):
+                    continue
+                if is_link_monster(card):
+                    continue
+                targets.append((mz_index, card))
+            if targets:
+                for zone, index, card in sequence_entries:
+                    for mz_index, _target in targets:
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_SEQUENCE_ALT_CID,
+                                name=card.name,
+                                effect_id="sequence_20226_equip",
+                                params={
+                                    "source": zone,
+                                    "source_index": index,
+                                    "target_mz_index": mz_index,
+                                },
+                                sort_key=(
+                                    FIENDSMITH_SEQUENCE_ALT_CID,
+                                    "sequence_20226_equip",
+                                    zone,
+                                    index,
+                                    mz_index,
+                                ),
+                            )
+                        )
+                for gy_index, card in enumerate(state.gy):
+                    if card.cid != FIENDSMITH_SEQUENCE_ALT_CID:
+                        continue
+                    for mz_index, _target in targets:
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_SEQUENCE_ALT_CID,
+                                name=card.name,
+                                effect_id="sequence_20226_equip",
+                                params={
+                                    "source": "gy",
+                                    "source_index": gy_index,
+                                    "target_mz_index": mz_index,
+                                },
+                                sort_key=(
+                                    FIENDSMITH_SEQUENCE_ALT_CID,
+                                    "sequence_20226_equip",
+                                    "gy",
+                                    gy_index,
+                                    mz_index,
+                                ),
+                            )
+                        )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "sequence_20226_shuffle_fuse":
+            if state.opt_used.get(f"{FIENDSMITH_SEQUENCE_ALT_CID}:e1"):
+                raise IllegalActionError("Fiendsmith's Sequence effect already used.")
+            if "Main Phase" not in state.phase:
+                raise IllegalActionError("Fiendsmith's Sequence requires Main Phase.")
+
+            seq_zone = action.params.get("seq_zone")
+            seq_index = action.params.get("seq_index")
+            extra_index = action.params.get("extra_index")
+            mz_index = action.params.get("mz_index")
+            gy_indices = action.params.get("gy_indices")
+            if None in (seq_zone, seq_index, extra_index, mz_index, gy_indices):
+                raise SimModelError("Missing params for Fiendsmith's Sequence fusion effect.")
+            if seq_zone not in {"mz", "emz"}:
+                raise SimModelError("Invalid zone for Fiendsmith's Sequence fusion effect.")
+            if not isinstance(seq_index, int) or not isinstance(extra_index, int) or not isinstance(mz_index, int):
+                raise SimModelError("Invalid index types for Fiendsmith's Sequence fusion effect.")
+            if not isinstance(gy_indices, list):
+                raise SimModelError("Invalid GY indices for Fiendsmith's Sequence fusion effect.")
+            if mz_index not in state.open_mz_indices():
+                raise IllegalActionError("No open Main Monster Zone for Fiendsmith's Sequence.")
+            if extra_index < 0 or extra_index >= len(state.extra):
+                raise IllegalActionError("Extra index out of range for Fiendsmith's Sequence.")
+
+            if seq_zone == "mz":
+                if seq_index < 0 or seq_index >= len(state.field.mz):
+                    raise IllegalActionError("Field index out of range for Sequence.")
+                seq_card = state.field.mz[seq_index]
+            else:
+                if seq_index < 0 or seq_index >= len(state.field.emz):
+                    raise IllegalActionError("Field index out of range for Sequence.")
+                seq_card = state.field.emz[seq_index]
+            if not seq_card or seq_card.cid != FIENDSMITH_SEQUENCE_ALT_CID:
+                raise SimModelError("Selected field card is not Fiendsmith's Sequence.")
+
+            target_cid = state.extra[extra_index].cid
+            if target_cid not in FIENDSMITH_FUSION_CIDS:
+                raise IllegalActionError("Selected Extra Deck card is not a Fiendsmith Fusion monster.")
+
+            seen = set()
+            for idx in gy_indices:
+                if not isinstance(idx, int):
+                    raise SimModelError("Invalid GY index type for Fiendsmith's Sequence.")
+                if idx in seen:
+                    raise IllegalActionError("Duplicate GY index for Fiendsmith's Sequence.")
+                seen.add(idx)
+                if idx < 0 or idx >= len(state.gy):
+                    raise IllegalActionError("GY index out of range for Fiendsmith's Sequence.")
+
+            materials = [state.gy[idx] for idx in gy_indices]
+            required_count = 2 if target_cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID} else 3
+            if len(materials) != required_count:
+                raise IllegalActionError("Fiendsmith's Sequence has invalid material count.")
+            if not fiendsmith_fusion_materials_ok(target_cid, materials):
+                raise IllegalActionError("Fiendsmith's Sequence materials do not satisfy fusion requirements.")
+
+            new_state = state.clone()
+            fusion = new_state.extra.pop(extra_index)
+            fusion.properly_summoned = True
+            fusion.metadata["from_extra"] = True
+            new_state.field.mz[mz_index] = fusion
+
+            removed_by_index = {}
+            for idx in sorted(gy_indices, reverse=True):
+                removed_by_index[idx] = new_state.gy.pop(idx)
+            for idx in gy_indices:
+                card = removed_by_index[idx]
+                if is_extra_deck_monster(card):
+                    new_state.extra.append(card)
+                else:
+                    new_state.deck.append(card)
+
+            new_state.opt_used[f"{FIENDSMITH_SEQUENCE_ALT_CID}:e1"] = True
+            return new_state
+
         if action.effect_id != "sequence_20226_equip":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
-        if state.opt_used.get(f"{FIENDSMITH_SEQUENCE_ALT_CID}:e1"):
-            raise IllegalActionError("Fiendsmith's Sequence effect already used.")
-        if "SEQUENCE_20226_EQUIP" not in state.events:
-            raise IllegalActionError("Fiendsmith's Sequence trigger not present.")
+        if state.opt_used.get(f"{FIENDSMITH_SEQUENCE_ALT_CID}:e2"):
+            raise IllegalActionError("Fiendsmith's Sequence equip effect already used.")
 
         source = action.params.get("source")
         source_index = action.params.get("source_index")
         target_index = action.params.get("target_mz_index")
         if None in (source, source_index, target_index):
             raise SimModelError("Missing params for Fiendsmith's Sequence.")
-        if source not in {"mz", "emz"}:
+        if source not in {"mz", "emz", "gy"}:
             raise SimModelError("Invalid source for Fiendsmith's Sequence.")
         if not isinstance(source_index, int) or not isinstance(target_index, int):
             raise SimModelError("Invalid index types for Fiendsmith's Sequence.")
@@ -429,15 +896,21 @@ class FiendsmithSequenceAltEffect(EffectImpl):
             if source_index < 0 or source_index >= len(state.field.mz):
                 raise IllegalActionError("Source index out of range for Fiendsmith's Sequence.")
             sequence = state.field.mz[source_index]
-        else:
+        elif source == "emz":
             if source_index < 0 or source_index >= len(state.field.emz):
                 raise IllegalActionError("Source index out of range for Fiendsmith's Sequence.")
             sequence = state.field.emz[source_index]
+        else:
+            if source_index < 0 or source_index >= len(state.gy):
+                raise IllegalActionError("Source index out of range for Fiendsmith's Sequence.")
+            sequence = state.gy[source_index]
         if not sequence or sequence.cid != FIENDSMITH_SEQUENCE_ALT_CID:
             raise SimModelError("Selected source is not Fiendsmith's Sequence.")
 
         new_state = state.clone()
-        if source == "mz":
+        if source == "gy":
+            sequence_card = new_state.gy.pop(source_index)
+        elif source == "mz":
             sequence_card = new_state.field.mz[source_index]
             new_state.field.mz[source_index] = None
         else:
@@ -448,18 +921,98 @@ class FiendsmithSequenceAltEffect(EffectImpl):
         if "link_rating" not in sequence_card.metadata:
             sequence_card.metadata["link_rating"] = 2
         new_state.equip_card(sequence_card, new_state.field.mz[target_index])
-        new_state.opt_used[f"{FIENDSMITH_SEQUENCE_ALT_CID}:e1"] = True
-        if "SEQUENCE_20226_EQUIP" in new_state.events:
-            new_state.events = [evt for evt in new_state.events if evt != "SEQUENCE_20226_EQUIP"]
+        new_state.opt_used[f"{FIENDSMITH_SEQUENCE_ALT_CID}:e2"] = True
         return new_state
 
 
 class DukeOfDemiseEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
+        if "DUKE_BATTLE_INDESTRUCTIBLE" not in state.restrictions:
+            for zone, index, card in state.field_cards():
+                if card.cid != DUKE_OF_DEMISE_CID:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=DUKE_OF_DEMISE_CID,
+                        name=card.name,
+                        effect_id="duke_battle_indestructible",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            DUKE_OF_DEMISE_CID,
+                            "duke_battle_indestructible",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
+
+        if "Standby" in str(state.phase) and not state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e0"):
+            for zone, index, card in state.field_cards():
+                if card.cid != DUKE_OF_DEMISE_CID:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=DUKE_OF_DEMISE_CID,
+                        name=card.name,
+                        effect_id="duke_standby_pay",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            DUKE_OF_DEMISE_CID,
+                            "duke_standby_pay",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
+                actions.append(
+                    EffectAction(
+                        cid=DUKE_OF_DEMISE_CID,
+                        name=card.name,
+                        effect_id="duke_standby_destroy",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            DUKE_OF_DEMISE_CID,
+                            "duke_standby_destroy",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
+
+        if "Main Phase" in str(state.phase) and not state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e2"):
+            open_mz = state.open_mz_indices()
+            if open_mz:
+                for zone, index, card in state.field_cards():
+                    if card.cid != DUKE_OF_DEMISE_CID:
+                        continue
+                    for hand_index, hand_card in enumerate(state.hand):
+                        for mz_index in open_mz:
+                            actions.append(
+                                EffectAction(
+                                    cid=DUKE_OF_DEMISE_CID,
+                                    name=card.name,
+                                    effect_id="duke_extra_normal_summon",
+                                    params={
+                                        "zone": zone,
+                                        "field_index": index,
+                                        "hand_index": hand_index,
+                                        "mz_index": mz_index,
+                                    },
+                                    sort_key=(
+                                        DUKE_OF_DEMISE_CID,
+                                        "duke_extra_normal_summon",
+                                        zone,
+                                        index,
+                                        hand_index,
+                                        mz_index,
+                                    ),
+                                )
+                            )
+
         if "DUKE_DEMISE_GY_TRIGGER" not in state.events:
             return actions
-        if state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e1"):
+        if state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e3"):
             return actions
 
         duke_indices = [idx for idx, card in enumerate(state.gy) if card.cid == DUKE_OF_DEMISE_CID]
@@ -468,7 +1021,9 @@ class DukeOfDemiseEffect(EffectImpl):
         target_indices = [
             idx
             for idx, card in enumerate(state.gy)
-            if card.cid != DUKE_OF_DEMISE_CID and is_fiend_card(card)
+            if card.cid != DUKE_OF_DEMISE_CID
+            and is_fiend_or_zombie(card)
+            and (card_level(card) or 0) >= 4
         ]
         if not target_indices:
             return actions
@@ -492,9 +1047,68 @@ class DukeOfDemiseEffect(EffectImpl):
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "duke_battle_indestructible":
+            new_state = state.clone()
+            new_state.restrictions.append("DUKE_BATTLE_INDESTRUCTIBLE")
+            return new_state
+
+        if action.effect_id == "duke_standby_pay":
+            if state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e0"):
+                raise IllegalActionError("The Duke of Demise effect already used.")
+            if "Standby" not in str(state.phase):
+                raise IllegalActionError("The Duke of Demise requires Standby Phase.")
+            new_state = state.clone()
+            new_state.restrictions.append("DUKE_STANDBY_COST_PAID")
+            new_state.opt_used[f"{DUKE_OF_DEMISE_CID}:e0"] = True
+            return new_state
+
+        if action.effect_id == "duke_standby_destroy":
+            if state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e0"):
+                raise IllegalActionError("The Duke of Demise effect already used.")
+            if "Standby" not in str(state.phase):
+                raise IllegalActionError("The Duke of Demise requires Standby Phase.")
+            zone = action.params.get("zone")
+            field_index = action.params.get("field_index")
+            if zone not in {"mz", "emz"} or not isinstance(field_index, int):
+                raise SimModelError("Invalid params for The Duke of Demise.")
+            new_state = state.clone()
+            if zone == "mz":
+                card = new_state.field.mz[field_index]
+                new_state.field.mz[field_index] = None
+            else:
+                card = new_state.field.emz[field_index]
+                new_state.field.emz[field_index] = None
+            if card is None:
+                raise IllegalActionError("The Duke of Demise missing for destruction.")
+            new_state.gy.append(card)
+            new_state.opt_used[f"{DUKE_OF_DEMISE_CID}:e0"] = True
+            return new_state
+
+        if action.effect_id == "duke_extra_normal_summon":
+            if state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e2"):
+                raise IllegalActionError("The Duke of Demise effect already used.")
+            if "Main Phase" not in str(state.phase):
+                raise IllegalActionError("The Duke of Demise requires Main Phase.")
+            hand_index = action.params.get("hand_index")
+            mz_index = action.params.get("mz_index")
+            if hand_index is None or mz_index is None:
+                raise SimModelError("Missing params for The Duke of Demise.")
+            if not isinstance(hand_index, int) or not isinstance(mz_index, int):
+                raise SimModelError("Invalid index types for The Duke of Demise.")
+            if hand_index < 0 or hand_index >= len(state.hand):
+                raise IllegalActionError("Hand index out of range for The Duke of Demise.")
+            if mz_index not in state.open_mz_indices():
+                raise IllegalActionError("No open Main Monster Zone for The Duke of Demise.")
+
+            new_state = state.clone()
+            summoned = new_state.hand.pop(hand_index)
+            new_state.field.mz[mz_index] = summoned
+            new_state.opt_used[f"{DUKE_OF_DEMISE_CID}:e2"] = True
+            return new_state
+
         if action.effect_id != "duke_demise_banish_recover":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
-        if state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e1"):
+        if state.opt_used.get(f"{DUKE_OF_DEMISE_CID}:e3"):
             raise IllegalActionError("The Duke of Demise effect already used.")
         if "DUKE_DEMISE_GY_TRIGGER" not in state.events:
             raise IllegalActionError("The Duke of Demise trigger not present.")
@@ -513,15 +1127,18 @@ class DukeOfDemiseEffect(EffectImpl):
             raise IllegalActionError("Target must be another Fiend monster.")
         if state.gy[duke_index].cid != DUKE_OF_DEMISE_CID:
             raise SimModelError("Selected GY card is not The Duke of Demise.")
-        if not is_fiend_card(state.gy[target_index]):
-            raise IllegalActionError("Target is not a Fiend monster.")
+        target = state.gy[target_index]
+        if not is_fiend_or_zombie(target):
+            raise IllegalActionError("Target is not a Fiend or Zombie monster.")
+        if (card_level(target) or 0) < 4:
+            raise IllegalActionError("Target must be Level 4 or higher.")
 
         new_state = state.clone()
         duke = new_state.gy.pop(duke_index)
         new_state.banished.append(duke)
         target = new_state.gy.pop(target_index if target_index < duke_index else target_index - 1)
         new_state.hand.append(target)
-        new_state.opt_used[f"{DUKE_OF_DEMISE_CID}:e1"] = True
+        new_state.opt_used[f"{DUKE_OF_DEMISE_CID}:e3"] = True
         if "DUKE_DEMISE_GY_TRIGGER" in new_state.events:
             new_state.events = [evt for evt in new_state.events if evt != "DUKE_DEMISE_GY_TRIGGER"]
         return new_state
@@ -623,8 +1240,6 @@ class NecroquipPrincessEffect(EffectImpl):
             return actions
         if state.opt_used.get(f"{NECROQUIP_PRINCESS_CID}:e1"):
             return actions
-        if not state.deck:
-            return actions
 
         for zone, index, card in state.field_cards():
             if card.cid != NECROQUIP_PRINCESS_CID:
@@ -633,20 +1248,44 @@ class NecroquipPrincessEffect(EffectImpl):
                 continue
             if str(card.metadata.get("summon_type", "")).lower() != "fusion":
                 continue
-            actions.append(
-                EffectAction(
-                    cid=NECROQUIP_PRINCESS_CID,
-                    name=card.name,
-                    effect_id="necroquip_draw",
-                    params={"zone": zone, "field_index": index},
-                    sort_key=(
-                        NECROQUIP_PRINCESS_CID,
-                        "necroquip_draw",
-                        zone,
-                        index,
-                    ),
+            if state.deck:
+                actions.append(
+                    EffectAction(
+                        cid=NECROQUIP_PRINCESS_CID,
+                        name=card.name,
+                        effect_id="necroquip_draw",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            NECROQUIP_PRINCESS_CID,
+                            "necroquip_draw",
+                            zone,
+                            index,
+                        ),
+                    )
                 )
-            )
+            if state.last_moved_to_gy:
+                for gy_index, target in enumerate(state.gy):
+                    if target.cid not in state.last_moved_to_gy:
+                        continue
+                    actions.append(
+                        EffectAction(
+                            cid=NECROQUIP_PRINCESS_CID,
+                            name=card.name,
+                            effect_id="necroquip_equip",
+                            params={
+                                "zone": zone,
+                                "field_index": index,
+                                "gy_index": gy_index,
+                            },
+                            sort_key=(
+                                NECROQUIP_PRINCESS_CID,
+                                "necroquip_equip",
+                                zone,
+                                index,
+                                gy_index,
+                            ),
+                        )
+                    )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
@@ -654,6 +1293,8 @@ class NecroquipPrincessEffect(EffectImpl):
             return self._apply_contact_fusion(state, action)
         elif action.effect_id == "necroquip_draw":
             return self._apply_draw(state, action)
+        elif action.effect_id == "necroquip_equip":
+            return self._apply_equip(state, action)
         else:
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
 
@@ -812,45 +1453,133 @@ class NecroquipPrincessEffect(EffectImpl):
             new_state.events = [evt for evt in new_state.events if evt != "NECROQUIP_TRIGGER"]
         return new_state
 
+    def _apply_equip(self, state: GameState, action: EffectAction) -> GameState:
+        if state.opt_used.get(f"{NECROQUIP_PRINCESS_CID}:e1"):
+            raise IllegalActionError("Necroquip Princess effect already used.")
+        if "NECROQUIP_TRIGGER" not in state.events:
+            raise IllegalActionError("Necroquip Princess trigger not present.")
+
+        zone = action.params.get("zone")
+        field_index = action.params.get("field_index")
+        gy_index = action.params.get("gy_index")
+        if zone not in {"mz", "emz"}:
+            raise SimModelError("Invalid zone for Necroquip Princess.")
+        if not isinstance(field_index, int) or not isinstance(gy_index, int):
+            raise SimModelError("Invalid index for Necroquip Princess.")
+        if gy_index < 0 or gy_index >= len(state.gy):
+            raise IllegalActionError("GY index out of range for Necroquip Princess.")
+        if state.gy[gy_index].cid not in state.last_moved_to_gy:
+            raise IllegalActionError("Necroquip Princess target was not just sent to GY.")
+
+        if zone == "mz":
+            card = state.field.mz[field_index] if 0 <= field_index < len(state.field.mz) else None
+        else:
+            card = state.field.emz[field_index] if 0 <= field_index < len(state.field.emz) else None
+        if not card or card.cid != NECROQUIP_PRINCESS_CID:
+            raise SimModelError("Selected field card is not Necroquip Princess.")
+        if not card.properly_summoned:
+            raise IllegalActionError("Necroquip Princess was not properly summoned.")
+
+        new_state = state.clone()
+        target = new_state.gy.pop(gy_index)
+        host = new_state.field.mz[field_index] if zone == "mz" else new_state.field.emz[field_index]
+        new_state.equip_card(target, host)
+        new_state.restrictions.append("NECROQUIP_EQUIP_ATK_500")
+        new_state.opt_used[f"{NECROQUIP_PRINCESS_CID}:e1"] = True
+        new_state.events = [evt for evt in new_state.events if evt != "NECROQUIP_TRIGGER"]
+        return new_state
+
 
 class AerialEaterEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
         if "AERIAL_EATER_TRIGGER" not in state.events:
-            return actions
+            pass
         if state.opt_used.get(f"{AERIAL_EATER_CID}:e1"):
-            return actions
+            pass
 
-        deck_indices = [idx for idx, card in enumerate(state.deck) if is_fiend_card(card)]
-        if not deck_indices:
-            return actions
+        if "AERIAL_EATER_TRIGGER" in state.events and not state.opt_used.get(
+            f"{AERIAL_EATER_CID}:e1"
+        ):
+            deck_indices = [idx for idx, card in enumerate(state.deck) if is_fiend_card(card)]
+            if deck_indices:
+                for zone, index, card in state.field_cards():
+                    if card.cid != AERIAL_EATER_CID:
+                        continue
+                    if not card.properly_summoned:
+                        continue
+                    if str(card.metadata.get("summon_type", "")).lower() != "fusion":
+                        continue
+                    for deck_index in deck_indices:
+                        actions.append(
+                            EffectAction(
+                                cid=AERIAL_EATER_CID,
+                                name=card.name,
+                                effect_id="aerial_eater_send",
+                                params={"zone": zone, "field_index": index, "deck_index": deck_index},
+                                sort_key=(
+                                    AERIAL_EATER_CID,
+                                    "aerial_eater_send",
+                                    zone,
+                                    index,
+                                    deck_index,
+                                ),
+                            )
+                        )
 
-        for zone, index, card in state.field_cards():
-            if card.cid != AERIAL_EATER_CID:
-                continue
-            if not card.properly_summoned:
-                continue
-            if str(card.metadata.get("summon_type", "")).lower() != "fusion":
-                continue
-            for deck_index in deck_indices:
-                actions.append(
-                    EffectAction(
-                        cid=AERIAL_EATER_CID,
-                        name=card.name,
-                        effect_id="aerial_eater_send",
-                        params={"zone": zone, "field_index": index, "deck_index": deck_index},
-                        sort_key=(
-                            AERIAL_EATER_CID,
-                            "aerial_eater_send",
-                            zone,
-                            index,
-                            deck_index,
-                        ),
+        if "Main Phase" in str(state.phase) and not state.opt_used.get(f"{AERIAL_EATER_CID}:e2"):
+            open_mz = state.open_mz_indices()
+            if open_mz:
+                for gy_index, card in enumerate(state.gy):
+                    if card.cid != AERIAL_EATER_CID:
+                        continue
+                    if not can_revive_from_gy(card):
+                        continue
+                    actions.append(
+                        EffectAction(
+                            cid=AERIAL_EATER_CID,
+                            name=card.name,
+                            effect_id="aerial_eater_gy_revive",
+                            params={
+                                "gy_index": gy_index,
+                                "mz_index": open_mz[0],
+                            },
+                            sort_key=(
+                                AERIAL_EATER_CID,
+                                "aerial_eater_gy_revive",
+                                gy_index,
+                                open_mz[0],
+                            ),
+                        )
                     )
-                )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "aerial_eater_gy_revive":
+            if state.opt_used.get(f"{AERIAL_EATER_CID}:e2"):
+                raise IllegalActionError("Aerial Eater effect already used.")
+            if "Main Phase" not in str(state.phase):
+                raise IllegalActionError("Aerial Eater requires Main Phase.")
+            gy_index = action.params.get("gy_index")
+            mz_index = action.params.get("mz_index")
+            if None in (gy_index, mz_index):
+                raise SimModelError("Missing params for Aerial Eater.")
+            if not isinstance(gy_index, int) or not isinstance(mz_index, int):
+                raise SimModelError("Invalid index types for Aerial Eater.")
+            if gy_index < 0 or gy_index >= len(state.gy):
+                raise IllegalActionError("GY index out of range for Aerial Eater.")
+            if mz_index not in state.open_mz_indices():
+                raise IllegalActionError("No open Main Monster Zone for Aerial Eater.")
+            if state.gy[gy_index].cid != AERIAL_EATER_CID:
+                raise IllegalActionError("Selected GY card is not Aerial Eater.")
+            validate_revive_from_gy(state.gy[gy_index])
+
+            new_state = state.clone()
+            aerial = new_state.gy.pop(gy_index)
+            new_state.field.mz[mz_index] = aerial
+            new_state.opt_used[f"{AERIAL_EATER_CID}:e2"] = True
+            return new_state
+
         if action.effect_id != "aerial_eater_send":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
         if state.opt_used.get(f"{AERIAL_EATER_CID}:e1"):
@@ -897,6 +1626,37 @@ class AerialEaterEffect(EffectImpl):
 class SnakeEyesDoomedDragonEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
+        if "Main Phase" in str(state.phase):
+            open_mz = state.open_mz_indices()
+            stz_indices = [idx for idx, card in enumerate(state.field.stz) if card is not None]
+            extra_indices = [
+                idx for idx, card in enumerate(state.extra) if card.cid == SNAKE_EYES_DOOMED_DRAGON_CID
+            ]
+            if open_mz and len(stz_indices) >= 2 and extra_indices:
+                for extra_index in extra_indices:
+                    for i in range(len(stz_indices)):
+                        for j in range(i + 1, len(stz_indices)):
+                            actions.append(
+                                EffectAction(
+                                    cid=SNAKE_EYES_DOOMED_DRAGON_CID,
+                                    name=state.extra[extra_index].name,
+                                    effect_id="doomed_dragon_contact_summon",
+                                    params={
+                                        "extra_index": extra_index,
+                                        "mz_index": open_mz[0],
+                                        "stz_indices": [stz_indices[i], stz_indices[j]],
+                                    },
+                                    sort_key=(
+                                        SNAKE_EYES_DOOMED_DRAGON_CID,
+                                        "doomed_dragon_contact_summon",
+                                        extra_index,
+                                        open_mz[0],
+                                        stz_indices[i],
+                                        stz_indices[j],
+                                    ),
+                                )
+                            )
+
         if "DOOMED_DRAGON_TRIGGER" not in state.events:
             return actions
         if state.opt_used.get(f"{SNAKE_EYES_DOOMED_DRAGON_CID}:e1"):
@@ -942,6 +1702,42 @@ class SnakeEyesDoomedDragonEffect(EffectImpl):
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "doomed_dragon_contact_summon":
+            if "Main Phase" not in str(state.phase):
+                raise IllegalActionError("Snake-Eyes Doomed Dragon requires Main Phase.")
+            extra_index = action.params.get("extra_index")
+            mz_index = action.params.get("mz_index")
+            stz_indices = action.params.get("stz_indices")
+            if None in (extra_index, mz_index, stz_indices):
+                raise SimModelError("Missing params for Snake-Eyes Doomed Dragon.")
+            if not isinstance(extra_index, int) or not isinstance(mz_index, int):
+                raise SimModelError("Invalid index types for Snake-Eyes Doomed Dragon.")
+            if not isinstance(stz_indices, list) or len(stz_indices) != 2:
+                raise SimModelError("Invalid STZ indices for Snake-Eyes Doomed Dragon.")
+            if extra_index < 0 or extra_index >= len(state.extra):
+                raise IllegalActionError("Extra index out of range for Snake-Eyes Doomed Dragon.")
+            if state.extra[extra_index].cid != SNAKE_EYES_DOOMED_DRAGON_CID:
+                raise IllegalActionError("Selected Extra Deck card is not Snake-Eyes Doomed Dragon.")
+            if mz_index not in state.open_mz_indices():
+                raise IllegalActionError("No open Main Monster Zone for Snake-Eyes Doomed Dragon.")
+            for idx in stz_indices:
+                if idx < 0 or idx >= len(state.field.stz):
+                    raise IllegalActionError("STZ index out of range for Snake-Eyes Doomed Dragon.")
+                if state.field.stz[idx] is None:
+                    raise IllegalActionError("STZ material missing for Snake-Eyes Doomed Dragon.")
+
+            new_state = state.clone()
+            for idx in sorted(stz_indices, reverse=True):
+                card = new_state.field.stz[idx]
+                new_state.field.stz[idx] = None
+                new_state.gy.append(card)
+
+            dragon = new_state.extra.pop(extra_index)
+            dragon.properly_summoned = True
+            dragon.metadata["from_extra"] = True
+            new_state.field.mz[mz_index] = dragon
+            return new_state
+
         if action.effect_id != "doomed_dragon_move_to_stz":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
         if state.opt_used.get(f"{SNAKE_EYES_DOOMED_DRAGON_CID}:e1"):
@@ -994,59 +1790,209 @@ class SnakeEyesDoomedDragonEffect(EffectImpl):
 class ABaoAQuEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "ABAO_TRIGGER" not in state.events:
-            return actions
-        if state.opt_used.get(f"{A_BAO_A_QU_CID}:e1"):
-            return actions
-        open_mz = state.open_mz_indices()
-        if not open_mz or not state.hand:
-            return actions
-
-        for zone, index, card in state.field_cards():
-            if card.cid != A_BAO_A_QU_CID:
-                continue
-            if not card.properly_summoned:
-                continue
-            if str(card.metadata.get("summon_type", "")).lower() != "link":
-                continue
-            for hand_index, _hand in enumerate(state.hand):
-                for gy_index, target in enumerate(state.gy):
-                    attr = str(target.metadata.get("attribute", "")).upper()
-                    if attr not in {"LIGHT", "DARK"}:
+        if "Main Phase" in str(state.phase) and not state.opt_used.get(f"{A_BAO_A_QU_CID}:e1"):
+            open_mz = state.open_mz_indices()
+            if state.hand:
+                for zone, index, card in state.field_cards():
+                    if card.cid != A_BAO_A_QU_CID:
                         continue
-                    for mz_index in open_mz:
-                        actions.append(
-                            EffectAction(
-                                cid=A_BAO_A_QU_CID,
-                                name=card.name,
-                                effect_id="abao_discard_banish_revive",
-                                params={
-                                    "zone": zone,
-                                    "field_index": index,
-                                    "hand_index": hand_index,
-                                    "gy_index": gy_index,
-                                    "mz_index": mz_index,
-                                },
-                                sort_key=(
-                                    A_BAO_A_QU_CID,
-                                    "abao_discard_banish_revive",
-                                    zone,
-                                    index,
-                                    hand_index,
-                                    gy_index,
-                                    mz_index,
-                                ),
+                    if not card.properly_summoned:
+                        continue
+                    if str(card.metadata.get("summon_type", "")).lower() != "link":
+                        continue
+                    field_targets = []
+                    for t_zone, t_index, t_card in state.field_cards():
+                        if t_zone == zone and t_index == index:
+                            continue
+                        field_targets.append((t_zone, t_index))
+                    for stz_index, stz_card in enumerate(state.field.stz):
+                        if stz_card:
+                            field_targets.append(("stz", stz_index))
+                    for fz_index, fz_card in enumerate(state.field.fz):
+                        if fz_card:
+                            field_targets.append(("fz", fz_index))
+                    for hand_index, _hand in enumerate(state.hand):
+                        for target_zone, target_index in field_targets:
+                            actions.append(
+                                EffectAction(
+                                    cid=A_BAO_A_QU_CID,
+                                    name=card.name,
+                                    effect_id="abao_discard_destroy",
+                                    params={
+                                        "zone": zone,
+                                        "field_index": index,
+                                        "hand_index": hand_index,
+                                        "target_zone": target_zone,
+                                        "target_index": target_index,
+                                    },
+                                    sort_key=(
+                                        A_BAO_A_QU_CID,
+                                        "abao_discard_destroy",
+                                        zone,
+                                        index,
+                                        hand_index,
+                                        target_zone,
+                                        target_index,
+                                    ),
+                                )
                             )
-                        )
+                        if not open_mz:
+                            continue
+                        for gy_index, target in enumerate(state.gy):
+                            attr = str(target.metadata.get("attribute", "")).upper()
+                            if attr not in {"LIGHT", "DARK"}:
+                                continue
+                            for mz_index in open_mz:
+                                actions.append(
+                                    EffectAction(
+                                        cid=A_BAO_A_QU_CID,
+                                        name=card.name,
+                                        effect_id="abao_discard_banish_revive",
+                                        params={
+                                            "zone": zone,
+                                            "field_index": index,
+                                            "hand_index": hand_index,
+                                            "gy_index": gy_index,
+                                            "mz_index": mz_index,
+                                        },
+                                        sort_key=(
+                                            A_BAO_A_QU_CID,
+                                            "abao_discard_banish_revive",
+                                            zone,
+                                            index,
+                                            hand_index,
+                                            gy_index,
+                                            mz_index,
+                                        ),
+                                    )
+                                )
+
+        if "Standby" in str(state.phase) and not state.opt_used.get(f"{A_BAO_A_QU_CID}:e2"):
+            for zone, index, card in state.field_cards():
+                if card.cid != A_BAO_A_QU_CID:
+                    continue
+                types = {str(c.metadata.get("race", "")).upper() for c in state.gy if c}
+                types.discard("")
+                count = len(types)
+                if count <= 0:
+                    continue
+                if len(state.deck) < count or len(state.hand) < count:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=A_BAO_A_QU_CID,
+                        name=card.name,
+                        effect_id="abao_standby_draw_cycle",
+                        params={"zone": zone, "field_index": index, "count": count},
+                        sort_key=(
+                            A_BAO_A_QU_CID,
+                            "abao_standby_draw_cycle",
+                            zone,
+                            index,
+                            count,
+                        ),
+                    )
+                )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "abao_discard_destroy":
+            if state.opt_used.get(f"{A_BAO_A_QU_CID}:e1"):
+                raise IllegalActionError("A Bao A Qu effect already used.")
+            if "Main Phase" not in str(state.phase):
+                raise IllegalActionError("A Bao A Qu requires Main Phase.")
+
+            zone = action.params.get("zone")
+            field_index = action.params.get("field_index")
+            hand_index = action.params.get("hand_index")
+            target_zone = action.params.get("target_zone")
+            target_index = action.params.get("target_index")
+            if None in (zone, field_index, hand_index, target_zone, target_index):
+                raise SimModelError("Missing params for A Bao A Qu.")
+            if zone not in {"mz", "emz"}:
+                raise SimModelError("Invalid zone for A Bao A Qu.")
+            if target_zone not in {"mz", "emz", "stz", "fz"}:
+                raise SimModelError("Invalid target zone for A Bao A Qu.")
+            if not isinstance(field_index, int) or not isinstance(hand_index, int):
+                raise SimModelError("Invalid index types for A Bao A Qu.")
+            if hand_index < 0 or hand_index >= len(state.hand):
+                raise IllegalActionError("Hand index out of range for A Bao A Qu.")
+
+            if zone == "mz":
+                card = state.field.mz[field_index] if 0 <= field_index < len(state.field.mz) else None
+            else:
+                card = state.field.emz[field_index] if 0 <= field_index < len(state.field.emz) else None
+            if not card or card.cid != A_BAO_A_QU_CID:
+                raise SimModelError("Selected field card is not A Bao A Qu.")
+            if not card.properly_summoned:
+                raise IllegalActionError("A Bao A Qu was not properly summoned.")
+            if str(card.metadata.get("summon_type", "")).lower() != "link":
+                raise IllegalActionError("A Bao A Qu is not a Link monster.")
+
+            new_state = state.clone()
+            discarded = new_state.hand.pop(hand_index)
+            new_state.gy.append(discarded)
+
+            if target_zone == "mz":
+                if target_index < 0 or target_index >= len(new_state.field.mz):
+                    raise IllegalActionError("Target index out of range for A Bao A Qu.")
+                target = new_state.field.mz[target_index]
+                new_state.field.mz[target_index] = None
+            elif target_zone == "emz":
+                if target_index < 0 or target_index >= len(new_state.field.emz):
+                    raise IllegalActionError("Target index out of range for A Bao A Qu.")
+                target = new_state.field.emz[target_index]
+                new_state.field.emz[target_index] = None
+            elif target_zone == "stz":
+                if target_index < 0 or target_index >= len(new_state.field.stz):
+                    raise IllegalActionError("Target index out of range for A Bao A Qu.")
+                target = new_state.field.stz[target_index]
+                new_state.field.stz[target_index] = None
+            else:
+                if target_index < 0 or target_index >= len(new_state.field.fz):
+                    raise IllegalActionError("Target index out of range for A Bao A Qu.")
+                target = new_state.field.fz[target_index]
+                new_state.field.fz[target_index] = None
+            if target is None:
+                raise IllegalActionError("A Bao A Qu target missing.")
+            new_state.gy.append(target)
+            new_state.opt_used[f"{A_BAO_A_QU_CID}:e1"] = True
+            return new_state
+
+        if action.effect_id == "abao_standby_draw_cycle":
+            if state.opt_used.get(f"{A_BAO_A_QU_CID}:e2"):
+                raise IllegalActionError("A Bao A Qu effect already used.")
+            if "Standby" not in str(state.phase):
+                raise IllegalActionError("A Bao A Qu requires Standby Phase.")
+
+            count = action.params.get("count")
+            if not isinstance(count, int) or count <= 0:
+                raise SimModelError("Invalid draw count for A Bao A Qu.")
+            if len(state.deck) < count or len(state.hand) < count:
+                raise IllegalActionError("Not enough cards for A Bao A Qu draw/cycle.")
+
+            new_state = state.clone()
+            drawn = []
+            for _ in range(count):
+                drawn.append(new_state.deck.pop(0))
+            new_state.hand.extend(drawn)
+
+            hand_indices = list(range(len(new_state.hand)))
+            hand_indices.sort(
+                key=lambda idx: (new_state.hand[idx].name.lower(), idx)
+            )
+            for idx in sorted(hand_indices[:count], reverse=True):
+                new_state.deck.append(new_state.hand.pop(idx))
+
+            new_state.opt_used[f"{A_BAO_A_QU_CID}:e2"] = True
+            return new_state
+
         if action.effect_id != "abao_discard_banish_revive":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
         if state.opt_used.get(f"{A_BAO_A_QU_CID}:e1"):
             raise IllegalActionError("A Bao A Qu effect already used.")
-        if "ABAO_TRIGGER" not in state.events:
-            raise IllegalActionError("A Bao A Qu trigger not present.")
+        if "Main Phase" not in str(state.phase):
+            raise IllegalActionError("A Bao A Qu requires Main Phase.")
 
         zone = action.params.get("zone")
         field_index = action.params.get("field_index")
@@ -1097,15 +2043,31 @@ class ABaoAQuEffect(EffectImpl):
         revived = new_state.gy.pop(gy_index)
         new_state.field.mz[mz_index] = revived
         new_state.opt_used[f"{A_BAO_A_QU_CID}:e1"] = True
-        if "ABAO_TRIGGER" in new_state.events:
-            new_state.events = [evt for evt in new_state.events if evt != "ABAO_TRIGGER"]
         return new_state
 
 
 class BuioDawnsLightEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "BUIO_TRIGGER" in state.events and not state.opt_used.get(f"{BUIO_DAWNS_LIGHT_CID}:e1"):
+        if "LR_MZ_INDESTRUCTIBLE" not in state.restrictions:
+            for zone, index, card in state.field_cards():
+                if card.cid != BUIO_DAWNS_LIGHT_CID:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=BUIO_DAWNS_LIGHT_CID,
+                        name=card.name,
+                        effect_id="buio_lr_protect",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            BUIO_DAWNS_LIGHT_CID,
+                            "buio_lr_protect",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
+        if "Main Phase" in str(state.phase) and not state.opt_used.get(f"{BUIO_DAWNS_LIGHT_CID}:e1"):
             open_mz = state.open_mz_indices()
             if open_mz:
                 for hand_index, card in enumerate(state.hand):
@@ -1136,7 +2098,7 @@ class BuioDawnsLightEffect(EffectImpl):
                             )
                         )
 
-        if "BUIO_GY_TRIGGER" in state.events and not state.opt_used.get(f"{BUIO_DAWNS_LIGHT_CID}:e2"):
+        if not state.opt_used.get(f"{BUIO_DAWNS_LIGHT_CID}:e2"):
             if BUIO_DAWNS_LIGHT_CID in state.last_moved_to_gy:
                 buio_indices = [
                     idx for idx, card in enumerate(state.gy) if card.cid == BUIO_DAWNS_LIGHT_CID
@@ -1166,11 +2128,16 @@ class BuioDawnsLightEffect(EffectImpl):
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "buio_lr_protect":
+            new_state = state.clone()
+            new_state.restrictions.append("LR_MZ_INDESTRUCTIBLE")
+            return new_state
+
         if action.effect_id == "buio_hand_ss":
             if state.opt_used.get(f"{BUIO_DAWNS_LIGHT_CID}:e1"):
                 raise IllegalActionError("Buio effect already used.")
-            if "BUIO_TRIGGER" not in state.events:
-                raise IllegalActionError("Buio trigger not present.")
+            if "Main Phase" not in str(state.phase):
+                raise IllegalActionError("Buio requires Main Phase.")
 
             hand_index = action.params.get("hand_index")
             target_index = action.params.get("target_mz_index")
@@ -1197,15 +2164,11 @@ class BuioDawnsLightEffect(EffectImpl):
             new_state.field.mz[mz_index] = buio
             new_state.field.mz[target_index].metadata["effects_negated"] = True
             new_state.opt_used[f"{BUIO_DAWNS_LIGHT_CID}:e1"] = True
-            if "BUIO_TRIGGER" in new_state.events:
-                new_state.events = [evt for evt in new_state.events if evt != "BUIO_TRIGGER"]
             return new_state
 
         if action.effect_id == "buio_gy_search_mutiny":
             if state.opt_used.get(f"{BUIO_DAWNS_LIGHT_CID}:e2"):
                 raise IllegalActionError("Buio GY effect already used.")
-            if "BUIO_GY_TRIGGER" not in state.events:
-                raise IllegalActionError("Buio GY trigger not present.")
             if BUIO_DAWNS_LIGHT_CID not in state.last_moved_to_gy:
                 raise IllegalActionError("Buio was not just sent to GY.")
 
@@ -1229,8 +2192,6 @@ class BuioDawnsLightEffect(EffectImpl):
             new_state.hand.append(mutiny)
             new_state.opt_used[f"{BUIO_DAWNS_LIGHT_CID}:e2"] = True
             new_state.last_moved_to_gy = []
-            if "BUIO_GY_TRIGGER" in new_state.events:
-                new_state.events = [evt for evt in new_state.events if evt != "BUIO_GY_TRIGGER"]
             return new_state
 
         raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
@@ -1239,13 +2200,77 @@ class BuioDawnsLightEffect(EffectImpl):
 class LuceDusksDarkEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "LUCE_TRIGGER" not in state.events:
-            return actions
-        if state.opt_used.get(f"{LUCE_DUSKS_DARK_CID}:e1"):
+        if "LR_MZ_INDESTRUCTIBLE" not in state.restrictions:
+            for zone, index, card in state.field_cards():
+                if card.cid != LUCE_DUSKS_DARK_CID:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=LUCE_DUSKS_DARK_CID,
+                        name=card.name,
+                        effect_id="luce_lr_protect",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            LUCE_DUSKS_DARK_CID,
+                            "luce_lr_protect",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
+        if "Main Phase" not in str(state.phase):
             return actions
 
-        deck_indices = [idx for idx, card in enumerate(state.deck) if is_fairy_or_fiend(card)]
-        if not deck_indices:
+        if not state.opt_used.get(f"{LUCE_DUSKS_DARK_CID}:e1"):
+            deck_indices = [idx for idx, card in enumerate(state.deck) if is_fairy_or_fiend(card)]
+            field_targets = []
+            for zone, index, card in state.field_cards():
+                field_targets.append((zone, index, card))
+            for stz_index, stz_card in enumerate(state.field.stz):
+                if stz_card:
+                    field_targets.append(("stz", stz_index, stz_card))
+            for fz_index, fz_card in enumerate(state.field.fz):
+                if fz_card:
+                    field_targets.append(("fz", fz_index, fz_card))
+            if deck_indices and field_targets:
+                for zone, index, card in state.field_cards():
+                    if card.cid != LUCE_DUSKS_DARK_CID:
+                        continue
+                    if not card.properly_summoned:
+                        continue
+                    if str(card.metadata.get("summon_type", "")).lower() != "fusion":
+                        continue
+                    for deck_index in deck_indices:
+                        for target_zone, target_index, target_card in field_targets:
+                            if target_zone == zone and target_index == index:
+                                continue
+                            actions.append(
+                                EffectAction(
+                                    cid=LUCE_DUSKS_DARK_CID,
+                                    name=card.name,
+                                    effect_id="luce_send_and_destroy",
+                                    params={
+                                        "zone": zone,
+                                        "field_index": index,
+                                        "deck_index": deck_index,
+                                        "target_zone": target_zone,
+                                        "target_index": target_index,
+                                    },
+                                    sort_key=(
+                                        LUCE_DUSKS_DARK_CID,
+                                        "luce_send_and_destroy",
+                                        zone,
+                                        index,
+                                        deck_index,
+                                        target_zone,
+                                        target_index,
+                                    ),
+                                )
+                            )
+
+        if "LUCE_DESTROY_TRIGGER" not in state.events:
+            return actions
+        if state.opt_used.get(f"{LUCE_DUSKS_DARK_CID}:e2"):
             return actions
 
         field_targets = []
@@ -1257,8 +2282,6 @@ class LuceDusksDarkEffect(EffectImpl):
         for fz_index, fz_card in enumerate(state.field.fz):
             if fz_card:
                 field_targets.append(("fz", fz_index, fz_card))
-        if not field_targets:
-            return actions
 
         for zone, index, card in state.field_cards():
             if card.cid != LUCE_DUSKS_DARK_CID:
@@ -1267,42 +2290,94 @@ class LuceDusksDarkEffect(EffectImpl):
                 continue
             if str(card.metadata.get("summon_type", "")).lower() != "fusion":
                 continue
-            for deck_index in deck_indices:
-                for target_zone, target_index, target_card in field_targets:
-                    if target_zone == zone and target_index == index:
-                        continue
-                    actions.append(
-                        EffectAction(
-                            cid=LUCE_DUSKS_DARK_CID,
-                            name=card.name,
-                            effect_id="luce_send_and_destroy",
-                            params={
-                                "zone": zone,
-                                "field_index": index,
-                                "deck_index": deck_index,
-                                "target_zone": target_zone,
-                                "target_index": target_index,
-                            },
-                            sort_key=(
-                                LUCE_DUSKS_DARK_CID,
-                                "luce_send_and_destroy",
-                                zone,
-                                index,
-                                deck_index,
-                                target_zone,
-                                target_index,
-                            ),
-                        )
+            for target_zone, target_index, target_card in field_targets:
+                if target_zone == zone and target_index == index:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=LUCE_DUSKS_DARK_CID,
+                        name=card.name,
+                        effect_id="luce_destroy_card",
+                        params={
+                            "zone": zone,
+                            "field_index": index,
+                            "target_zone": target_zone,
+                            "target_index": target_index,
+                        },
+                        sort_key=(
+                            LUCE_DUSKS_DARK_CID,
+                            "luce_destroy_card",
+                            zone,
+                            index,
+                            target_zone,
+                            target_index,
+                        ),
                     )
+                )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "luce_lr_protect":
+            new_state = state.clone()
+            new_state.restrictions.append("LR_MZ_INDESTRUCTIBLE")
+            return new_state
+
+        if action.effect_id == "luce_destroy_card":
+            if state.opt_used.get(f"{LUCE_DUSKS_DARK_CID}:e2"):
+                raise IllegalActionError("Luce effect already used.")
+            if "LUCE_DESTROY_TRIGGER" not in state.events:
+                raise IllegalActionError("Luce trigger not present.")
+
+            zone = action.params.get("zone")
+            field_index = action.params.get("field_index")
+            target_zone = action.params.get("target_zone")
+            target_index = action.params.get("target_index")
+            if None in (zone, field_index, target_zone, target_index):
+                raise SimModelError("Missing params for Luce.")
+            if zone not in {"mz", "emz"}:
+                raise SimModelError("Invalid zone for Luce.")
+            if target_zone not in {"mz", "emz", "stz", "fz"}:
+                raise SimModelError("Invalid target zone for Luce.")
+            if not isinstance(field_index, int) or not isinstance(target_index, int):
+                raise SimModelError("Invalid index types for Luce.")
+
+            if zone == "mz":
+                card = state.field.mz[field_index] if 0 <= field_index < len(state.field.mz) else None
+            else:
+                card = state.field.emz[field_index] if 0 <= field_index < len(state.field.emz) else None
+            if not card or card.cid != LUCE_DUSKS_DARK_CID:
+                raise SimModelError("Selected field card is not Luce.")
+            if not card.properly_summoned:
+                raise IllegalActionError("Luce was not properly summoned.")
+            if str(card.metadata.get("summon_type", "")).lower() != "fusion":
+                raise IllegalActionError("Luce is not a Fusion monster.")
+
+            new_state = state.clone()
+            if target_zone == "mz":
+                target = new_state.field.mz[target_index]
+                new_state.field.mz[target_index] = None
+            elif target_zone == "emz":
+                target = new_state.field.emz[target_index]
+                new_state.field.emz[target_index] = None
+            elif target_zone == "stz":
+                target = new_state.field.stz[target_index]
+                new_state.field.stz[target_index] = None
+            else:
+                target = new_state.field.fz[target_index]
+                new_state.field.fz[target_index] = None
+            if target is None:
+                raise IllegalActionError("Luce target missing.")
+            new_state.gy.append(target)
+            new_state.opt_used[f"{LUCE_DUSKS_DARK_CID}:e2"] = True
+            new_state.events = [evt for evt in new_state.events if evt != "LUCE_DESTROY_TRIGGER"]
+            return new_state
+
         if action.effect_id != "luce_send_and_destroy":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
         if state.opt_used.get(f"{LUCE_DUSKS_DARK_CID}:e1"):
             raise IllegalActionError("Luce effect already used.")
-        if "LUCE_TRIGGER" not in state.events:
-            raise IllegalActionError("Luce trigger not present.")
+        if "Main Phase" not in str(state.phase):
+            raise IllegalActionError("Luce requires Main Phase.")
 
         zone = action.params.get("zone")
         field_index = action.params.get("field_index")
@@ -1355,102 +2430,78 @@ class LuceDusksDarkEffect(EffectImpl):
             raise IllegalActionError("Luce target missing.")
         new_state.gy.append(target)
         new_state.opt_used[f"{LUCE_DUSKS_DARK_CID}:e1"] = True
-        if "LUCE_TRIGGER" in new_state.events:
-            new_state.events = [evt for evt in new_state.events if evt != "LUCE_TRIGGER"]
         return new_state
 
 
 class MutinyInTheSkyEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if "MUTINY_FUSION_TRIGGER" in state.events and not state.opt_used.get(
-            f"{MUTINY_IN_THE_SKY_CID}:e1"
-        ):
+        if "Main Phase" in str(state.phase) and not state.opt_used.get(f"{MUTINY_IN_THE_SKY_CID}:e1"):
             open_mz = state.open_mz_indices()
-            if open_mz:
-                mutiny_indices = [idx for idx, card in enumerate(state.hand) if card.cid == MUTINY_IN_THE_SKY_CID]
-                luce_indices = [idx for idx, card in enumerate(state.extra) if card.cid == LUCE_DUSKS_DARK_CID]
-                aerial_indices = [
-                    idx for idx, card in enumerate(state.gy) if card.cid == AERIAL_EATER_CID
+            mutiny_indices = [idx for idx, card in enumerate(state.hand) if card.cid == MUTINY_IN_THE_SKY_CID]
+            if open_mz and mutiny_indices:
+                fusion_targets = [
+                    (idx, card)
+                    for idx, card in enumerate(state.extra)
+                    if str(card.metadata.get("summon_type", "")).lower() == "fusion"
+                    and is_fairy_or_fiend(card)
                 ]
-                buio_indices = [
-                    idx for idx, card in enumerate(state.gy) if card.cid == BUIO_DAWNS_LIGHT_CID
+                gy_indices = [
+                    idx for idx, card in enumerate(state.gy) if is_fairy_or_fiend(card)
                 ]
-                if mutiny_indices and luce_indices and aerial_indices and buio_indices:
-                    for hand_index in mutiny_indices:
-                        for extra_index in luce_indices:
-                            for aerial_index in aerial_indices:
-                                for buio_index in buio_indices:
-                                    actions.append(
-                                        EffectAction(
-                                            cid=MUTINY_IN_THE_SKY_CID,
-                                            name=state.hand[hand_index].name,
-                                            effect_id="mutiny_fusion_summon",
-                                            params={
-                                                "hand_index": hand_index,
-                                                "extra_index": extra_index,
-                                                "mz_index": open_mz[0],
-                                                "gy_indices": [aerial_index, buio_index],
-                                            },
-                                            sort_key=(
-                                                MUTINY_IN_THE_SKY_CID,
-                                                "mutiny_fusion_summon",
-                                                hand_index,
-                                                extra_index,
-                                                open_mz[0],
-                                                aerial_index,
-                                                buio_index,
-                                            ),
-                                        )
-                                    )
-
-        if "MUTINY_GY_TRIGGER" in state.events and not state.opt_used.get(
-            f"{MUTINY_IN_THE_SKY_CID}:e2"
-        ):
-            # Find cost sources: Fiend/Fairy from hand or face-up field
-            cost_sources: list[tuple[str, int]] = []
-            for hand_idx, hand_card in enumerate(state.hand):
-                if is_fairy_or_fiend(hand_card):
-                    cost_sources.append(("hand", hand_idx))
-            for mz_idx, mz_card in enumerate(state.field.mz):
-                if mz_card and is_fairy_or_fiend(mz_card):
-                    cost_sources.append(("mz", mz_idx))
-            for emz_idx, emz_card in enumerate(state.field.emz):
-                if emz_card and is_fairy_or_fiend(emz_card):
-                    cost_sources.append(("emz", emz_idx))
-
-            if cost_sources:
-                for gy_index, card in enumerate(state.gy):
-                    if card.cid != MUTINY_IN_THE_SKY_CID:
-                        continue
-                    for cost_zone, cost_index in cost_sources:
-                        actions.append(
-                            EffectAction(
-                                cid=MUTINY_IN_THE_SKY_CID,
-                                name=card.name,
-                                effect_id="mutiny_gy_add",
-                                params={
-                                    "gy_index": gy_index,
-                                    "cost_zone": cost_zone,
-                                    "cost_index": cost_index,
-                                },
-                                sort_key=(
-                                    MUTINY_IN_THE_SKY_CID,
-                                    "mutiny_gy_add",
-                                    gy_index,
-                                    cost_zone,
-                                    cost_index,
-                                ),
+                for hand_index in mutiny_indices:
+                    for extra_index, fusion_card in fusion_targets:
+                        min_materials = int(fusion_card.metadata.get("min_materials", 2))
+                        if len(gy_indices) < min_materials:
+                            continue
+                        for combo in itertools.combinations(gy_indices, min_materials):
+                            actions.append(
+                                EffectAction(
+                                    cid=MUTINY_IN_THE_SKY_CID,
+                                    name=state.hand[hand_index].name,
+                                    effect_id="mutiny_fusion_summon",
+                                    params={
+                                        "hand_index": hand_index,
+                                        "extra_index": extra_index,
+                                        "mz_index": open_mz[0],
+                                        "gy_indices": list(combo),
+                                    },
+                                    sort_key=(
+                                        MUTINY_IN_THE_SKY_CID,
+                                        "mutiny_fusion_summon",
+                                        hand_index,
+                                        extra_index,
+                                        open_mz[0],
+                                        tuple(combo),
+                                    ),
+                                )
                             )
-                        )
+
+        if "Main Phase" in str(state.phase) and not state.opt_used.get(f"{MUTINY_IN_THE_SKY_CID}:e2"):
+            for gy_index, card in enumerate(state.gy):
+                if card.cid != MUTINY_IN_THE_SKY_CID:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=MUTINY_IN_THE_SKY_CID,
+                        name=card.name,
+                        effect_id="mutiny_gy_add",
+                        params={"gy_index": gy_index},
+                        sort_key=(
+                            MUTINY_IN_THE_SKY_CID,
+                            "mutiny_gy_add",
+                            gy_index,
+                        ),
+                    )
+                )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
         if action.effect_id == "mutiny_fusion_summon":
             if state.opt_used.get(f"{MUTINY_IN_THE_SKY_CID}:e1"):
                 raise IllegalActionError("Mutiny effect already used.")
-            if "MUTINY_FUSION_TRIGGER" not in state.events:
-                raise IllegalActionError("Mutiny trigger not present.")
+            if "Main Phase" not in str(state.phase):
+                raise IllegalActionError("Mutiny requires Main Phase.")
 
             hand_index = action.params.get("hand_index")
             extra_index = action.params.get("extra_index")
@@ -1460,7 +2511,7 @@ class MutinyInTheSkyEffect(EffectImpl):
                 raise SimModelError("Missing params for Mutiny.")
             if not isinstance(hand_index, int) or not isinstance(extra_index, int) or not isinstance(mz_index, int):
                 raise SimModelError("Invalid index types for Mutiny.")
-            if not isinstance(gy_indices, list) or len(gy_indices) != 2:
+            if not isinstance(gy_indices, list):
                 raise SimModelError("Invalid GY indices for Mutiny.")
             if hand_index < 0 or hand_index >= len(state.hand):
                 raise IllegalActionError("Hand index out of range for Mutiny.")
@@ -1471,8 +2522,12 @@ class MutinyInTheSkyEffect(EffectImpl):
 
             if state.hand[hand_index].cid != MUTINY_IN_THE_SKY_CID:
                 raise SimModelError("Selected hand card is not Mutiny in the Sky.")
-            if state.extra[extra_index].cid != LUCE_DUSKS_DARK_CID:
-                raise IllegalActionError("Selected Extra Deck card is not Luce.")
+            extra_card = state.extra[extra_index]
+            if str(extra_card.metadata.get("summon_type", "")).lower() != "fusion":
+                raise IllegalActionError("Selected Extra Deck card is not a Fusion monster.")
+            if not is_fairy_or_fiend(extra_card):
+                raise IllegalActionError("Selected Extra Deck card is not Fiend or Fairy.")
+            min_materials = int(extra_card.metadata.get("min_materials", 2))
 
             seen = set()
             for idx in gy_indices:
@@ -1483,21 +2538,21 @@ class MutinyInTheSkyEffect(EffectImpl):
                 seen.add(idx)
                 if idx < 0 or idx >= len(state.gy):
                     raise IllegalActionError("GY index out of range for Mutiny.")
+            if len(gy_indices) != min_materials:
+                raise IllegalActionError("Invalid GY indices for Mutiny.")
 
             materials = [state.gy[idx] for idx in gy_indices]
-            if not any(card.cid == AERIAL_EATER_CID for card in materials):
-                raise IllegalActionError("Mutiny requires Aerial Eater as material.")
-            if not any(card.cid == BUIO_DAWNS_LIGHT_CID for card in materials):
-                raise IllegalActionError("Mutiny requires Buio as material.")
+            if not all(is_fairy_or_fiend(card) for card in materials):
+                raise IllegalActionError("Mutiny materials must be Fiend or Fairy monsters.")
 
             new_state = state.clone()
             mutiny = new_state.hand.pop(hand_index)
             new_state.gy.append(mutiny)
 
-            luce = new_state.extra.pop(extra_index)
-            luce.properly_summoned = True
-            luce.metadata["from_extra"] = True
-            new_state.field.mz[mz_index] = luce
+            fusion = new_state.extra.pop(extra_index)
+            fusion.properly_summoned = True
+            fusion.metadata["from_extra"] = True
+            new_state.field.mz[mz_index] = fusion
 
             removed = {}
             for idx in sorted(gy_indices, reverse=True):
@@ -1510,83 +2565,28 @@ class MutinyInTheSkyEffect(EffectImpl):
                     new_state.deck.append(card)
 
             new_state.opt_used[f"{MUTINY_IN_THE_SKY_CID}:e1"] = True
-            if "MUTINY_FUSION_TRIGGER" in new_state.events:
-                new_state.events = [evt for evt in new_state.events if evt != "MUTINY_FUSION_TRIGGER"]
             return new_state
 
         if action.effect_id == "mutiny_gy_add":
             if state.opt_used.get(f"{MUTINY_IN_THE_SKY_CID}:e2"):
                 raise IllegalActionError("Mutiny GY effect already used.")
-            if "MUTINY_GY_TRIGGER" not in state.events:
-                raise IllegalActionError("Mutiny GY trigger not present.")
+            if "Main Phase" not in str(state.phase):
+                raise IllegalActionError("Mutiny requires Main Phase.")
 
             gy_index = action.params.get("gy_index")
-            cost_zone = action.params.get("cost_zone")
-            cost_index = action.params.get("cost_index")
-            if gy_index is None or cost_zone is None or cost_index is None:
+            if gy_index is None:
                 raise SimModelError("Missing params for Mutiny GY.")
-            if not isinstance(gy_index, int) or not isinstance(cost_index, int):
+            if not isinstance(gy_index, int):
                 raise SimModelError("Invalid index type for Mutiny GY.")
-            if cost_zone not in {"hand", "mz", "emz"}:
-                raise SimModelError("Invalid cost zone for Mutiny GY.")
             if gy_index < 0 or gy_index >= len(state.gy):
                 raise IllegalActionError("GY index out of range for Mutiny GY.")
             if state.gy[gy_index].cid != MUTINY_IN_THE_SKY_CID:
                 raise SimModelError("Selected GY card is not Mutiny in the Sky.")
 
-            # Validate cost source
-            if cost_zone == "hand":
-                if cost_index < 0 or cost_index >= len(state.hand):
-                    raise IllegalActionError("Cost index out of range for Mutiny GY.")
-                if not is_fairy_or_fiend(state.hand[cost_index]):
-                    raise IllegalActionError("Cost must be a Fiend or Fairy monster.")
-            elif cost_zone == "mz":
-                if cost_index < 0 or cost_index >= len(state.field.mz):
-                    raise IllegalActionError("Cost index out of range for Mutiny GY.")
-                if not state.field.mz[cost_index] or not is_fairy_or_fiend(state.field.mz[cost_index]):
-                    raise IllegalActionError("Cost must be a Fiend or Fairy monster.")
-            else:  # emz
-                if cost_index < 0 or cost_index >= len(state.field.emz):
-                    raise IllegalActionError("Cost index out of range for Mutiny GY.")
-                if not state.field.emz[cost_index] or not is_fairy_or_fiend(state.field.emz[cost_index]):
-                    raise IllegalActionError("Cost must be a Fiend or Fairy monster.")
-
             new_state = state.clone()
-
-            # Pay cost: send Fiend/Fairy to GY
-            if cost_zone == "hand":
-                cost_card = new_state.hand.pop(cost_index)
-                new_state.gy.append(cost_card)
-            elif cost_zone == "mz":
-                cost_card = new_state.field.mz[cost_index]
-                new_state.field.mz[cost_index] = None
-                # Send any equipped cards to GY first
-                for eq in cost_card.equipped:
-                    new_state.gy.append(eq)
-                cost_card.equipped = []
-                new_state.gy.append(cost_card)
-            else:  # emz
-                cost_card = new_state.field.emz[cost_index]
-                new_state.field.emz[cost_index] = None
-                for eq in cost_card.equipped:
-                    new_state.gy.append(eq)
-                cost_card.equipped = []
-                new_state.gy.append(cost_card)
-
-            # Find Mutiny in GY (index may have shifted if cost was from GY-adjacent)
-            mutiny_idx = None
-            for idx, card in enumerate(new_state.gy):
-                if card.cid == MUTINY_IN_THE_SKY_CID:
-                    mutiny_idx = idx
-                    break
-            if mutiny_idx is None:
-                raise IllegalActionError("Mutiny in the Sky not found in GY.")
-
-            mutiny = new_state.gy.pop(mutiny_idx)
+            mutiny = new_state.gy.pop(gy_index)
             new_state.hand.append(mutiny)
             new_state.opt_used[f"{MUTINY_IN_THE_SKY_CID}:e2"] = True
-            if "MUTINY_GY_TRIGGER" in new_state.events:
-                new_state.events = [evt for evt in new_state.events if evt != "MUTINY_GY_TRIGGER"]
             return new_state
 
         raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")

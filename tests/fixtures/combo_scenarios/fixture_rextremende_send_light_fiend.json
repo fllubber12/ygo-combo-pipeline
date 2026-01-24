@@ -30,7 +30,8 @@
         "emz": [null, null]
       }
     },
-    "phase": "Main Phase 1"
+    "phase": "Main Phase 1",
+    "pending_triggers": ["SUMMON:20774"]
   },
   "search": {
     "max_depth": 1,

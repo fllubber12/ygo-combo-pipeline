@@ -5,7 +5,7 @@
 
 ## Effect Actions
 1. Buio the Dawn's Light [21624] buio_gy_search_mutiny: {'buio_gy_index': 0, 'deck_index': 0}
-2. Mutiny in the Sky [21626] mutiny_fusion_summon: {'hand_index': 0, 'extra_index': 0, 'mz_index': 0, 'gy_indices': [1, 0]}
+2. Mutiny in the Sky [21626] mutiny_fusion_summon: {'hand_index': 0, 'extra_index': 0, 'mz_index': 0, 'gy_indices': [0, 1]}
 
 ## Final Snapshot
 ```json

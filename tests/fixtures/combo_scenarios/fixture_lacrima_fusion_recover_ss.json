@@ -32,7 +32,8 @@
       "extra": []
     },
     "opt_used": {},
-    "last_moved_to_gy": []
+    "last_moved_to_gy": [],
+    "restrictions": ["LACRIMA_ATK_REDUCTION"]
   },
   "search": {
     "max_depth": 1,

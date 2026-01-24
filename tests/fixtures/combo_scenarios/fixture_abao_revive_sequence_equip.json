@@ -8,28 +8,11 @@
     "zones": {
       "field_zones": {
         "mz": [
-          {
-            "cid": "20226",
-            "name": "Fiendsmith's Sequence",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 2
-            },
-            "properly_summoned": true
-          },
           null,
-          {
-            "cid": "DUMMY_1",
-            "name": "Field Filler 1"
-          },
-          {
-            "cid": "DUMMY_2",
-            "name": "Field Filler 2"
-          },
-          {
-            "cid": "DUMMY_3",
-            "name": "Field Filler 3"
-          }
+          null,
+          null,
+          null,
+          null
         ],
         "emz": [
           {
@@ -53,6 +36,15 @@
       "deck": [],
       "gy": [
         {
+          "cid": "20226",
+          "name": "Fiendsmith's Sequence",
+          "metadata": {
+            "summon_type": "link",
+            "link_rating": 2
+          },
+          "properly_summoned": true
+        },
+        {
           "cid": "20196",
           "name": "Fiendsmith Engraver",
           "metadata": {
@@ -64,7 +56,9 @@
       "banished": [],
       "extra": []
     },
-    "opt_used": {},
+    "opt_used": {
+      "20196:e3": true
+    },
     "last_moved_to_gy": []
   },
   "search": {

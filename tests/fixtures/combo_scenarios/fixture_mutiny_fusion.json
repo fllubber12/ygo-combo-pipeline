@@ -17,7 +17,8 @@
           "name": "Aerial Eater",
           "metadata": {
             "summon_type": "fusion",
-            "level": 6
+            "level": 6,
+            "race": "FIEND"
           },
           "properly_summoned": true
         },
@@ -36,7 +37,8 @@
           "name": "Luce the Dusk's Dark",
           "metadata": {
             "summon_type": "fusion",
-            "level": 8
+            "level": 8,
+            "race": "FIEND"
           }
         }
       ],

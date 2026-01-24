@@ -73,6 +73,7 @@ class GameState:
     restrictions: list
     events: list[str]
     last_moved_to_gy: list[str]
+    pending_triggers: list[str] = field(default_factory=list)
 
     def clone(self) -> "GameState":
         return copy.deepcopy(self)
@@ -161,6 +162,7 @@ class GameState:
             restrictions=list(snapshot.get("restrictions", [])),
             events=list(snapshot.get("events", [])),
             last_moved_to_gy=list(snapshot.get("last_moved_to_gy", [])),
+            pending_triggers=list(snapshot.get("pending_triggers", [])),
         )
 
 

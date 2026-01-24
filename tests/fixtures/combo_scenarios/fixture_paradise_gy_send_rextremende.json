@@ -2,7 +2,7 @@
   "name": "fixture_paradise_gy_send_rextremende",
   "state": {
     "phase": "Main Phase 1",
-    "events": ["OPP_TURN"],
+    "events": ["OPP_SPECIAL_SUMMON"],
     "zones": {
       "gy": [
         {

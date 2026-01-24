@@ -77,7 +77,7 @@ class TestLibraryDecklistEffects(unittest.TestCase):
 
     def test_duke_demise_recover(self):
         snapshot = run_scenario("fixture_duke_demise_recover")
-        self.assertIn("Buio the Dawn's Light", snapshot["zones"]["hand"])
+        self.assertIn("Fiendsmith Engraver", snapshot["zones"]["hand"])
         self.assertIn("The Duke of Demise", snapshot["zones"]["banished"])
 
     def test_necroquip_draw(self):
@@ -134,6 +134,10 @@ class TestLibraryDecklistEffects(unittest.TestCase):
     def test_luce_send_destroy(self):
         snapshot = run_scenario("fixture_luce_send_destroy")
         self.assertIn("Buio the Dawn's Light", snapshot["zones"]["gy"])
+        self.assertIn("Opponent Card", snapshot["zones"]["gy"])
+
+    def test_luce_destroy_trigger(self):
+        snapshot = run_scenario("fixture_luce_destroy_trigger")
         self.assertIn("Opponent Card", snapshot["zones"]["gy"])
 
     def test_mutiny_fusion(self):

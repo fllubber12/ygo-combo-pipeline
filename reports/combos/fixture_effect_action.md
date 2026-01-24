@@ -4,16 +4,16 @@
 (none)
 
 ## Effect Actions
-1. Demo Extender [DEMO_EXTENDER_001] special_summon_self: {'hand_index': 0, 'mz_index': 0}
+(none)
 
 ## Final Snapshot
 ```json
 {
   "zones": {
-    "hand": [],
-    "field": [
+    "hand": [
       "Demo Extender"
     ],
+    "field": [],
     "gy": [],
     "banished": [],
     "deck": [],

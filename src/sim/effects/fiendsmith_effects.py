@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import itertools
+
 from ..errors import IllegalActionError, SimModelError
 from ..state import (
     CardInstance,
@@ -22,6 +24,7 @@ FIENDSMITH_IN_PARADISE_CID = FIENDSMITH_PARADISE_CID
 FIENDSMITH_KYRIE_CID = "20816"
 FIENDSMITH_AGNUMDAY_CID = "20521"
 FIENDSMITH_SEQUENCE_CID = "20238"
+FIENDSMITH_SEQUENCE_ALT_CID = "20226"
 FIENDSMITH_REXTREMENDE_CID = "20774"
 
 OPP_TURN_EVENT = "OPP_TURN"
@@ -40,6 +43,7 @@ LACRIMA_CT_SEND_TARGET_CIDS = {
     "20215",  # Desirae (Fusion)
     "20225",  # Requiem (Link)
     "20238",  # Sequence (Link)
+    "20226",  # Sequence (alt CID)
     "20521",  # Agnumday (Link)
     "20774",  # Rextremende (Fusion)
     "20240",  # Tract (Spell)
@@ -57,6 +61,7 @@ LIGHT_FIEND_MONSTER_CIDS = {
     "20215",  # Desirae (Fusion)
     "20225",  # Requiem (Link-1)
     "20238",  # Sequence (Link-2)
+    "20226",  # Sequence (Link-2 alt CID)
     "20521",  # Agnumday (Link-3)
     "20774",  # Rextremende (Fusion)
     "20490",  # Lacrima the Crimson Tears (Main Deck, Level 4, "treated as Fiendsmith")
@@ -69,6 +74,7 @@ FIENDSMITH_MONSTER_CIDS = {
     "20215",  # Desirae (Fusion)
     "20225",  # Requiem (Link)
     "20238",  # Sequence (Link)
+    "20226",  # Sequence (Link alt CID)
     "20521",  # Agnumday (Link)
     "20774",  # Rextremende (Fusion)
 }
@@ -85,34 +91,22 @@ LACRIMA_GY_LINK_TARGET_CIDS = {
     FIENDSMITH_REQUIEM_CID,
     FIENDSMITH_AGNUMDAY_CID,
     FIENDSMITH_SEQUENCE_CID,
+    FIENDSMITH_SEQUENCE_ALT_CID,
 }
 LINK_RATING_BY_CID = {
     FIENDSMITH_REQUIEM_CID: 1,
     FIENDSMITH_AGNUMDAY_CID: 3,
     FIENDSMITH_SEQUENCE_CID: 2,
+    FIENDSMITH_SEQUENCE_ALT_CID: 2,
 }
 
-REXTREMENDE_SEND_ALLOWLIST = {
-    FIENDSMITH_ENGRAVER_CID,
-    FIENDSMITH_DESIRAE_CID,
-}
-REXTREMENDE_RECOVER_ALLOWLIST = {
-    FIENDSMITH_TRACT_CID,
-    FIENDSMITH_SANCT_CID,
-    FIENDSMITH_PARADISE_CID,
-    FIENDSMITH_SEQUENCE_CID,
-    FIENDSMITH_REQUIEM_CID,
-    FIENDSMITH_AGNUMDAY_CID,
-    FIENDSMITH_DESIRAE_CID,
-}
-PARADISE_SEND_ALLOWLIST = {
-    FIENDSMITH_ENGRAVER_CID,
-    FIENDSMITH_DESIRAE_CID,
-    FIENDSMITH_LACRIMA_CID,
-    FIENDSMITH_REQUIEM_CID,
-    FIENDSMITH_SEQUENCE_CID,
-    FIENDSMITH_REXTREMENDE_CID,
-}
+REXTREMENDE_SEND_ALLOWLIST: set[str] = set()
+REXTREMENDE_RECOVER_ALLOWLIST = (
+    set(FIENDSMITH_ST_CIDS)
+    | set(FIENDSMITH_MONSTER_CIDS)
+    | {FIENDSMITH_LACRIMA_CRIMSON_CID}
+)
+PARADISE_SEND_ALLOWLIST = set(FIENDSMITH_MONSTER_CIDS) | {FIENDSMITH_LACRIMA_CRIMSON_CID}
 KYRIE_FUSION_MATERIAL_CIDS = {
     FIENDSMITH_DESIRAE_CID,
     FIENDSMITH_LACRIMA_CID,
@@ -128,6 +122,7 @@ FIENDSMITH_FUSION_CIDS = {
 FIENDSMITH_EQUIP_CIDS = {
     FIENDSMITH_REQUIEM_CID,
     FIENDSMITH_SEQUENCE_CID,
+    FIENDSMITH_SEQUENCE_ALT_CID,
     FIENDSMITH_AGNUMDAY_CID,
 }
 
@@ -148,6 +143,17 @@ def is_light_fiend_monster(card_cid: str) -> bool:
     return card_cid in LIGHT_FIEND_MONSTER_CIDS
 
 
+def is_fiendsmith_monster(card: CardInstance) -> bool:
+    # "Lacrima the Crimson Tears" is always treated as a Fiendsmith card.
+    if card.cid == FIENDSMITH_LACRIMA_CRIMSON_CID:
+        return True
+    return card.cid in FIENDSMITH_MONSTER_CIDS
+
+
+def is_fiendsmith_card(card: CardInstance) -> bool:
+    return is_fiendsmith_monster(card) or is_fiendsmith_st(card.cid)
+
+
 def controls_only_light_fiends(state: GameState) -> bool:
     field_cards = [card for card in state.field.mz + state.field.emz if card]
     if not field_cards:
@@ -162,6 +168,36 @@ def is_link_monster(card: CardInstance) -> bool:
         return int(card.metadata.get("link_rating", 0)) > 0
     except (TypeError, ValueError):
         return False
+
+
+def is_fiendsmith_fusion(card: CardInstance) -> bool:
+    return card.cid in FIENDSMITH_FUSION_CIDS
+
+
+def fiendsmith_fusion_materials_ok(target_cid: str, materials: list[CardInstance]) -> bool:
+    if target_cid == FIENDSMITH_LACRIMA_CID:
+        return len(materials) == 2 and all(is_light_fiend_card(card) for card in materials)
+    if target_cid == FIENDSMITH_DESIRAE_CID:
+        if len(materials) != 3:
+            return False
+        if not any(card.cid == FIENDSMITH_ENGRAVER_CID for card in materials):
+            return False
+        return all(is_light_fiend_card(card) for card in materials)
+    if target_cid == FIENDSMITH_REXTREMENDE_CID:
+        if len(materials) != 2:
+            return False
+        has_fiendsmith_fusion = any(
+            card.cid in FIENDSMITH_FUSION_CIDS and card.cid != FIENDSMITH_REXTREMENDE_CID
+            for card in materials
+        )
+        if not has_fiendsmith_fusion:
+            return False
+        return any(
+            str(card.metadata.get("summon_type", "")).lower() in {"fusion", "link"}
+            or is_link_monster(card)
+            for card in materials
+        )
+    return False
 
 
 def total_equipped_link_rating(card: CardInstance) -> int:
@@ -275,7 +311,7 @@ class FiendsmithEngraverEffect(EffectImpl):
                     for target_index, target in enumerate(state.gy):
                         if target_index == gy_index:
                             continue
-                        if not is_light_fiend_monster(target.cid):
+                        if not is_light_fiend_card(target):
                             continue
                         for mz_index in open_mz:
                             actions.append(
@@ -353,7 +389,7 @@ class FiendsmithEngraverEffect(EffectImpl):
 
         if state.gy[gy_index].cid != FIENDSMITH_ENGRAVER_CID:
             raise SimModelError("Selected GY card is not Fiendsmith Engraver.")
-        if not is_light_fiend_monster(state.gy[target_index].cid):
+        if not is_light_fiend_card(state.gy[target_index]):
             raise IllegalActionError("Target GY card is not a LIGHT Fiend monster.")
 
         new_state = state.clone()
@@ -364,7 +400,11 @@ class FiendsmithEngraverEffect(EffectImpl):
         removed.reverse()
         engraver = removed[0] if gy_index < target_index else removed[1]
         target = removed[1] if gy_index < target_index else removed[0]
-        new_state.deck.append(target)
+        if is_extra_deck_monster(target):
+            target.metadata["from_extra"] = True
+            new_state.extra.append(target)
+        else:
+            new_state.deck.append(target)
         new_state.field.mz[mz_index] = engraver
         new_state.opt_used[f"{FIENDSMITH_ENGRAVER_CID}:e3"] = True
         return new_state
@@ -454,7 +494,7 @@ class FiendsmithTractEffect(EffectImpl):
                     if card.cid != FIENDSMITH_TRACT_CID:
                         continue
                     for deck_index, deck_card in enumerate(state.deck):
-                        if not is_light_fiend_monster(deck_card.cid):
+                        if not is_light_fiend_card(deck_card):
                             continue
                         for discard_index in range(len(state.hand)):
                             if discard_index == hand_index:
@@ -483,10 +523,12 @@ class FiendsmithTractEffect(EffectImpl):
             open_mz = state.open_mz_indices()
             if open_mz:
                 tract_indices = [idx for idx, card in enumerate(state.gy) if card.cid == FIENDSMITH_TRACT_CID]
-                desirae_indices = [
-                    idx for idx, card in enumerate(state.extra) if card.cid == FIENDSMITH_DESIRAE_CID
+                fusion_targets = [
+                    (idx, card)
+                    for idx, card in enumerate(state.extra)
+                    if card.cid in FIENDSMITH_FUSION_CIDS
                 ]
-                if tract_indices and desirae_indices:
+                if tract_indices and fusion_targets:
                     candidates: list[tuple[str, int, CardInstance]] = []
                     for hand_index, card in enumerate(state.hand):
                         candidates.append(("hand", hand_index, card))
@@ -497,59 +539,43 @@ class FiendsmithTractEffect(EffectImpl):
                         if card:
                             candidates.append(("emz", emz_index, card))
 
-                    engravers = [
-                        entry for entry in candidates if entry[2].cid == FIENDSMITH_ENGRAVER_CID
-                    ]
-                    light_fiends = [entry for entry in candidates if is_light_fiend_card(entry[2])]
+                    candidates.sort(key=lambda entry: (entry[0], entry[1]))
 
                     for gy_index in tract_indices:
                         tract_card = state.gy[gy_index]
-                        for extra_index in desirae_indices:
-                            for engraver in engravers:
-                                other_lights = [
-                                    entry
-                                    for entry in light_fiends
-                                    if (entry[0], entry[1]) != (engraver[0], engraver[1])
+                        for extra_index, fusion_card in fusion_targets:
+                            required = 2 if fusion_card.cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID} else 3
+                            if len(candidates) < required:
+                                continue
+                            for combo in itertools.combinations(candidates, required):
+                                material_cards = [entry[2] for entry in combo]
+                                if not fiendsmith_fusion_materials_ok(fusion_card.cid, material_cards):
+                                    continue
+                                materials = [
+                                    {"source": entry[0], "index": entry[1]}
+                                    for entry in combo
                                 ]
-                                for first_idx in range(len(other_lights)):
-                                    for second_idx in range(first_idx + 1, len(other_lights)):
-                                        materials = [
-                                            {
-                                                "source": engraver[0],
-                                                "index": engraver[1],
-                                            },
-                                            {
-                                                "source": other_lights[first_idx][0],
-                                                "index": other_lights[first_idx][1],
-                                            },
-                                            {
-                                                "source": other_lights[second_idx][0],
-                                                "index": other_lights[second_idx][1],
-                                            },
-                                        ]
-                                        material_key = tuple(
-                                            (entry["source"], entry["index"]) for entry in materials
-                                        )
-                                        actions.append(
-                                            EffectAction(
-                                                cid=FIENDSMITH_TRACT_CID,
-                                                name=tract_card.name,
-                                                effect_id="gy_banish_fuse_fiendsmith",
-                                                params={
-                                                    "gy_index": gy_index,
-                                                    "extra_index": extra_index,
-                                                    "mz_index": open_mz[0],
-                                                    "materials": materials,
-                                                },
-                                                sort_key=(
-                                                    FIENDSMITH_TRACT_CID,
-                                                    "gy_banish_fuse_fiendsmith",
-                                                    gy_index,
-                                                    extra_index,
-                                                    material_key,
-                                                ),
-                                            )
-                                        )
+                                material_key = tuple((entry["source"], entry["index"]) for entry in materials)
+                                actions.append(
+                                    EffectAction(
+                                        cid=FIENDSMITH_TRACT_CID,
+                                        name=tract_card.name,
+                                        effect_id="gy_banish_fuse_fiendsmith",
+                                        params={
+                                            "gy_index": gy_index,
+                                            "extra_index": extra_index,
+                                            "mz_index": open_mz[0],
+                                            "materials": materials,
+                                        },
+                                        sort_key=(
+                                            FIENDSMITH_TRACT_CID,
+                                            "gy_banish_fuse_fiendsmith",
+                                            gy_index,
+                                            extra_index,
+                                            material_key,
+                                        ),
+                                    )
+                                )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
@@ -574,7 +600,7 @@ class FiendsmithTractEffect(EffectImpl):
 
             if state.hand[hand_index].cid != FIENDSMITH_TRACT_CID:
                 raise SimModelError("Action does not match Fiendsmith's Tract card.")
-            if not is_light_fiend_monster(state.deck[deck_index].cid):
+            if not is_light_fiend_card(state.deck[deck_index]):
                 raise IllegalActionError("Selected deck card is not a LIGHT Fiend monster.")
 
             new_state = state.clone()
@@ -612,7 +638,7 @@ class FiendsmithTractEffect(EffectImpl):
         materials = action.params.get("materials")
         if gy_index is None or extra_index is None or mz_index is None or materials is None:
             raise SimModelError("Missing params for Fiendsmith's Tract GY effect.")
-        if not isinstance(materials, list) or len(materials) != 3:
+        if not isinstance(materials, list):
             raise SimModelError("Invalid materials for Fiendsmith's Tract GY effect.")
 
         if gy_index < 0 or gy_index >= len(state.gy):
@@ -624,8 +650,9 @@ class FiendsmithTractEffect(EffectImpl):
 
         if state.gy[gy_index].cid != FIENDSMITH_TRACT_CID:
             raise SimModelError("Selected GY card is not Fiendsmith's Tract.")
-        if state.extra[extra_index].cid != FIENDSMITH_DESIRAE_CID:
-            raise IllegalActionError("Selected Extra Deck target is not Fiendsmith's Desirae.")
+        target_cid = state.extra[extra_index].cid
+        if target_cid not in FIENDSMITH_FUSION_CIDS:
+            raise IllegalActionError("Selected Extra Deck target is not a Fiendsmith Fusion monster.")
 
         seen = set()
         material_cards: list[CardInstance] = []
@@ -657,10 +684,11 @@ class FiendsmithTractEffect(EffectImpl):
                 raise IllegalActionError("Material missing from field for Fiendsmith's Tract.")
             material_cards.append(card)
 
-        if not any(card.cid == FIENDSMITH_ENGRAVER_CID for card in material_cards):
-            raise IllegalActionError("Fiendsmith's Tract requires Fiendsmith Engraver.")
-        if not all(is_light_fiend_card(card) for card in material_cards):
-            raise IllegalActionError("Fiendsmith's Tract requires LIGHT Fiend materials.")
+        required_count = 2 if target_cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID} else 3
+        if len(material_cards) != required_count:
+            raise IllegalActionError("Invalid material count for Fiendsmith's Tract.")
+        if not fiendsmith_fusion_materials_ok(target_cid, material_cards):
+            raise IllegalActionError("Fiendsmith's Tract materials do not satisfy fusion requirements.")
 
         new_state = state.clone()
         tract_card = new_state.gy.pop(gy_index)
@@ -710,38 +738,39 @@ class FiendsmithLacrimaCrimsonEffect(EffectImpl):
         actions: list[EffectAction] = []
 
         if not state.opt_used.get(f"{FIENDSMITH_LACRIMA_CRIMSON_CID}:e1"):
-            field_entries = []
-            for index, card in enumerate(state.field.mz):
-                if card and card.cid == FIENDSMITH_LACRIMA_CRIMSON_CID:
-                    field_entries.append(("mz", index, card))
-            for index, card in enumerate(state.field.emz):
-                if card and card.cid == FIENDSMITH_LACRIMA_CRIMSON_CID:
-                    field_entries.append(("emz", index, card))
+            if f"SUMMON:{FIENDSMITH_LACRIMA_CRIMSON_CID}" in state.pending_triggers:
+                field_entries = []
+                for index, card in enumerate(state.field.mz):
+                    if card and card.cid == FIENDSMITH_LACRIMA_CRIMSON_CID:
+                        field_entries.append(("mz", index, card))
+                for index, card in enumerate(state.field.emz):
+                    if card and card.cid == FIENDSMITH_LACRIMA_CRIMSON_CID:
+                        field_entries.append(("emz", index, card))
 
-            for zone, field_index, card in field_entries:
-                for deck_index, deck_card in enumerate(state.deck):
-                    # Can send ANY "Fiendsmith" card except itself
-                    if deck_card.cid not in LACRIMA_CT_SEND_TARGET_CIDS:
-                        continue
-                    actions.append(
-                        EffectAction(
-                            cid=FIENDSMITH_LACRIMA_CRIMSON_CID,
-                            name=card.name,
-                            effect_id="send_fiendsmith_from_deck",
-                            params={
-                                "zone": zone,
-                                "field_index": field_index,
-                                "deck_index": deck_index,
-                            },
-                            sort_key=(
-                                FIENDSMITH_LACRIMA_CRIMSON_CID,
-                                "send_fiendsmith_from_deck",
-                                zone,
-                                field_index,
-                                deck_index,
-                            ),
+                for zone, field_index, card in field_entries:
+                    for deck_index, deck_card in enumerate(state.deck):
+                        # Can send ANY "Fiendsmith" card except itself
+                        if deck_card.cid not in LACRIMA_CT_SEND_TARGET_CIDS:
+                            continue
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_LACRIMA_CRIMSON_CID,
+                                name=card.name,
+                                effect_id="send_fiendsmith_from_deck",
+                                params={
+                                    "zone": zone,
+                                    "field_index": field_index,
+                                    "deck_index": deck_index,
+                                },
+                                sort_key=(
+                                    FIENDSMITH_LACRIMA_CRIMSON_CID,
+                                    "send_fiendsmith_from_deck",
+                                    zone,
+                                    field_index,
+                                    deck_index,
+                                ),
+                            )
                         )
-                    )
 
         if (
             not state.opt_used.get(f"{FIENDSMITH_LACRIMA_CRIMSON_CID}:e2")
@@ -818,6 +847,11 @@ class FiendsmithLacrimaCrimsonEffect(EffectImpl):
             new_state.gy.append(sent)
             new_state.last_moved_to_gy = [sent.cid]
             new_state.opt_used[f"{FIENDSMITH_LACRIMA_CRIMSON_CID}:e1"] = True
+            new_state.pending_triggers = [
+                trig
+                for trig in new_state.pending_triggers
+                if trig != f"SUMMON:{FIENDSMITH_LACRIMA_CRIMSON_CID}"
+            ]
             return new_state
 
         if action.effect_id == "gy_shuffle_ss_fiendsmith_link":
@@ -850,6 +884,10 @@ class FiendsmithLacrimaCrimsonEffect(EffectImpl):
             lacrima_card = state.gy[gy_index]
             target_card = state.gy[target_index]
             validate_revive_from_gy(target_card)
+            if target_card.cid == FIENDSMITH_REQUIEM_CID and state.opt_used.get(
+                f"{FIENDSMITH_REQUIEM_CID}:spsummon_once"
+            ):
+                raise IllegalActionError("Fiendsmith's Requiem can only be Special Summoned once per turn.")
 
             new_state = state.clone()
             for index in sorted([gy_index, target_index], reverse=True):
@@ -857,6 +895,8 @@ class FiendsmithLacrimaCrimsonEffect(EffectImpl):
 
             new_state.deck.append(lacrima_card)
             new_state.field.emz[emz_index] = target_card
+            if target_card.cid == FIENDSMITH_REQUIEM_CID:
+                new_state.opt_used[f"{FIENDSMITH_REQUIEM_CID}:spsummon_once"] = True
             new_state.opt_used[f"{FIENDSMITH_LACRIMA_CRIMSON_CID}:e2"] = True
             return new_state
 
@@ -974,6 +1014,8 @@ class FiendsmithAgnumdayEffect(EffectImpl):
             agnumday_card.metadata["link_rating"] = LINK_RATING_BY_CID.get(agnumday_card.cid, 3)
 
         new_state.equip_card(agnumday_card, new_state.field.mz[mz_index])
+        new_state.restrictions.append("AGNUMDAY_ATK_BOOST_APPLIED")
+        new_state.restrictions.append("AGNUMDAY_PIERCING")
         new_state.opt_used[f"{FIENDSMITH_AGNUMDAY_CID}:e1"] = True
         return new_state
 
@@ -995,96 +1037,54 @@ class FiendsmithSequenceEffect(EffectImpl):
         if not state.opt_used.get(f"{FIENDSMITH_SEQUENCE_CID}:e1") and "Main Phase" in state.phase:
             open_mz = state.open_mz_indices()
             if open_mz and sequence_entries:
-                engraver_indices = [
-                    idx for idx, card in enumerate(state.gy) if card.cid == FIENDSMITH_ENGRAVER_CID
-                ]
-                light_indices = [
-                    idx for idx, card in enumerate(state.gy) if is_light_fiend_card(card)
-                ]
-                desirae_indices = [
-                    idx for idx, card in enumerate(state.extra) if card.cid == FIENDSMITH_DESIRAE_CID
+                gy_entries = list(enumerate(state.gy))
+                fusion_targets = [
+                    (idx, card)
+                    for idx, card in enumerate(state.extra)
+                    if card.cid in FIENDSMITH_FUSION_CIDS
                 ]
                 for seq_zone, seq_index, seq_card in sequence_entries:
-                    for extra_index in desirae_indices:
+                    for extra_index, fusion_card in fusion_targets:
+                        required = 2 if fusion_card.cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID} else 3
+                        if len(gy_entries) < required:
+                            continue
                         for mz_index in open_mz:
-                            for engraver_index in engraver_indices:
-                                other_indices = [
-                                    idx for idx in light_indices if idx != engraver_index
-                                ]
-                                for first_pos in range(len(other_indices)):
-                                    for second_pos in range(first_pos + 1, len(other_indices)):
-                                        gy_indices = [
-                                            engraver_index,
-                                            other_indices[first_pos],
-                                            other_indices[second_pos],
-                                        ]
-                                        actions.append(
-                                            EffectAction(
-                                                cid=FIENDSMITH_SEQUENCE_CID,
-                                                name=seq_card.name,
-                                                effect_id="sequence_shuffle_fuse_fiend",
-                                                params={
-                                                    "seq_zone": seq_zone,
-                                                    "seq_index": seq_index,
-                                                    "extra_index": extra_index,
-                                                    "mz_index": mz_index,
-                                                    "gy_indices": gy_indices,
-                                                },
-                                                sort_key=(
-                                                    FIENDSMITH_SEQUENCE_CID,
-                                                    "sequence_shuffle_fuse_fiend",
-                                                    seq_zone,
-                                                    seq_index,
-                                                    extra_index,
-                                                    mz_index,
-                                                    tuple(gy_indices),
-                                                ),
-                                            )
-                                        )
-
-                rext_indices = [
-                    idx
-                    for idx, card in enumerate(state.extra)
-                    if card.cid == FIENDSMITH_REXTREMENDE_CID
-                ]
-                desirae_gy_indices = [
-                    idx for idx, card in enumerate(state.gy) if card.cid == FIENDSMITH_DESIRAE_CID
-                ]
-                extra_gy_indices = [
-                    idx
-                    for idx, card in enumerate(state.gy)
-                    if card.cid != FIENDSMITH_DESIRAE_CID and is_extra_deck_monster(card)
-                ]
-                if rext_indices and desirae_gy_indices and extra_gy_indices:
-                    for seq_zone, seq_index, seq_card in sequence_entries:
-                        for extra_index in rext_indices:
-                            for mz_index in open_mz:
-                                for desirae_index in desirae_gy_indices:
-                                    for other_index in extra_gy_indices:
-                                        gy_indices = [desirae_index, other_index]
-                                        actions.append(
-                                            EffectAction(
-                                                cid=FIENDSMITH_SEQUENCE_CID,
-                                                name=seq_card.name,
-                                                effect_id="sequence_shuffle_fuse_rextremende",
-                                                params={
-                                                    "seq_zone": seq_zone,
-                                                    "seq_index": seq_index,
-                                                    "extra_index": extra_index,
-                                                    "mz_index": mz_index,
-                                                    "gy_indices": gy_indices,
-                                                },
-                                                sort_key=(
-                                                    FIENDSMITH_SEQUENCE_CID,
-                                                    "sequence_shuffle_fuse_rextremende",
-                                                    seq_zone,
-                                                    seq_index,
-                                                    extra_index,
-                                                    mz_index,
-                                                    tuple(gy_indices),
-                                                ),
-                                            )
-                                        )
+                            for combo in itertools.combinations(gy_entries, required):
+                                gy_indices = [idx for idx, _card in combo]
+                                material_cards = [card for _idx, card in combo]
+                                if not fiendsmith_fusion_materials_ok(
+                                    fusion_card.cid, material_cards
+                                ):
+                                    continue
+                                if fusion_card.cid == FIENDSMITH_DESIRAE_CID:
+                                    effect_id = "sequence_shuffle_fuse_fiend"
+                                elif fusion_card.cid == FIENDSMITH_REXTREMENDE_CID:
+                                    effect_id = "sequence_shuffle_fuse_rextremende"
+                                else:
+                                    effect_id = "sequence_shuffle_fuse_lacrima"
+                                actions.append(
+                                    EffectAction(
+                                        cid=FIENDSMITH_SEQUENCE_CID,
+                                        name=seq_card.name,
+                                        effect_id=effect_id,
+                                        params={
+                                            "seq_zone": seq_zone,
+                                            "seq_index": seq_index,
+                                            "extra_index": extra_index,
+                                            "mz_index": mz_index,
+                                            "gy_indices": gy_indices,
+                                        },
+                                        sort_key=(
+                                            FIENDSMITH_SEQUENCE_CID,
+                                            effect_id,
+                                            seq_zone,
+                                            seq_index,
+                                            extra_index,
+                                            mz_index,
+                                            tuple(gy_indices),
+                                        ),
+                                    )
+                                )
 
         if not state.opt_used.get(f"{FIENDSMITH_SEQUENCE_CID}:e2"):
             targets = []
@@ -1145,7 +1145,11 @@ class FiendsmithSequenceEffect(EffectImpl):
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
-        if action.effect_id == "sequence_shuffle_fuse_fiend":
+        if action.effect_id in {
+            "sequence_shuffle_fuse_fiend",
+            "sequence_shuffle_fuse_rextremende",
+            "sequence_shuffle_fuse_lacrima",
+        }:
             if OPP_TURN_EVENT in state.events:
                 raise IllegalActionError("Fiendsmith's Sequence cannot be used on opponent turn.")
             if state.opt_used.get(f"{FIENDSMITH_SEQUENCE_CID}:e1"):
@@ -1164,7 +1168,7 @@ class FiendsmithSequenceEffect(EffectImpl):
                 raise SimModelError("Invalid zone for Fiendsmith's Sequence fusion effect.")
             if not isinstance(seq_index, int) or not isinstance(extra_index, int) or not isinstance(mz_index, int):
                 raise SimModelError("Invalid index types for Fiendsmith's Sequence fusion effect.")
-            if not isinstance(gy_indices, list) or len(gy_indices) != 3:
+            if not isinstance(gy_indices, list):
                 raise SimModelError("Invalid GY indices for Fiendsmith's Sequence fusion effect.")
 
             if mz_index not in state.open_mz_indices():
@@ -1183,8 +1187,9 @@ class FiendsmithSequenceEffect(EffectImpl):
             if not seq_card or seq_card.cid != FIENDSMITH_SEQUENCE_CID:
                 raise SimModelError("Selected field card is not Fiendsmith's Sequence.")
 
-            if state.extra[extra_index].cid != FIENDSMITH_DESIRAE_CID:
-                raise IllegalActionError("Selected Extra Deck card is not Fiendsmith's Desirae.")
+            target_cid = state.extra[extra_index].cid
+            if target_cid not in FIENDSMITH_FUSION_CIDS:
+                raise IllegalActionError("Selected Extra Deck card is not a Fiendsmith Fusion monster.")
 
             seen = set()
             for idx in gy_indices:
@@ -1197,85 +1202,11 @@ class FiendsmithSequenceEffect(EffectImpl):
                     raise IllegalActionError("GY index out of range for Fiendsmith's Sequence.")
 
             materials = [state.gy[idx] for idx in gy_indices]
-            if not any(card.cid == FIENDSMITH_ENGRAVER_CID for card in materials):
-                raise IllegalActionError("Fiendsmith's Sequence requires Fiendsmith Engraver.")
-            if not all(is_light_fiend_card(card) for card in materials):
-                raise IllegalActionError("Fiendsmith's Sequence requires LIGHT Fiend materials.")
-
-            new_state = state.clone()
-            fusion = new_state.extra.pop(extra_index)
-            fusion.properly_summoned = True
-            fusion.metadata["from_extra"] = True
-            new_state.field.mz[mz_index] = fusion
-
-            removed_by_index = {}
-            for idx in sorted(gy_indices, reverse=True):
-                removed_by_index[idx] = new_state.gy.pop(idx)
-            for idx in gy_indices:
-                card = removed_by_index[idx]
-                if is_extra_deck_monster(card):
-                    new_state.extra.append(card)
-                else:
-                    new_state.deck.append(card)
-
-            new_state.opt_used[f"{FIENDSMITH_SEQUENCE_CID}:e1"] = True
-            return new_state
-
-        if action.effect_id == "sequence_shuffle_fuse_rextremende":
-            if OPP_TURN_EVENT in state.events:
-                raise IllegalActionError("Fiendsmith's Sequence cannot be used on opponent turn.")
-            if state.opt_used.get(f"{FIENDSMITH_SEQUENCE_CID}:e1"):
-                raise IllegalActionError("Fiendsmith's Sequence effect already used.")
-            if "Main Phase" not in state.phase:
-                raise IllegalActionError("Fiendsmith's Sequence requires Main Phase.")
-
-            seq_zone = action.params.get("seq_zone")
-            seq_index = action.params.get("seq_index")
-            extra_index = action.params.get("extra_index")
-            mz_index = action.params.get("mz_index")
-            gy_indices = action.params.get("gy_indices")
-            if None in (seq_zone, seq_index, extra_index, mz_index, gy_indices):
-                raise SimModelError("Missing params for Fiendsmith's Sequence fusion effect.")
-            if seq_zone not in {"mz", "emz"}:
-                raise SimModelError("Invalid zone for Fiendsmith's Sequence fusion effect.")
-            if not isinstance(seq_index, int) or not isinstance(extra_index, int) or not isinstance(mz_index, int):
-                raise SimModelError("Invalid index types for Fiendsmith's Sequence fusion effect.")
-            if not isinstance(gy_indices, list) or len(gy_indices) != 2:
-                raise SimModelError("Invalid GY indices for Fiendsmith's Sequence fusion effect.")
-
-            if mz_index not in state.open_mz_indices():
-                raise IllegalActionError("No open Main Monster Zone for Fiendsmith's Sequence.")
-            if extra_index < 0 or extra_index >= len(state.extra):
-                raise IllegalActionError("Extra index out of range for Fiendsmith's Sequence.")
-
-            if seq_zone == "mz":
-                if seq_index < 0 or seq_index >= len(state.field.mz):
-                    raise IllegalActionError("Field index out of range for Sequence.")
-                seq_card = state.field.mz[seq_index]
-            else:
-                if seq_index < 0 or seq_index >= len(state.field.emz):
-                    raise IllegalActionError("Field index out of range for Sequence.")
-                seq_card = state.field.emz[seq_index]
-            if not seq_card or seq_card.cid != FIENDSMITH_SEQUENCE_CID:
-                raise SimModelError("Selected field card is not Fiendsmith's Sequence.")
-
-            if state.extra[extra_index].cid != FIENDSMITH_REXTREMENDE_CID:
-                raise IllegalActionError("Selected Extra Deck card is not Fiendsmith's Rextremende.")
-
-            if len(set(gy_indices)) != 2:
-                raise IllegalActionError("Duplicate GY index for Fiendsmith's Sequence.")
-            for idx in gy_indices:
-                if not isinstance(idx, int):
-                    raise SimModelError("Invalid GY index type for Fiendsmith's Sequence.")
-                if idx < 0 or idx >= len(state.gy):
-                    raise IllegalActionError("GY index out of range for Fiendsmith's Sequence.")
-
-            materials = [state.gy[idx] for idx in gy_indices]
-            if not any(card.cid == FIENDSMITH_DESIRAE_CID for card in materials):
-                raise IllegalActionError("Fiendsmith's Sequence requires Fiendsmith's Desirae.")
-            other = next(card for card in materials if card.cid != FIENDSMITH_DESIRAE_CID)
-            if not is_extra_deck_monster(other):
-                raise IllegalActionError("Fiendsmith's Sequence requires an extra deck monster.")
+            required_count = 2 if target_cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID} else 3
+            if len(materials) != required_count:
+                raise IllegalActionError("Fiendsmith's Sequence has invalid material count.")
+            if not fiendsmith_fusion_materials_ok(target_cid, materials):
+                raise IllegalActionError("Fiendsmith's Sequence materials do not satisfy fusion requirements.")
 
             new_state = state.clone()
             fusion = new_state.extra.pop(extra_index)
@@ -1360,6 +1291,23 @@ class FiendsmithRextremendeEffect(EffectImpl):
             return []
 
         actions: list[EffectAction] = []
+        if "REXTREMENDE_IMMUNITY" not in state.restrictions:
+            for mz_index, card in enumerate(state.field.mz):
+                if card and card.cid == FIENDSMITH_REXTREMENDE_CID:
+                    if any(eq.cid in FIENDSMITH_EQUIP_CIDS for eq in card.equipped):
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_REXTREMENDE_CID,
+                                name=card.name,
+                                effect_id="rextremende_immunity",
+                                params={"mz_index": mz_index},
+                                sort_key=(
+                                    FIENDSMITH_REXTREMENDE_CID,
+                                    "rextremende_immunity",
+                                    mz_index,
+                                ),
+                            )
+                        )
 
         if not state.opt_used.get(f"{FIENDSMITH_REXTREMENDE_CID}:e1"):
             for mz_index, card in enumerate(state.field.mz):
@@ -1367,10 +1315,10 @@ class FiendsmithRextremendeEffect(EffectImpl):
                     continue
                 if not card.properly_summoned:
                     continue
+                if str(card.metadata.get("summon_type", "")).lower() != "fusion":
+                    continue
                 for hand_index, _hand_card in enumerate(state.hand):
                     for deck_index, deck_card in enumerate(state.deck):
-                        if deck_card.cid not in REXTREMENDE_SEND_ALLOWLIST:
-                            continue
                         if not is_light_fiend_card(deck_card):
                             continue
                         actions.append(
@@ -1395,8 +1343,6 @@ class FiendsmithRextremendeEffect(EffectImpl):
                             )
                         )
                     for extra_index, extra_card in enumerate(state.extra):
-                        if extra_card.cid not in REXTREMENDE_SEND_ALLOWLIST:
-                            continue
                         if not is_light_fiend_card(extra_card):
                             continue
                         actions.append(
@@ -1433,7 +1379,7 @@ class FiendsmithRextremendeEffect(EffectImpl):
                     for target_index, card in enumerate(state.gy):
                         if target_index == rext_index:
                             continue
-                        if card.cid not in REXTREMENDE_RECOVER_ALLOWLIST:
+                        if not is_fiendsmith_card(card):
                             continue
                         actions.append(
                             EffectAction(
@@ -1455,7 +1401,7 @@ class FiendsmithRextremendeEffect(EffectImpl):
                             )
                         )
                     for target_index, card in enumerate(state.banished):
-                        if card.cid not in REXTREMENDE_RECOVER_ALLOWLIST:
+                        if not is_fiendsmith_card(card):
                             continue
                         actions.append(
                             EffectAction(
@@ -1480,6 +1426,21 @@ class FiendsmithRextremendeEffect(EffectImpl):
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "rextremende_immunity":
+            mz_index = action.params.get("mz_index")
+            if mz_index is None or not isinstance(mz_index, int):
+                raise SimModelError("Missing params for Fiendsmith's Rextremende effect.")
+            if mz_index < 0 or mz_index >= len(state.field.mz):
+                raise IllegalActionError("MZ index out of range for Fiendsmith's Rextremende.")
+            rext = state.field.mz[mz_index]
+            if not rext or rext.cid != FIENDSMITH_REXTREMENDE_CID:
+                raise SimModelError("Selected field card is not Fiendsmith's Rextremende.")
+            if not any(eq.cid in FIENDSMITH_EQUIP_CIDS for eq in rext.equipped):
+                raise IllegalActionError("Fiendsmith's Rextremende is not equipped with a Fiendsmith Equip.")
+            new_state = state.clone()
+            new_state.restrictions.append("REXTREMENDE_IMMUNITY")
+            return new_state
+
         if action.effect_id == "rextremende_discard_send_light_fiend":
             if OPP_TURN_EVENT in state.events:
                 raise IllegalActionError("Fiendsmith's Rextremende cannot be used on opponent turn.")
@@ -1506,6 +1467,8 @@ class FiendsmithRextremendeEffect(EffectImpl):
                 raise SimModelError("Selected field card is not Fiendsmith's Rextremende.")
             if not rext.properly_summoned:
                 raise IllegalActionError("Fiendsmith's Rextremende must be properly summoned.")
+            if str(rext.metadata.get("summon_type", "")).lower() != "fusion":
+                raise IllegalActionError("Fiendsmith's Rextremende is not a Fusion monster.")
 
             if send_source == "deck":
                 if send_index < 0 or send_index >= len(state.deck):
@@ -1515,8 +1478,8 @@ class FiendsmithRextremendeEffect(EffectImpl):
                 if send_index < 0 or send_index >= len(state.extra):
                     raise IllegalActionError("Extra index out of range for Fiendsmith's Rextremende.")
                 target = state.extra[send_index]
-            if target.cid not in REXTREMENDE_SEND_ALLOWLIST or not is_light_fiend_card(target):
-                raise IllegalActionError("Selected target is not an allowed LIGHT Fiend.")
+            if not is_light_fiend_card(target):
+                raise IllegalActionError("Selected target is not a LIGHT Fiend.")
 
             new_state = state.clone()
             discarded = new_state.hand.pop(hand_index)
@@ -1565,8 +1528,8 @@ class FiendsmithRextremendeEffect(EffectImpl):
                         "Target banished index out of range for Fiendsmith's Rextremende."
                     )
                 target = state.banished[target_index]
-            if target.cid not in REXTREMENDE_RECOVER_ALLOWLIST:
-                raise IllegalActionError("Selected target is not a Fiendsmith card.")
+            if target.cid == FIENDSMITH_REXTREMENDE_CID or not is_fiendsmith_card(target):
+                raise IllegalActionError("Selected target is not another Fiendsmith card.")
 
             new_state = state.clone()
             if target_zone == "gy":
@@ -1584,14 +1547,36 @@ class FiendsmithRextremendeEffect(EffectImpl):
 class FiendsmithInParadiseEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
-        if OPP_TURN_EVENT in state.events and not state.opt_used.get(
-            f"{FIENDSMITH_IN_PARADISE_CID}:e2"
+        if not state.opt_used.get(f"{FIENDSMITH_PARADISE_CID}:e1"):
+            stz_indices = [
+                idx
+                for idx, card in enumerate(state.field.stz)
+                if card and card.cid == FIENDSMITH_PARADISE_CID
+            ]
+            for stz_index in stz_indices:
+                actions.append(
+                    EffectAction(
+                        cid=FIENDSMITH_PARADISE_CID,
+                        name=state.field.stz[stz_index].name,
+                        effect_id="paradise_field_wipe",
+                        params={"stz_index": stz_index},
+                        sort_key=(
+                            FIENDSMITH_PARADISE_CID,
+                            "paradise_field_wipe",
+                            stz_index,
+                        ),
+                    )
+                )
+
+        if (
+            OPP_SPECIAL_SUMMON_EVENT in state.events
+            and not state.opt_used.get(f"{FIENDSMITH_IN_PARADISE_CID}:e2")
         ):
             for gy_index, card in enumerate(state.gy):
                 if card.cid != FIENDSMITH_IN_PARADISE_CID:
                     continue
                 for deck_index, deck_card in enumerate(state.deck):
-                    if deck_card.cid not in PARADISE_SEND_ALLOWLIST:
+                    if not is_fiendsmith_monster(deck_card):
                         continue
                     actions.append(
                         EffectAction(
@@ -1613,7 +1598,7 @@ class FiendsmithInParadiseEffect(EffectImpl):
                         )
                     )
                 for extra_index, extra_card in enumerate(state.extra):
-                    if extra_card.cid not in PARADISE_SEND_ALLOWLIST:
+                    if not is_fiendsmith_monster(extra_card):
                         continue
                     actions.append(
                         EffectAction(
@@ -1634,37 +1619,58 @@ class FiendsmithInParadiseEffect(EffectImpl):
                             ),
                         )
                     )
-
-        if not state.opt_used.get(f"{FIENDSMITH_PARADISE_CID}:e1"):
-            if OPP_SPECIAL_SUMMON_EVENT in state.events:
-                desirae_indices = [
-                    idx for idx, card in enumerate(state.extra) if card.cid == FIENDSMITH_DESIRAE_CID
-                ]
-                if desirae_indices:
-                    for gy_index, card in enumerate(state.gy):
-                        if card.cid != FIENDSMITH_PARADISE_CID:
-                            continue
-                        for extra_index in desirae_indices:
-                            actions.append(
-                                EffectAction(
-                                    cid=FIENDSMITH_PARADISE_CID,
-                                    name=card.name,
-                                    effect_id="gy_banish_send_desirae",
-                                    params={"gy_index": gy_index, "extra_index": extra_index},
-                                    sort_key=(
-                                        FIENDSMITH_PARADISE_CID,
-                                        "gy_banish_send_desirae",
-                                        gy_index,
-                                        extra_index,
-                                    ),
-                                )
-                            )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "paradise_field_wipe":
+            if state.opt_used.get(f"{FIENDSMITH_PARADISE_CID}:e1"):
+                raise IllegalActionError("Fiendsmith in Paradise effect already used.")
+
+            stz_index = action.params.get("stz_index")
+            if stz_index is None:
+                raise SimModelError("Missing params for Fiendsmith in Paradise effect.")
+            if not isinstance(stz_index, int):
+                raise SimModelError("Invalid index types for Fiendsmith in Paradise effect.")
+            if stz_index < 0 or stz_index >= len(state.field.stz):
+                raise IllegalActionError("STZ index out of range for Fiendsmith in Paradise.")
+            if state.field.stz[stz_index] is None or state.field.stz[stz_index].cid != FIENDSMITH_PARADISE_CID:
+                raise IllegalActionError("Fiendsmith in Paradise not found in STZ.")
+
+            new_state = state.clone()
+            # Send all other cards on the field to the GY (Paradise is sent after resolution).
+            for zone, index, card in list(new_state.field_cards()):
+                if zone == "mz":
+                    target_card = new_state.field.mz[index]
+                    new_state.field.mz[index] = None
+                else:
+                    target_card = new_state.field.emz[index]
+                    new_state.field.emz[index] = None
+                if target_card:
+                    for eq in target_card.equipped:
+                        new_state.gy.append(eq)
+                    target_card.equipped = []
+                    new_state.gy.append(target_card)
+            for stz_idx, card in enumerate(new_state.field.stz):
+                if not card:
+                    continue
+                if stz_idx == stz_index:
+                    new_state.gy.append(card)
+                    new_state.field.stz[stz_idx] = None
+                else:
+                    new_state.gy.append(card)
+                    new_state.field.stz[stz_idx] = None
+            for fz_idx, card in enumerate(new_state.field.fz):
+                if not card:
+                    continue
+                new_state.gy.append(card)
+                new_state.field.fz[fz_idx] = None
+
+            new_state.opt_used[f"{FIENDSMITH_PARADISE_CID}:e1"] = True
+            return new_state
+
         if action.effect_id == "paradise_gy_banish_send_fiendsmith":
-            if OPP_TURN_EVENT not in state.events:
-                raise IllegalActionError("Fiendsmith in Paradise requires opponent turn.")
+            if OPP_SPECIAL_SUMMON_EVENT not in state.events:
+                raise IllegalActionError("Fiendsmith in Paradise requires opponent Special Summon.")
             if state.opt_used.get(f"{FIENDSMITH_IN_PARADISE_CID}:e2"):
                 raise IllegalActionError("Fiendsmith in Paradise effect already used.")
 
@@ -1685,12 +1691,12 @@ class FiendsmithInParadiseEffect(EffectImpl):
             if send_source == "deck":
                 if send_index < 0 or send_index >= len(state.deck):
                     raise IllegalActionError("Deck index out of range for Fiendsmith in Paradise.")
-                if state.deck[send_index].cid not in PARADISE_SEND_ALLOWLIST:
+                if not is_fiendsmith_monster(state.deck[send_index]):
                     raise IllegalActionError("Selected deck card is not a Fiendsmith monster.")
             else:
                 if send_index < 0 or send_index >= len(state.extra):
                     raise IllegalActionError("Extra index out of range for Fiendsmith in Paradise.")
-                if state.extra[send_index].cid not in PARADISE_SEND_ALLOWLIST:
+                if not is_fiendsmith_monster(state.extra[send_index]):
                     raise IllegalActionError("Selected Extra Deck card is not a Fiendsmith monster.")
 
             new_state = state.clone()
@@ -1702,38 +1708,9 @@ class FiendsmithInParadiseEffect(EffectImpl):
                 sent = new_state.extra.pop(send_index)
                 sent.metadata["from_extra"] = True
             new_state.gy.append(sent)
+            new_state.pending_triggers.append(f"SENT_TO_GY:{sent.cid}")
             new_state.last_moved_to_gy = [sent.cid]
             new_state.opt_used[f"{FIENDSMITH_IN_PARADISE_CID}:e2"] = True
-            return new_state
-
-        if action.effect_id == "gy_banish_send_desirae":
-            if state.opt_used.get(f"{FIENDSMITH_PARADISE_CID}:e1"):
-                raise IllegalActionError("Fiendsmith in Paradise effect already used.")
-            if OPP_SPECIAL_SUMMON_EVENT not in state.events:
-                raise IllegalActionError("Fiendsmith in Paradise requires opponent Special Summon.")
-
-            gy_index = action.params.get("gy_index")
-            extra_index = action.params.get("extra_index")
-            if gy_index is None or extra_index is None:
-                raise SimModelError("Missing params for Fiendsmith in Paradise effect.")
-            if gy_index < 0 or gy_index >= len(state.gy):
-                raise IllegalActionError("GY index out of range for Fiendsmith in Paradise.")
-            if extra_index < 0 or extra_index >= len(state.extra):
-                raise IllegalActionError("Extra index out of range for Fiendsmith in Paradise.")
-
-            if state.gy[gy_index].cid != FIENDSMITH_PARADISE_CID:
-                raise SimModelError("Selected GY card is not Fiendsmith in Paradise.")
-            if state.extra[extra_index].cid != FIENDSMITH_DESIRAE_CID:
-                raise IllegalActionError("Selected Extra Deck card is not Fiendsmith's Desirae.")
-
-            new_state = state.clone()
-            paradise = new_state.gy.pop(gy_index)
-            new_state.banished.append(paradise)
-
-            desirae = new_state.extra.pop(extra_index)
-            new_state.gy.append(desirae)
-            new_state.opt_used[f"{FIENDSMITH_PARADISE_CID}:e1"] = True
-            new_state.last_moved_to_gy = [FIENDSMITH_DESIRAE_CID]
             if OPP_SPECIAL_SUMMON_EVENT in new_state.events:
                 new_state.events = [
                     evt for evt in new_state.events if evt != OPP_SPECIAL_SUMMON_EVENT
@@ -1745,18 +1722,35 @@ class FiendsmithInParadiseEffect(EffectImpl):
 
 class FiendsmithKyrieEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
-        if OPP_TURN_EVENT in state.events:
-            return []
-        if not str(state.phase).lower().startswith("main"):
-            return []
+        actions: list[EffectAction] = []
+        in_main = str(state.phase).lower().startswith("main")
+
+        if in_main and not state.opt_used.get(f"{FIENDSMITH_KYRIE_CID}:e1"):
+            for hand_index, card in enumerate(state.hand):
+                if card.cid != FIENDSMITH_KYRIE_CID:
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=FIENDSMITH_KYRIE_CID,
+                        name=card.name,
+                        effect_id="kyrie_activate_battle_shield",
+                        params={"hand_index": hand_index},
+                        sort_key=(
+                            FIENDSMITH_KYRIE_CID,
+                            "kyrie_activate_battle_shield",
+                            hand_index,
+                        ),
+                    )
+                )
+
         if state.opt_used.get(f"{FIENDSMITH_KYRIE_CID}:e2"):
-            return []
+            return actions
 
         kyrie_indices = [
             idx for idx, card in enumerate(state.gy) if card.cid == FIENDSMITH_KYRIE_CID
         ]
         if not kyrie_indices:
-            return []
+            return actions
 
         # Find ANY Fiendsmith Fusion monster in Extra Deck
         fusion_indices = [
@@ -1764,7 +1758,7 @@ class FiendsmithKyrieEffect(EffectImpl):
         ]
         open_mz = state.open_mz_indices()
         if not fusion_indices or not open_mz:
-            return []
+            return actions
 
         material_pool: list[dict] = []
         for mz_index, card in enumerate(state.field.mz):
@@ -1775,6 +1769,8 @@ class FiendsmithKyrieEffect(EffectImpl):
                 material_pool.append({"source": "emz", "index": emz_index})
         for mz_index, card in enumerate(state.field.mz):
             if not card:
+                continue
+            if not is_fiendsmith_monster(card):
                 continue
             for equip_index, _equip in enumerate(card.equipped):
                 material_pool.append(
@@ -1788,6 +1784,8 @@ class FiendsmithKyrieEffect(EffectImpl):
         for emz_index, card in enumerate(state.field.emz):
             if not card:
                 continue
+            if not is_fiendsmith_monster(card):
+                continue
             for equip_index, _equip in enumerate(card.equipped):
                 material_pool.append(
                     {
@@ -1798,89 +1796,93 @@ class FiendsmithKyrieEffect(EffectImpl):
                     }
                 )
 
-        actions: list[EffectAction] = []
         for gy_index in kyrie_indices:
             for extra_index in fusion_indices:
                 for mz_index in open_mz:
-                    for first_pos in range(len(material_pool)):
-                        for second_pos in range(first_pos + 1, len(material_pool)):
-                            materials = [
-                                material_pool[first_pos],
-                                material_pool[second_pos],
-                            ]
-                            cards = []
-                            for material in materials:
-                                source = material["source"]
-                                if source == "mz":
-                                    card = state.field.mz[material["index"]]
-                                elif source == "emz":
-                                    card = state.field.emz[material["index"]]
-                                else:
-                                    host_zone = material["host_zone"]
-                                    host_index = material["host_index"]
-                                    equip_index = material["equip_index"]
-                                    host = (
-                                        state.field.mz[host_index]
-                                        if host_zone == "mz"
-                                        else state.field.emz[host_index]
-                                    )
-                                    if host is None or equip_index >= len(host.equipped):
-                                        card = None
-                                    else:
-                                        card = host.equipped[equip_index]
-                                cards.append(card)
-                            if any(card is None for card in cards):
-                                continue
-                            # Cannot use the target fusion as material
-                            target_fusion_cid = state.extra[extra_index].cid
-                            if any(card.cid == target_fusion_cid for card in cards):
-                                continue
-                            # Materials must be LIGHT Fiend (to satisfy Fusion material requirements)
-                            if not all(is_light_fiend_card(card) for card in cards):
-                                continue
-                            # Rextremende requires Desirae as one of the materials
-                            if target_fusion_cid == FIENDSMITH_REXTREMENDE_CID:
-                                if not any(card.cid == FIENDSMITH_DESIRAE_CID for card in cards):
-                                    continue
-                            actions.append(
-                                EffectAction(
-                                    cid=FIENDSMITH_KYRIE_CID,
-                                    name=state.gy[gy_index].name,
-                                    effect_id="kyrie_gy_banish_fuse",
-                                    params={
-                                        "gy_index": gy_index,
-                                        "extra_index": extra_index,
-                                        "mz_index": mz_index,
-                                        "materials": materials,
-                                    },
-                                    sort_key=(
-                                        FIENDSMITH_KYRIE_CID,
-                                        "kyrie_gy_banish_fuse",
-                                        gy_index,
-                                        extra_index,
-                                        mz_index,
-                                        tuple(
-                                            (
-                                                material.get("source"),
-                                                material.get("host_zone"),
-                                                material.get("host_index"),
-                                                material.get("index"),
-                                                material.get("equip_index"),
-                                            )
-                                            for material in materials
-                                        ),
-                                    ),
+                    target_fusion_cid = state.extra[extra_index].cid
+                    required = 2 if target_fusion_cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID} else 3
+                    if len(material_pool) < required:
+                        continue
+                    for combo in itertools.combinations(material_pool, required):
+                        cards: list[CardInstance] = []
+                        for material in combo:
+                            source = material["source"]
+                            if source == "mz":
+                                card = state.field.mz[material["index"]]
+                            elif source == "emz":
+                                card = state.field.emz[material["index"]]
+                            else:
+                                host_zone = material["host_zone"]
+                                host_index = material["host_index"]
+                                equip_index = material["equip_index"]
+                                host = (
+                                    state.field.mz[host_index]
+                                    if host_zone == "mz"
+                                    else state.field.emz[host_index]
                                 )
+                                if host is None or equip_index >= len(host.equipped):
+                                    card = None
+                                else:
+                                    card = host.equipped[equip_index]
+                            if card is None:
+                                break
+                            cards.append(card)
+                        if len(cards) != required:
+                            continue
+                        if any(card.cid == target_fusion_cid for card in cards):
+                            continue
+                        if not fiendsmith_fusion_materials_ok(target_fusion_cid, cards):
+                            continue
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_KYRIE_CID,
+                                name=state.gy[gy_index].name,
+                                effect_id="kyrie_gy_banish_fuse",
+                                params={
+                                    "gy_index": gy_index,
+                                    "extra_index": extra_index,
+                                    "mz_index": mz_index,
+                                    "materials": list(combo),
+                                },
+                                sort_key=(
+                                    FIENDSMITH_KYRIE_CID,
+                                    "kyrie_gy_banish_fuse",
+                                    gy_index,
+                                    extra_index,
+                                    mz_index,
+                                    tuple((entry["source"], entry.get("index")) for entry in combo),
+                                ),
                             )
+                        )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "kyrie_activate_battle_shield":
+            if state.opt_used.get(f"{FIENDSMITH_KYRIE_CID}:e1"):
+                raise IllegalActionError("Fiendsmith Kyrie effect already used.")
+            if not str(state.phase).lower().startswith("main"):
+                raise IllegalActionError("Fiendsmith Kyrie requires Main Phase.")
+
+            hand_index = action.params.get("hand_index")
+            if hand_index is None:
+                raise SimModelError("Missing params for Fiendsmith Kyrie effect.")
+            if not isinstance(hand_index, int):
+                raise SimModelError("Invalid index type for Fiendsmith Kyrie effect.")
+            if hand_index < 0 or hand_index >= len(state.hand):
+                raise IllegalActionError("Hand index out of range for Fiendsmith Kyrie.")
+            if state.hand[hand_index].cid != FIENDSMITH_KYRIE_CID:
+                raise SimModelError("Selected hand card is not Fiendsmith Kyrie.")
+
+            new_state = state.clone()
+            kyrie = new_state.hand.pop(hand_index)
+            new_state.gy.append(kyrie)
+            new_state.restrictions.append("LIGHT_FIEND_BATTLE_INDESTRUCTIBLE")
+            new_state.restrictions.append("BATTLE_DAMAGE_HALVED")
+            new_state.opt_used[f"{FIENDSMITH_KYRIE_CID}:e1"] = True
+            return new_state
+
         if action.effect_id != "kyrie_gy_banish_fuse":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
-        if OPP_TURN_EVENT in state.events:
-            raise IllegalActionError("Fiendsmith Kyrie cannot be used on opponent turn.")
-        if not str(state.phase).lower().startswith("main"):
-            raise IllegalActionError("Fiendsmith Kyrie requires Main Phase.")
         if state.opt_used.get(f"{FIENDSMITH_KYRIE_CID}:e2"):
             raise IllegalActionError("Fiendsmith Kyrie effect already used.")
 
@@ -1892,7 +1894,7 @@ class FiendsmithKyrieEffect(EffectImpl):
             raise SimModelError("Missing params for Fiendsmith Kyrie effect.")
         if not isinstance(gy_index, int) or not isinstance(extra_index, int) or not isinstance(mz_index, int):
             raise SimModelError("Invalid index types for Fiendsmith Kyrie effect.")
-        if not isinstance(materials, list) or len(materials) != 2:
+        if not isinstance(materials, list):
             raise SimModelError("Invalid materials for Fiendsmith Kyrie effect.")
         if gy_index < 0 or gy_index >= len(state.gy):
             raise IllegalActionError("GY index out of range for Fiendsmith Kyrie.")
@@ -1900,7 +1902,8 @@ class FiendsmithKyrieEffect(EffectImpl):
             raise SimModelError("Selected GY card is not Fiendsmith Kyrie.")
         if extra_index < 0 or extra_index >= len(state.extra):
             raise IllegalActionError("Extra index out of range for Fiendsmith Kyrie.")
-        if state.extra[extra_index].cid not in FIENDSMITH_FUSION_CIDS:
+        target_fusion_cid = state.extra[extra_index].cid
+        if target_fusion_cid not in FIENDSMITH_FUSION_CIDS:
             raise IllegalActionError("Selected Extra Deck card is not a Fiendsmith Fusion monster.")
         if mz_index not in state.open_mz_indices():
             raise IllegalActionError("No open Main Monster Zone for Fiendsmith Kyrie.")
@@ -1933,6 +1936,8 @@ class FiendsmithKyrieEffect(EffectImpl):
                     if host_zone == "mz"
                     else state.field.emz[host_index]
                 )
+                if host is None or not is_fiendsmith_monster(host):
+                    raise IllegalActionError("Equip material host must be a Fiendsmith monster.")
                 if host is None or equip_index < 0 or equip_index >= len(host.equipped):
                     raise IllegalActionError("Equip material index out of range for Fiendsmith Kyrie.")
                 card = host.equipped[equip_index]
@@ -1944,16 +1949,13 @@ class FiendsmithKyrieEffect(EffectImpl):
             material_cards.append(card)
 
         # Cannot use the target fusion as material
-        target_fusion_cid = state.extra[extra_index].cid
         if any(card.cid == target_fusion_cid for card in material_cards):
             raise IllegalActionError("Fiendsmith Kyrie cannot use the target Fusion as material.")
-        # Materials must be LIGHT Fiend (to satisfy Fusion material requirements)
-        if not all(is_light_fiend_card(card) for card in material_cards):
-            raise IllegalActionError("Fiendsmith Kyrie requires LIGHT Fiend materials.")
-        # Rextremende requires Desirae as one of the materials
-        if target_fusion_cid == FIENDSMITH_REXTREMENDE_CID:
-            if not any(card.cid == FIENDSMITH_DESIRAE_CID for card in material_cards):
-                raise IllegalActionError("Rextremende requires Desirae as material.")
+        required_count = 2 if target_fusion_cid in {FIENDSMITH_LACRIMA_CID, FIENDSMITH_REXTREMENDE_CID} else 3
+        if len(material_cards) != required_count:
+            raise IllegalActionError("Invalid material count for Fiendsmith Kyrie.")
+        if not fiendsmith_fusion_materials_ok(target_fusion_cid, material_cards):
+            raise IllegalActionError("Fiendsmith Kyrie materials do not satisfy fusion requirements.")
 
         new_state = state.clone()
         kyrie = new_state.gy.pop(gy_index)
@@ -1999,45 +2001,36 @@ class FiendsmithKyrieEffect(EffectImpl):
         new_state.last_moved_to_gy = [card.cid for card in removed_materials]
         new_state.opt_used[f"{FIENDSMITH_KYRIE_CID}:e2"] = True
         return new_state
-        if state.opt_used.get(f"{FIENDSMITH_PARADISE_CID}:e1"):
-            raise IllegalActionError("Fiendsmith in Paradise effect already used.")
-        if OPP_SPECIAL_SUMMON_EVENT not in state.events:
-            raise IllegalActionError("Fiendsmith in Paradise requires opponent Special Summon.")
-
-        gy_index = action.params.get("gy_index")
-        extra_index = action.params.get("extra_index")
-        if gy_index is None or extra_index is None:
-            raise SimModelError("Missing params for Fiendsmith in Paradise effect.")
-        if gy_index < 0 or gy_index >= len(state.gy):
-            raise IllegalActionError("GY index out of range for Fiendsmith in Paradise.")
-        if extra_index < 0 or extra_index >= len(state.extra):
-            raise IllegalActionError("Extra index out of range for Fiendsmith in Paradise.")
-
-        if state.gy[gy_index].cid != FIENDSMITH_PARADISE_CID:
-            raise SimModelError("Selected GY card is not Fiendsmith in Paradise.")
-        if state.extra[extra_index].cid != FIENDSMITH_DESIRAE_CID:
-            raise IllegalActionError("Selected Extra Deck card is not Fiendsmith's Desirae.")
-
-        new_state = state.clone()
-        paradise = new_state.gy.pop(gy_index)
-        new_state.banished.append(paradise)
-
-        desirae = new_state.extra.pop(extra_index)
-        new_state.gy.append(desirae)
-        new_state.opt_used[f"{FIENDSMITH_PARADISE_CID}:e1"] = True
-        new_state.last_moved_to_gy = [FIENDSMITH_DESIRAE_CID]
-        if OPP_SPECIAL_SUMMON_EVENT in new_state.events:
-            new_state.events = [evt for evt in new_state.events if evt != OPP_SPECIAL_SUMMON_EVENT]
-        return new_state
 
 
 class FiendsmithLacrimaEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
+        if "LACRIMA_ATK_REDUCTION" not in state.restrictions:
+            for zone, index, card in state.field_cards():
+                if card.cid != FIENDSMITH_LACRIMA_CID:
+                    continue
+                if not card.properly_summoned:
+                    continue
+                if str(card.metadata.get("summon_type", "")).lower() != "fusion":
+                    continue
+                actions.append(
+                    EffectAction(
+                        cid=FIENDSMITH_LACRIMA_CID,
+                        name=card.name,
+                        effect_id="lacrima_atk_reduction",
+                        params={"zone": zone, "field_index": index},
+                        sort_key=(
+                            FIENDSMITH_LACRIMA_CID,
+                            "lacrima_atk_reduction",
+                            zone,
+                            index,
+                        ),
+                    )
+                )
 
         if not state.opt_used.get(f"{FIENDSMITH_LACRIMA_CID}:e1"):
             open_mz = state.open_mz_indices()
-            prefer_ss = bool(open_mz)
             mz_index = open_mz[0] if open_mz else None
 
             field_entries: list[tuple[str, int, CardInstance]] = []
@@ -2063,9 +2056,8 @@ class FiendsmithLacrimaEffect(EffectImpl):
                     if str(card.metadata.get("summon_type", "")).lower() != "fusion":
                         continue
                     for target_zone, target_index, target in targets:
-                        if prefer_ss:
-                            if not can_revive_from_gy(target):
-                                continue
+                        can_ss = mz_index is not None and can_revive_from_gy(target)
+                        if can_ss:
                             actions.append(
                                 EffectAction(
                                     cid=FIENDSMITH_LACRIMA_CID,
@@ -2091,36 +2083,38 @@ class FiendsmithLacrimaEffect(EffectImpl):
                                     ),
                                 )
                             )
-                        else:
-                            if is_extra_deck_monster(target):
-                                continue
-                            actions.append(
-                                EffectAction(
-                                    cid=FIENDSMITH_LACRIMA_CID,
-                                    name=card.name,
-                                    effect_id="lacrima_fusion_recover_light_fiend",
-                                    params={
-                                        "field_zone": zone,
-                                        "field_index": field_index,
-                                        "source_zone": target_zone,
-                                        "source_index": target_index,
-                                        "mode": "hand",
-                                    },
-                                    sort_key=(
-                                        FIENDSMITH_LACRIMA_CID,
-                                        "lacrima_fusion_recover_light_fiend",
-                                        zone,
-                                        field_index,
-                                        "hand",
-                                        target_zone,
-                                        target_index,
-                                    ),
-                                )
+                            continue
+                        if is_extra_deck_monster(target):
+                            continue
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_LACRIMA_CID,
+                                name=card.name,
+                                effect_id="lacrima_fusion_recover_light_fiend",
+                                params={
+                                    "field_zone": zone,
+                                    "field_index": field_index,
+                                    "source_zone": target_zone,
+                                    "source_index": target_index,
+                                    "mode": "hand",
+                                },
+                                sort_key=(
+                                    FIENDSMITH_LACRIMA_CID,
+                                    "lacrima_fusion_recover_light_fiend",
+                                    zone,
+                                    field_index,
+                                    "hand",
+                                    target_zone,
+                                    target_index,
+                                ),
                             )
+                        )
 
         if state.opt_used.get(f"{FIENDSMITH_LACRIMA_CID}:e2"):
             return actions
         if FIENDSMITH_LACRIMA_CID not in state.last_moved_to_gy:
+            return actions
+        if f"SENT_TO_GY:{FIENDSMITH_LACRIMA_CID}" not in state.pending_triggers:
             return actions
 
         lacrima_indices = [
@@ -2129,36 +2123,45 @@ class FiendsmithLacrimaEffect(EffectImpl):
         if not lacrima_indices:
             return actions
 
-        target_indices = [
-            idx
-            for idx, card in enumerate(state.gy)
-            if card.cid != FIENDSMITH_LACRIMA_CID and is_light_fiend_card(card)
-        ]
-        if not target_indices:
-            return actions
-
         for lacrima_index in lacrima_indices:
-            for target_index in target_indices:
-                actions.append(
-                    EffectAction(
-                        cid=FIENDSMITH_LACRIMA_CID,
-                        name=state.gy[lacrima_index].name,
-                        effect_id="lacrima_gy_shuffle_light_fiend",
-                        params={
-                            "lacrima_gy_index": lacrima_index,
-                            "target_gy_index": target_index,
-                        },
-                        sort_key=(
-                            FIENDSMITH_LACRIMA_CID,
-                            "lacrima_gy_shuffle_light_fiend",
-                            lacrima_index,
-                            target_index,
-                        ),
-                    )
+            actions.append(
+                EffectAction(
+                    cid=FIENDSMITH_LACRIMA_CID,
+                    name=state.gy[lacrima_index].name,
+                    effect_id="lacrima_gy_burn",
+                    params={"lacrima_gy_index": lacrima_index},
+                    sort_key=(
+                        FIENDSMITH_LACRIMA_CID,
+                        "lacrima_gy_burn",
+                        lacrima_index,
+                    ),
                 )
+            )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "lacrima_atk_reduction":
+            zone = action.params.get("zone")
+            field_index = action.params.get("field_index")
+            if zone not in {"mz", "emz"}:
+                raise SimModelError("Invalid zone for Fiendsmith's Lacrima effect.")
+            if not isinstance(field_index, int):
+                raise SimModelError("Invalid index types for Fiendsmith's Lacrima effect.")
+            if zone == "mz":
+                if field_index < 0 or field_index >= len(state.field.mz):
+                    raise IllegalActionError("Field index out of range for Fiendsmith's Lacrima.")
+                lacrima = state.field.mz[field_index]
+            else:
+                if field_index < 0 or field_index >= len(state.field.emz):
+                    raise IllegalActionError("Field index out of range for Fiendsmith's Lacrima.")
+                lacrima = state.field.emz[field_index]
+            if not lacrima or lacrima.cid != FIENDSMITH_LACRIMA_CID:
+                raise SimModelError("Selected field card is not Fiendsmith's Lacrima.")
+
+            new_state = state.clone()
+            new_state.restrictions.append("LACRIMA_ATK_REDUCTION")
+            return new_state
+
         if action.effect_id == "lacrima_fusion_recover_light_fiend":
             if state.opt_used.get(f"{FIENDSMITH_LACRIMA_CID}:e1"):
                 raise IllegalActionError("Fiendsmith's Lacrima effect already used.")
@@ -2231,40 +2234,31 @@ class FiendsmithLacrimaEffect(EffectImpl):
             new_state.opt_used[f"{FIENDSMITH_LACRIMA_CID}:e1"] = True
             return new_state
 
-        if action.effect_id == "lacrima_gy_shuffle_light_fiend":
+        if action.effect_id == "lacrima_gy_burn":
             if state.opt_used.get(f"{FIENDSMITH_LACRIMA_CID}:e2"):
                 raise IllegalActionError("Fiendsmith's Lacrima GY effect already used.")
             if FIENDSMITH_LACRIMA_CID not in state.last_moved_to_gy:
                 raise IllegalActionError("Fiendsmith's Lacrima was not just sent to GY.")
 
             lacrima_index = action.params.get("lacrima_gy_index")
-            target_index = action.params.get("target_gy_index")
-            if lacrima_index is None or target_index is None:
+            if lacrima_index is None:
                 raise SimModelError("Missing params for Fiendsmith's Lacrima GY effect.")
-            if not isinstance(lacrima_index, int) or not isinstance(target_index, int):
+            if not isinstance(lacrima_index, int):
                 raise SimModelError("Invalid index types for Fiendsmith's Lacrima GY effect.")
             if lacrima_index < 0 or lacrima_index >= len(state.gy):
                 raise IllegalActionError("Lacrima GY index out of range.")
-            if target_index < 0 or target_index >= len(state.gy):
-                raise IllegalActionError("Target GY index out of range.")
-            if lacrima_index == target_index:
-                raise IllegalActionError("Target must be another LIGHT Fiend monster.")
             if state.gy[lacrima_index].cid != FIENDSMITH_LACRIMA_CID:
                 raise SimModelError("Selected GY card is not Fiendsmith's Lacrima.")
-            if not is_light_fiend_card(state.gy[target_index]):
-                raise IllegalActionError("Target is not a LIGHT Fiend monster.")
-            if state.gy[target_index].cid == FIENDSMITH_LACRIMA_CID:
-                raise IllegalActionError("Target must be another LIGHT Fiend monster.")
 
             new_state = state.clone()
-            target = new_state.gy.pop(target_index)
-            if is_extra_deck_monster(target):
-                target.metadata["from_extra"] = True
-                new_state.extra.append(target)
-            else:
-                new_state.deck.append(target)
+            new_state.restrictions.append("LACRIMA_BURN_1200")
             new_state.opt_used[f"{FIENDSMITH_LACRIMA_CID}:e2"] = True
             new_state.last_moved_to_gy = []
+            new_state.pending_triggers = [
+                trig
+                for trig in new_state.pending_triggers
+                if trig != f"SENT_TO_GY:{FIENDSMITH_LACRIMA_CID}"
+            ]
             return new_state
 
         raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
@@ -2297,6 +2291,8 @@ class FiendsmithDesiraeEffect(EffectImpl):
         if state.opt_used.get(f"{FIENDSMITH_DESIRAE_CID}:e1"):
             return actions
         if FIENDSMITH_DESIRAE_CID not in state.last_moved_to_gy:
+            return actions
+        if f"SENT_TO_GY:{FIENDSMITH_DESIRAE_CID}" not in state.pending_triggers:
             return actions
 
         desirae_indices = [idx for idx, card in enumerate(state.gy) if card.cid == FIENDSMITH_DESIRAE_CID]
@@ -2384,7 +2380,11 @@ class FiendsmithDesiraeEffect(EffectImpl):
 
         new_state = state.clone()
         cost_card = new_state.gy.pop(cost_index)
-        new_state.deck.append(cost_card)
+        if is_extra_deck_monster(cost_card):
+            cost_card.metadata["from_extra"] = True
+            new_state.extra.append(cost_card)
+        else:
+            new_state.deck.append(cost_card)
 
         target_card: CardInstance | None
         if target_zone == "mz":
@@ -2416,6 +2416,11 @@ class FiendsmithDesiraeEffect(EffectImpl):
 
         new_state.opt_used[f"{FIENDSMITH_DESIRAE_CID}:e1"] = True
         new_state.last_moved_to_gy = []
+        new_state.pending_triggers = [
+            trig
+            for trig in new_state.pending_triggers
+            if trig != f"SENT_TO_GY:{FIENDSMITH_DESIRAE_CID}"
+        ]
         return new_state
 
     def _apply_negate(self, state: GameState, action: EffectAction) -> GameState:
@@ -2442,35 +2447,86 @@ class FiendsmithDesiraeEffect(EffectImpl):
 
 class FiendsmithSanctEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
-        if not controls_only_light_fiends(state):
-            return []
-
-        open_mz = state.open_mz_indices()
-        if not open_mz:
-            return []
-
         actions: list[EffectAction] = []
-        for hand_index, card in enumerate(state.hand):
-            if card.cid != FIENDSMITH_SANCT_CID:
-                continue
-            for mz_index in open_mz:
-                actions.append(
-                    EffectAction(
-                        cid=FIENDSMITH_SANCT_CID,
-                        name=card.name,
-                        effect_id="activate_sanct_token",
-                        params={"hand_index": hand_index, "mz_index": mz_index},
-                        sort_key=(
-                            FIENDSMITH_SANCT_CID,
-                            "activate_sanct_token",
-                            hand_index,
-                            mz_index,
-                        ),
+
+        if controls_only_light_fiends(state):
+            open_mz = state.open_mz_indices()
+            for hand_index, card in enumerate(state.hand):
+                if card.cid != FIENDSMITH_SANCT_CID:
+                    continue
+                for mz_index in open_mz:
+                    actions.append(
+                        EffectAction(
+                            cid=FIENDSMITH_SANCT_CID,
+                            name=card.name,
+                            effect_id="activate_sanct_token",
+                            params={"hand_index": hand_index, "mz_index": mz_index},
+                            sort_key=(
+                                FIENDSMITH_SANCT_CID,
+                                "activate_sanct_token",
+                                hand_index,
+                                mz_index,
+                            ),
+                        )
                     )
-                )
+
+        if (
+            "FIENDSMITH_DESTROYED_BY_OPP" in state.events
+            and not state.opt_used.get(f"{FIENDSMITH_SANCT_CID}:e2")
+        ):
+            open_stz = [idx for idx, card in enumerate(state.field.stz) if card is None]
+            for gy_index, card in enumerate(state.gy):
+                if card.cid != FIENDSMITH_SANCT_CID:
+                    continue
+                for stz_index in open_stz:
+                    actions.append(
+                        EffectAction(
+                            cid=FIENDSMITH_SANCT_CID,
+                            name=card.name,
+                            effect_id="sanct_set_from_gy",
+                            params={"gy_index": gy_index, "stz_index": stz_index},
+                            sort_key=(
+                                FIENDSMITH_SANCT_CID,
+                                "sanct_set_from_gy",
+                                gy_index,
+                                stz_index,
+                            ),
+                        )
+                    )
         return actions
 
     def apply(self, state: GameState, action: EffectAction) -> GameState:
+        if action.effect_id == "sanct_set_from_gy":
+            if state.opt_used.get(f"{FIENDSMITH_SANCT_CID}:e2"):
+                raise IllegalActionError("Fiendsmith's Sanct set effect already used.")
+            if "FIENDSMITH_DESTROYED_BY_OPP" not in state.events:
+                raise IllegalActionError("Fiendsmith's Sanct requires destroyed Fiendsmith event.")
+
+            gy_index = action.params.get("gy_index")
+            stz_index = action.params.get("stz_index")
+            if gy_index is None or stz_index is None:
+                raise SimModelError("Missing params for Fiendsmith's Sanct set effect.")
+            if not isinstance(gy_index, int) or not isinstance(stz_index, int):
+                raise SimModelError("Invalid index types for Fiendsmith's Sanct set effect.")
+            if gy_index < 0 or gy_index >= len(state.gy):
+                raise IllegalActionError("GY index out of range for Fiendsmith's Sanct.")
+            if stz_index < 0 or stz_index >= len(state.field.stz):
+                raise IllegalActionError("STZ index out of range for Fiendsmith's Sanct.")
+            if state.field.stz[stz_index] is not None:
+                raise IllegalActionError("Target STZ is not open for Fiendsmith's Sanct.")
+            if state.gy[gy_index].cid != FIENDSMITH_SANCT_CID:
+                raise SimModelError("Selected GY card is not Fiendsmith's Sanct.")
+
+            new_state = state.clone()
+            sanct = new_state.gy.pop(gy_index)
+            new_state.field.stz[stz_index] = sanct
+            new_state.opt_used[f"{FIENDSMITH_SANCT_CID}:e2"] = True
+            if "FIENDSMITH_DESTROYED_BY_OPP" in new_state.events:
+                new_state.events = [
+                    evt for evt in new_state.events if evt != "FIENDSMITH_DESTROYED_BY_OPP"
+                ]
+            return new_state
+
         if action.effect_id != "activate_sanct_token":
             raise SimModelError(f"Unmodeled effect_id: {action.effect_id}")
 
@@ -2491,6 +2547,7 @@ class FiendsmithSanctEffect(EffectImpl):
         sanct = new_state.hand.pop(hand_index)
         new_state.gy.append(sanct)
         new_state.field.mz[mz_index] = make_fiendsmith_token()
+        new_state.restrictions.append("ONLY_FIEND_ATTACKS_THIS_TURN")
         return new_state
 
 
@@ -2510,7 +2567,7 @@ class FiendsmithRequiemEffect(EffectImpl):
         if field_entries and "Main Phase" in state.phase and not state.opt_used.get(f"{FIENDSMITH_REQUIEM_CID}:e1"):
             for zone, field_index, card in field_entries:
                 for source_index, source_card in enumerate(state.hand):
-                    if source_card.cid not in REQUIEM_QUICK_TARGET_CIDS:
+                    if not is_fiendsmith_monster(source_card) or is_extra_deck_monster(source_card):
                         continue
                     for mz_index in open_mz:
                         actions.append(
@@ -2537,7 +2594,7 @@ class FiendsmithRequiemEffect(EffectImpl):
                             )
                         )
                 for source_index, source_card in enumerate(state.deck):
-                    if source_card.cid not in REQUIEM_QUICK_TARGET_CIDS:
+                    if not is_fiendsmith_monster(source_card) or is_extra_deck_monster(source_card):
                         continue
                     for mz_index in open_mz:
                         actions.append(
@@ -2667,7 +2724,7 @@ class FiendsmithRequiemEffect(EffectImpl):
         else:
             raise SimModelError("Invalid source for Fiendsmith's Requiem effect.")
 
-        if target.cid not in REQUIEM_QUICK_TARGET_CIDS:
+        if not is_fiendsmith_monster(target) or is_extra_deck_monster(target):
             raise IllegalActionError("Selected target is not an allowed Fiendsmith monster.")
 
         new_state = state.clone()
@@ -2685,6 +2742,7 @@ class FiendsmithRequiemEffect(EffectImpl):
             summoned = new_state.deck.pop(source_index)
 
         new_state.field.mz[mz_index] = summoned
+        new_state.pending_triggers.append(f"SUMMON:{summoned.cid}")
         new_state.opt_used[f"{FIENDSMITH_REQUIEM_CID}:e1"] = True
         return new_state
 

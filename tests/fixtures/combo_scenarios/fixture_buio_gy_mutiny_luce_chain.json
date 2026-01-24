@@ -29,13 +29,17 @@
       "gy": [
         {
           "cid": "21624",
-          "name": "Buio the Dawn's Light"
+          "name": "Buio the Dawn's Light",
+          "metadata": {
+            "race": "FIEND"
+          }
         },
         {
           "cid": "20427",
           "name": "Aerial Eater",
           "metadata": {
-            "summon_type": "fusion"
+            "summon_type": "fusion",
+            "race": "FIEND"
           }
         }
       ],
@@ -45,7 +49,8 @@
           "cid": "21625",
           "name": "Luce the Dusk's Dark",
           "metadata": {
-            "summon_type": "fusion"
+            "summon_type": "fusion",
+            "race": "FIEND"
           }
         }
       ]

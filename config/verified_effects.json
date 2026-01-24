@@ -12,14 +12,16 @@
         "location": "hand",
         "cost": "discard this card",
         "action": "add 1 Fiendsmith Spell/Trap from deck to hand",
-        "opt": "hard_opt"
+        "opt": "hard_opt",
+        "effect_type": "continuous"
       },
       {
         "id": "e2",
         "location": "field",
         "cost": "target 1 Fiendsmith Equip Card you control and 1 monster on field",
         "action": "send both to GY",
-        "opt": "hard_opt"
+        "opt": "hard_opt",
+        "effect_type": "continuous"
       },
       {
         "id": "e3",
@@ -27,8 +29,762 @@
         "cost": "shuffle 1 OTHER LIGHT Fiend monster from your GY into deck",
         "action": "Special Summon this card (Engraver) from GY",
         "opt": "hard_opt",
-        "restrictions": ["cannot shuffle this card itself as cost"]
+        "restrictions": [
+          "cannot shuffle this card itself as cost"
+        ],
+        "effect_type": "continuous"
       }
-    ]
+    ],
+    "card_type": "monster"
+  },
+  "10942": {
+    "name": "Evilswarm Exciton Knight",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c46772449.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "quick",
+        "condition": "You have more cards in your hand+field than your opponent; during your Main Phase or opponent Battle Phase.",
+        "cost": "detach 1 Xyz material",
+        "action": "destroy all other cards on the field; opponent takes no damage for the rest of this turn.",
+        "opt": "once_per_chain",
+        "lines": "6-51",
+        "effect_type": "quick"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "13081": {
+    "name": "D/D/D Wave High King Caesar",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c79559912.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "quick",
+        "condition": "Chain to a monster effect or activation that includes Special Summoning.",
+        "cost": "detach 1 Xyz material",
+        "action": "negate the activation, destroy that card; then you may increase this card's ATK by 1800 and, if you control another face-up \"D/D\" monster, it also gains 1800.",
+        "opt": "once_per_chain",
+        "lines": "8-72",
+        "effect_type": "quick"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "trigger",
+        "condition": "Sent to GY from field.",
+        "action": "add 1 \"Dark Contract\" card from deck to hand.",
+        "opt": "soft_opt",
+        "lines": "21-90",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "14856": {
+    "name": "Cross-Sheep",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c50277355.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "trigger",
+        "condition": "A monster is Special Summoned to a zone this card points to.",
+        "action": "Apply effects based on the types of linked face-up monsters: Ritual -> draw 2 then discard 2; Fusion -> Special Summon a Level 4 or lower monster from your GY; Synchro -> all your face-up monsters gain 700 ATK; Xyz -> all opponent face-up monsters lose 700 ATK.",
+        "opt": "hard_opt",
+        "lines": "6-114",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "17806": {
+    "name": "Muckraker From the Underworld",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c71607202.lua",
+    "effects": [
+      {
+        "id": "e0",
+        "location": "field",
+        "type": "continuous",
+        "condition": "This card was Link Summoned this turn.",
+        "action": "This card cannot be used as Link Material this turn.",
+        "opt": "none",
+        "lines": "10-16,39-41",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "continuous",
+        "condition": "A monster you control would be destroyed by battle or card effect.",
+        "cost": "Tribute 1 Fiend monster you control.",
+        "action": "Destruction replacement for that monster.",
+        "opt": "none",
+        "lines": "17-65",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "type": "ignition",
+        "condition": "Target 1 Fiend monster in your GY (except this card).",
+        "cost": "Discard 1 card.",
+        "action": "Special Summon the target; then you cannot Special Summon non-Fiend monsters for the rest of this turn.",
+        "opt": "hard_opt",
+        "lines": "26-93",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "19188": {
+    "name": "S:P Little Knight",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c29301450.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If Link Summoned using a Fusion/Synchro/Xyz/Link monster as material.",
+        "action": "Target 1 card on the field or in either GY; banish it. Then your monsters cannot attack directly this turn.",
+        "opt": "hard_opt",
+        "lines": "10-69",
+        "effect_type": "trigger"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "type": "quick",
+        "condition": "When your opponent activates a card or effect (chain).",
+        "action": "Target exactly 2 face-up monsters on the field (at least 1 you control); banish them until the End Phase.",
+        "opt": "hard_opt",
+        "lines": "27-90",
+        "effect_type": "quick"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20214": {
+    "name": "Fiendsmith's Lacrima",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c46640168.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "continuous",
+        "condition": "While this card is face-up on the field.",
+        "action": "All monsters your opponent controls lose 600 ATK.",
+        "opt": "none",
+        "lines": "9-16",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If Fusion Summoned.",
+        "action": "Target 1 LIGHT Fiend in your GY or banishment; add it to hand or Special Summon it.",
+        "opt": "hard_opt",
+        "lines": "17-74",
+        "effect_type": "trigger"
+      },
+      {
+        "id": "e3",
+        "location": "gy",
+        "type": "trigger",
+        "condition": "If this card is sent to the GY.",
+        "cost": "Shuffle 1 other LIGHT Fiend from your GY into the Deck/Extra Deck.",
+        "action": "Inflict 1200 damage to your opponent.",
+        "opt": "hard_opt",
+        "lines": "29-95",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20215": {
+    "name": "Fiendsmith's Desirae",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c82135803.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "quick",
+        "condition": "Total Link Rating of face-up equipped cards > 0.",
+        "action": "Negate the effects of up to that many face-up cards on the field until end of turn.",
+        "opt": "hard_opt",
+        "lines": "9-56",
+        "effect_type": "quick"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "trigger",
+        "condition": "If this card is sent to the GY.",
+        "cost": "Shuffle 1 other LIGHT Fiend from your GY into the Deck/Extra Deck.",
+        "action": "Target 1 card on the field; send it to the GY.",
+        "opt": "hard_opt",
+        "lines": "21-79",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20225": {
+    "name": "Fiendsmith's Requiem",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c2463794.lua",
+    "effects": [
+      {
+        "id": "e0",
+        "location": "field",
+        "type": "restriction",
+        "condition": "While this card exists.",
+        "action": "You can only Special Summon \"Fiendsmith's Requiem(s)\" once per turn.",
+        "opt": "hard_opt",
+        "lines": "9-10",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "quick",
+        "condition": "During your Main Phase.",
+        "cost": "Tribute this card.",
+        "action": "Special Summon 1 \"Fiendsmith\" monster from your hand or Deck.",
+        "opt": "hard_opt",
+        "lines": "11-55",
+        "effect_type": "quick"
+      },
+      {
+        "id": "e2",
+        "location": "field/gy",
+        "type": "ignition",
+        "condition": "Target 1 face-up non-Link LIGHT Fiend you control.",
+        "action": "Equip this card to it as an Equip Spell (equip limit; equipped monster gains 600 ATK).",
+        "opt": "hard_opt",
+        "lines": "24-96",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20238": {
+    "name": "Fiendsmith's Sequence",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c49867899.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "ignition",
+        "condition": "During your Main Phase.",
+        "action": "Fusion Summon 1 Fiend Fusion Monster by shuffling its materials from your GY into the Deck.",
+        "opt": "hard_opt",
+        "lines": "9-23,42-48",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e2",
+        "location": "field/gy",
+        "type": "ignition",
+        "condition": "Target 1 face-up non-Link LIGHT Fiend you control.",
+        "action": "Equip this card to it as an Equip Spell (equip limit; opponent cannot target it with card effects).",
+        "opt": "hard_opt",
+        "lines": "24-89",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20226": {
+    "name": "Fiendsmith's Sequence (alt CID)",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c49867899.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "ignition",
+        "condition": "During your Main Phase.",
+        "action": "Fusion Summon 1 Fiend Fusion Monster by shuffling its materials from your GY into the Deck.",
+        "opt": "hard_opt",
+        "lines": "9-23,42-48",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e2",
+        "location": "field/gy",
+        "type": "ignition",
+        "condition": "Target 1 face-up non-Link LIGHT Fiend you control.",
+        "action": "Equip this card to it as an Equip Spell (equip limit; opponent cannot target it with card effects).",
+        "opt": "hard_opt",
+        "lines": "24-89",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20240": {
+    "name": "Fiendsmith's Tract",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c98567237.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "spell",
+        "type": "activate",
+        "condition": "Activate this card.",
+        "action": "Add 1 LIGHT Fiend from your Deck to your hand, then discard 1 card.",
+        "opt": "hard_opt",
+        "lines": "6-47",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "ignition",
+        "condition": "From your GY.",
+        "cost": "Banish this card.",
+        "action": "Fusion Summon 1 \"Fiendsmith\" Fusion Monster using monsters from your hand or field as material.",
+        "opt": "hard_opt",
+        "lines": "16-27",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "spell"
+  },
+  "20241": {
+    "name": "Fiendsmith's Sanct",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c35552985.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "spell",
+        "type": "activate",
+        "condition": "You control no monsters or only LIGHT Fiend monsters.",
+        "action": "Special Summon 1 Fiendsmith Token; then you cannot declare attacks except with Fiend monsters this turn.",
+        "opt": "hard_opt",
+        "lines": "6-63",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "trigger",
+        "condition": "If your face-up \"Fiendsmith\" monster(s) were destroyed by an opponent's effect.",
+        "action": "Set this card from the GY.",
+        "opt": "hard_opt",
+        "lines": "18-82",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "spell"
+  },
+  "20251": {
+    "name": "Fiendsmith in Paradise",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c99989863.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "trap",
+        "type": "activate",
+        "condition": "Target 1 Level 7+ LIGHT Fiend you control.",
+        "action": "Send all other cards on the field to the GY.",
+        "opt": "hard_opt",
+        "lines": "6-53",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "trigger",
+        "condition": "If your opponent Special Summons a monster.",
+        "cost": "Banish this card.",
+        "action": "Send 1 \"Fiendsmith\" monster from your Deck or Extra Deck to the GY.",
+        "opt": "hard_opt",
+        "lines": "18-67",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "trap"
+  },
+  "20389": {
+    "name": "The Duke of Demise",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c45445571.lua",
+    "effects": [
+      {
+        "id": "e0",
+        "location": "field",
+        "type": "continuous",
+        "condition": "During your Standby Phase.",
+        "action": "Pay 500 LP, or destroy this card.",
+        "opt": "soft_opt",
+        "lines": "9-63",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "continuous",
+        "condition": "While this card is face-up on the field.",
+        "action": "This card cannot be destroyed by battle.",
+        "opt": "none",
+        "lines": "20-27",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "type": "ignition",
+        "condition": "You can Normal Summon a monster.",
+        "action": "Normal Summon 1 monster from your hand or field.",
+        "opt": "hard_opt",
+        "lines": "28-74",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e3",
+        "location": "gy",
+        "type": "ignition",
+        "condition": "From your GY.",
+        "cost": "Banish this card.",
+        "action": "Add 1 Level 4+ Fiend or Zombie from your GY to your hand.",
+        "opt": "hard_opt",
+        "lines": "38-91",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20423": {
+    "name": "Necroquip Princess",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c93860227.lua",
+    "effects": [
+      {
+        "id": "summon",
+        "location": "extra",
+        "type": "contact_fusion",
+        "condition": "Must be Special Summoned (from your Extra Deck) by sending the materials from your hand and/or field to the GY.",
+        "materials": "1 monster equipped with a Monster Card + 1 Fiend Monster Card",
+        "notes": "Cannot be Fusion Summoned by Polymerization/Tract/Sequence.",
+        "lines": "7-10",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e0",
+        "location": "field",
+        "type": "restriction",
+        "condition": "While this card is face-up on the field.",
+        "action": "You can only control 1 \"Necroquip Princess\".",
+        "opt": "none",
+        "lines": "11-12",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If a monster is sent from the hand to the GY as cost to activate a card or effect.",
+        "action": "Choose 1: equip that monster to this card as an Equip Spell (gains 500 ATK), or draw 1 card.",
+        "opt": "hard_opt",
+        "lines": "14-87",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20427": {
+    "name": "Aerial Eater",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c28143384.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If Fusion Summoned.",
+        "action": "Send 1 Fiend monster from your Deck to the GY.",
+        "opt": "hard_opt",
+        "lines": "9-49",
+        "effect_type": "trigger"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "ignition",
+        "condition": "From your GY.",
+        "cost": "Banish 2 Level 6+ Fiend monsters with the same Attribute from your field and/or GY (except this card).",
+        "action": "Special Summon this card.",
+        "opt": "hard_opt",
+        "lines": "21-74",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20490": {
+    "name": "Lacrima the Crimson Tears",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c28803166.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If this card is Normal or Special Summoned.",
+        "action": "Send 1 \"Fiendsmith\" card from your Deck to the GY (except this card).",
+        "opt": "hard_opt",
+        "lines": "6-49",
+        "effect_type": "trigger"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "quick",
+        "condition": "During your opponent's turn.",
+        "action": "Target 1 \"Fiendsmith\" Link Monster in your GY; shuffle this card into the Deck, and if you do, Special Summon the target.",
+        "opt": "hard_opt",
+        "lines": "20-70",
+        "effect_type": "quick"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20521": {
+    "name": "Fiendsmith's Agnumday",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c32991300.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "quick",
+        "condition": "Target 1 LIGHT non-Link Fiend in your GY.",
+        "action": "Special Summon it, then equip this card to it (equipped monster gains ATK equal to total Link Rating of equipped Link monsters x 600 and gains piercing).",
+        "opt": "soft_opt",
+        "lines": "9-77",
+        "effect_type": "quick"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20772": {
+    "name": "Snake-Eyes Doomed Dragon",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c58071334.lua",
+    "effects": [
+      {
+        "id": "e0",
+        "location": "extra",
+        "type": "special_summon_procedure",
+        "condition": "If you can send 2 face-up monsters from your Spell & Trap Zone to the GY.",
+        "action": "Special Summon this card from the Extra Deck by sending those monsters to the GY.",
+        "opt": "none",
+        "lines": "10-53",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If Special Summoned.",
+        "action": "Target 1 monster on the field; move it to the Spell & Trap Zone as a Continuous Spell.",
+        "opt": "hard_opt",
+        "lines": "20-79",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20774": {
+    "name": "Fiendsmith's Rextremende",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c11464648.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "continuous",
+        "condition": "While equipped with a face-up \"Fiendsmith\" Equip Spell.",
+        "action": "Unaffected by other cards' effects.",
+        "opt": "none",
+        "lines": "9-63",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If Fusion Summoned.",
+        "cost": "Discard 1 card.",
+        "action": "Send 1 LIGHT Fiend monster from your Deck or Extra Deck to the GY.",
+        "opt": "hard_opt",
+        "lines": "18-82",
+        "effect_type": "trigger"
+      },
+      {
+        "id": "e3",
+        "location": "gy",
+        "type": "trigger",
+        "condition": "If this card is sent to the GY.",
+        "action": "Add 1 other \"Fiendsmith\" card from your GY or banishment to your hand.",
+        "opt": "hard_opt",
+        "lines": "31-99",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20786": {
+    "name": "A Bao A Qu, the Lightless Shadow",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c4731783.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "quick",
+        "condition": "During your Main Phase.",
+        "cost": "Discard 1 card.",
+        "action": "Choose 1: destroy 1 card on the field; or banish this card until the End Phase and Special Summon 1 LIGHT or DARK monster from your GY.",
+        "opt": "hard_opt",
+        "lines": "9-86",
+        "effect_type": "quick"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "type": "trigger",
+        "condition": "During your Standby Phase.",
+        "action": "Draw cards equal to the number of different Monster Types among monsters in your GY, then place the same number of cards from your hand on the bottom of the Deck in any order.",
+        "opt": "hard_opt",
+        "lines": "22-108",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "20816": {
+    "name": "Fiendsmith Kyrie",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c26434972.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "trap",
+        "type": "activate",
+        "condition": "Activate this card.",
+        "action": "This turn, your LIGHT Fiend monsters cannot be destroyed by battle, and any battle damage you take is halved.",
+        "opt": "hard_opt",
+        "lines": "6-53",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "quick",
+        "condition": "From your GY.",
+        "cost": "Banish this card.",
+        "action": "Fusion Summon 1 \"Fiendsmith\" Fusion Monster using monsters you control and/or monsters in your Spell & Trap Zone that are equipped to a Fiendsmith monster as material.",
+        "opt": "hard_opt",
+        "lines": "14-27,55-61",
+        "effect_type": "quick"
+      }
+    ],
+    "card_type": "trap"
+  },
+  "21624": {
+    "name": "Buio the Dawn's Light",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c19000848.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "continuous",
+        "condition": "While this card is face-up on the field.",
+        "action": "Monsters in the leftmost/rightmost Main Monster Zones cannot be destroyed by card effects.",
+        "opt": "none",
+        "lines": "6-15",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e2",
+        "location": "hand",
+        "type": "ignition",
+        "condition": "Target 1 Fiend Effect Monster you control.",
+        "action": "Negate its effects, and if you do, Special Summon this card.",
+        "opt": "hard_opt",
+        "lines": "16-63",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e3",
+        "location": "gy",
+        "type": "trigger",
+        "condition": "If this card is sent to the GY.",
+        "action": "Add 1 \"Mutiny in the Sky\" from your Deck to your hand.",
+        "opt": "hard_opt",
+        "lines": "27-78",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "21625": {
+    "name": "Luce the Dusk's Dark",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c45409943.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "field",
+        "type": "continuous",
+        "condition": "While this card is face-up on the field.",
+        "action": "Monsters in the leftmost/rightmost Main Monster Zones cannot be destroyed by card effects.",
+        "opt": "none",
+        "lines": "9-18",
+        "effect_type": "continuous"
+      },
+      {
+        "id": "e2",
+        "location": "field",
+        "type": "ignition",
+        "condition": "Target 1 card your opponent controls.",
+        "action": "Send 1 Fiend or Fairy monster from your Deck to the GY, and if you do, destroy that target.",
+        "opt": "hard_opt",
+        "lines": "19-67",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e3",
+        "location": "field",
+        "type": "trigger",
+        "condition": "If a card you controlled was destroyed by a card effect.",
+        "action": "Target 1 card on the field; destroy it.",
+        "opt": "hard_opt",
+        "lines": "30-86",
+        "effect_type": "trigger"
+      }
+    ],
+    "card_type": "monster"
+  },
+  "21626": {
+    "name": "Mutiny in the Sky",
+    "source": "https://github.com/ProjectIgnis/CardScripts/blob/master/official/c71593652.lua",
+    "effects": [
+      {
+        "id": "e1",
+        "location": "spell",
+        "type": "activate",
+        "condition": "Activate this card.",
+        "action": "Fusion Summon 1 Fiend or Fairy Fusion Monster by shuffling Fiend/Fairy monsters from your GY into the Deck.",
+        "opt": "hard_opt",
+        "lines": "6-27",
+        "effect_type": "ignition"
+      },
+      {
+        "id": "e2",
+        "location": "gy",
+        "type": "ignition",
+        "condition": "From your GY.",
+        "cost": "Send 1 Fiend or Fairy monster from your hand or field to the GY.",
+        "action": "Add this card to your hand.",
+        "opt": "hard_opt",
+        "lines": "11-47",
+        "effect_type": "ignition"
+      }
+    ],
+    "card_type": "spell"
   }
 }

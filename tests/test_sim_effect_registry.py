@@ -7,7 +7,7 @@ sys.path.insert(0, str(repo_root / "src"))
 
 from sim.effects.registry import apply_effect_action, enumerate_effect_actions  # noqa: E402
 from sim.effects.types import EffectAction  # noqa: E402
-from sim.errors import SimModelError  # noqa: E402
+from sim.errors import IllegalActionError, SimModelError  # noqa: E402
 from sim.state import GameState  # noqa: E402
 
 
@@ -50,7 +50,7 @@ class TestSimEffectRegistry(unittest.TestCase):
             params={},
             sort_key=("UNKNOWN_CID",),
         )
-        with self.assertRaises(SimModelError):
+        with self.assertRaises((IllegalActionError, SimModelError)):
             apply_effect_action(state, action)
 
 

@@ -1349,3 +1349,10 @@ Stub CIDs (excluding allowed):
 Missing CIDs:
   (none)
 ```
+
+- 2026-01-21: Handoff refresh for cdb metadata + name fallback (non-GPL facts only).
+  - Note: cards.cdb ingestion active via texts.name fallback; batch reports previously showed S=1 A=1 across 10 hands under cdbmeta_namefallback.
+  - Added deterministic batch-derived fixture and inert coverage for FIENDSMITH_TOKEN.
+  - Tweaked opp-turn pop fixture to allow Desirae trigger within max_depth.
+  - QA (this run): `python3 -m unittest discover -s tests` (FAILED, 13 failures); `python3 audit_effect_coverage.py` (Missing=0); `python3 audit_modeling_status.py --fail` (Modeled=25, Stub=0, Missing=0).
+  - Updates zip: `updates_20260123_162828.zip`
