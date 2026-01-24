@@ -1,0 +1,49 @@
+{
+  "name": "golden_requiem_e2_equip_from_field",
+  "description": "GOLDEN: Requiem e2 - Equip self to non-Link LIGHT Fiend (from FIELD, not just GY)",
+  "lua_reference": "c2463794.lua lines 25-34,57-96: SetRange(LOCATION_MZONE|LOCATION_GRAVE), filter non-Link LIGHT Fiend",
+  "test": {
+    "effect_id": "requiem_e2_equip",
+    "preconditions": [
+      "Requiem on field (testing field location - this was the bug)",
+      "Non-Link LIGHT Fiend on field to equip to"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "requiem_location": "equipped",
+      "target_has_equipped": true,
+      "opt_used": "20225:e2"
+    },
+    "regression_test": "Verifies fix from e626e68 - e2 now works from FIELD, not just GY"
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [],
+      "banished": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20225",
+            "name": "Fiendsmith's Requiem",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1, "summon_type": "link"},
+            "properly_summoned": true
+          },
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+          },
+          null, null, null
+        ],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

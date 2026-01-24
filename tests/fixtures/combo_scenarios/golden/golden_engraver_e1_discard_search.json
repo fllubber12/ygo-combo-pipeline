@@ -1,0 +1,48 @@
+{
+  "name": "golden_engraver_e1_discard_search",
+  "description": "GOLDEN: Engraver e1 - Discard self from hand to search Fiendsmith S/T from deck",
+  "lua_reference": "c60764609.lua lines 7-15: SetRange(LOCATION_HAND), SetCost(Cost.SelfDiscard), filter SET_FIENDSMITH+IsSpellTrap",
+  "test": {
+    "effect_id": "engraver_e1_search",
+    "preconditions": [
+      "Engraver in hand",
+      "Fiendsmith S/T (Tract) in deck",
+      "OPT not used"
+    ],
+    "expected_action_count": 1,
+    "expected_outcome": {
+      "engraver_location": "gy",
+      "tract_location": "hand",
+      "opt_used": "20196:e1"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        }
+      ],
+      "deck": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "metadata": {"card_type": "spell"}
+        }
+      ],
+      "extra": [],
+      "gy": [],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

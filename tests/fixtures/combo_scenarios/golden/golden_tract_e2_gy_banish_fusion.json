@@ -1,0 +1,66 @@
+{
+  "name": "golden_tract_e2_gy_banish_fusion",
+  "description": "GOLDEN: Tract e2 - Banish self from GY to Fusion Summon Fiendsmith using hand/field",
+  "lua_reference": "c98567237.lua lines 17-27: SetRange(LOCATION_GRAVE), SetCost(Cost.SelfBanish), Fusion.SummonEffTG for SET_FIENDSMITH",
+  "test": {
+    "effect_id": "tract_e2_fusion",
+    "preconditions": [
+      "Tract in GY",
+      "Fiendsmith Fusion target in Extra (Lacrima)",
+      "Materials on hand/field (2 LIGHT Fiends)"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "tract_location": "banished",
+      "fusion_location": "field",
+      "materials_location": "gy",
+      "opt_used": "20240:e2"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        },
+        {
+          "cid": "20490",
+          "name": "Lacrima the Crimson Tears",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+        }
+      ],
+      "deck": [],
+      "extra": [
+        {
+          "cid": "20214",
+          "name": "Fiendsmith's Lacrima",
+          "metadata": {
+            "summon_type": "fusion",
+            "min_materials": 2,
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "material_race": "FIEND"
+          }
+        }
+      ],
+      "gy": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "metadata": {"card_type": "spell"}
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

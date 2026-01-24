@@ -1,0 +1,55 @@
+{
+  "name": "golden_engraver_e2_send_equip_monster",
+  "description": "GOLDEN: Engraver e2 - Send 1 Fiendsmith Equip you control + 1 monster on field to GY",
+  "lua_reference": "c60764609.lua lines 17-25,52-70: SetRange(LOCATION_MZONE), tgfilter checks Fiendsmith Equip + IsMonster",
+  "test": {
+    "effect_id": "engraver_e2_send",
+    "preconditions": [
+      "Engraver on field (required by LOCATION_MZONE)",
+      "Fiendsmith Equip (Requiem) equipped to a monster",
+      "Target monster on field"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "equip_location": "gy",
+      "target_monster_location": "gy",
+      "opt_used": "20196:e2"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [],
+      "banished": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6},
+            "equipped": [
+              {
+                "cid": "20225",
+                "name": "Fiendsmith's Requiem",
+                "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1}
+              }
+            ]
+          },
+          {
+            "cid": "20490",
+            "name": "Lacrima the Crimson Tears",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+          },
+          null, null, null
+        ],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

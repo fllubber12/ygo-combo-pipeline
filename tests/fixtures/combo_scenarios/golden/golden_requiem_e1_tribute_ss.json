@@ -1,0 +1,55 @@
+{
+  "name": "golden_requiem_e1_tribute_ss",
+  "description": "GOLDEN: Requiem e1 - Tribute self to SS 1 Fiendsmith monster from hand or deck",
+  "lua_reference": "c2463794.lua lines 12-23,41-55: EFFECT_TYPE_QUICK_O, SetRange(LOCATION_MZONE), Cost.SelfTribute, SS from HAND|DECK",
+  "test": {
+    "effect_id": "requiem_e1_tribute_ss",
+    "preconditions": [
+      "Requiem on field",
+      "Fiendsmith monster in hand or deck",
+      "Main Phase"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "requiem_location": "gy",
+      "summoned_monster_location": "field",
+      "opt_used": "20225:e1"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [
+        {
+          "cid": "20490",
+          "name": "Lacrima the Crimson Tears",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+        },
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        }
+      ],
+      "extra": [],
+      "gy": [],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [
+          {
+            "cid": "20225",
+            "name": "Fiendsmith's Requiem",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1, "summon_type": "link"},
+            "properly_summoned": true
+          },
+          null
+        ],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "golden_tract_e1_search_light_fiend",
+  "description": "GOLDEN: Tract e1 - Activate to search LIGHT Fiend from deck, then discard 1",
+  "lua_reference": "c98567237.lua lines 7-15,33-47: EFFECT_TYPE_ACTIVATE, filter LIGHT+FIEND+IsAbleToHand, then discard",
+  "test": {
+    "effect_id": "tract_e1_activate",
+    "preconditions": [
+      "Tract in hand",
+      "LIGHT Fiend in deck (Engraver)",
+      "Card in hand to discard after search"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "tract_location": "gy",
+      "searched_card_location": "hand",
+      "discarded_card_location": "gy",
+      "opt_used": "20240:e1"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "metadata": {"card_type": "spell"}
+        },
+        {
+          "cid": "DUMMY_1",
+          "name": "Discard Fodder",
+          "metadata": {}
+        }
+      ],
+      "deck": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        }
+      ],
+      "extra": [],
+      "gy": [],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

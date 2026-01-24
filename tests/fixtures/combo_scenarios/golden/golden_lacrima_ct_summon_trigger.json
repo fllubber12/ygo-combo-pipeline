@@ -1,0 +1,53 @@
+{
+  "name": "golden_lacrima_ct_summon_trigger",
+  "description": "GOLDEN: Lacrima Crimson Tears e1/e2 - When summoned, send 1 Fiendsmith from deck (except self)",
+  "lua_reference": "c28803166.lua lines 7-19,37-49: TRIGGER_O on EVENT_SUMMON_SUCCESS/EVENT_SPSUMMON_SUCCESS, filter SET_FIENDSMITH not self",
+  "test": {
+    "effect_id": "lacrima_ct_summon_send",
+    "preconditions": [
+      "Lacrima CT summoned (pending trigger)",
+      "Fiendsmith card in deck (not Lacrima CT itself)"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "sent_card_location": "gy",
+      "opt_used": "20490:e1"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        },
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "metadata": {"card_type": "spell"}
+        }
+      ],
+      "extra": [],
+      "gy": [],
+      "banished": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20490",
+            "name": "Lacrima the Crimson Tears",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+          },
+          null, null, null, null
+        ],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {},
+    "pending_triggers": ["SUMMON:20490"]
+  }
+}

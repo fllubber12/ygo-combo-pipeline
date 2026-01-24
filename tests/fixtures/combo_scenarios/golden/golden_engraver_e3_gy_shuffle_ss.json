@@ -1,0 +1,47 @@
+{
+  "name": "golden_engraver_e3_gy_shuffle_ss",
+  "description": "GOLDEN: Engraver e3 - Shuffle OTHER LIGHT Fiend from GY to Deck/Extra; SS this card from GY",
+  "lua_reference": "c60764609.lua lines 27-35,72-94: SetRange(LOCATION_GRAVE), cost shuffles OTHER LIGHT Fiend (excludes self)",
+  "test": {
+    "effect_id": "engraver_e3_revive",
+    "preconditions": [
+      "Engraver in GY",
+      "Another LIGHT Fiend in GY (for cost)",
+      "Open monster zone"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "engraver_location": "field",
+      "cost_card_location": "deck_or_extra",
+      "opt_used": "20196:e3"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        },
+        {
+          "cid": "20490",
+          "name": "Lacrima the Crimson Tears",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

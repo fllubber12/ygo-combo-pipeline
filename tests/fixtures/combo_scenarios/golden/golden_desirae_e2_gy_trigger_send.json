@@ -1,0 +1,58 @@
+{
+  "name": "golden_desirae_e2_gy_trigger_send",
+  "description": "GOLDEN: Desirae e2 - When sent to GY, shuffle LIGHT Fiend (not self), send 1 card on field to GY",
+  "lua_reference": "c82135803.lua lines 22-32,57-79: TRIGGER_O on EVENT_TO_GRAVE, cost shuffle LIGHT Fiend, target LOCATION_ONFIELD",
+  "test": {
+    "effect_id": "desirae_e2_gy_send",
+    "preconditions": [
+      "Desirae in GY with pending trigger",
+      "LIGHT Fiend in GY (for cost, not Desirae)",
+      "Card on field to send to GY"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "cost_card_location": "deck_or_extra",
+      "target_card_location": "gy",
+      "opt_used": "20215:e1"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "summon_type": "fusion"},
+          "properly_summoned": true
+        },
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1},
+          "properly_summoned": true
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+          },
+          null, null, null, null
+        ],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {},
+    "pending_triggers": ["SENT_TO_GY:20215"],
+    "last_moved_to_gy": ["20215"]
+  }
+}

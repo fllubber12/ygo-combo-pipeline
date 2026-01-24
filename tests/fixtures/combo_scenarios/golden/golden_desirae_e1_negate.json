@@ -1,0 +1,51 @@
+{
+  "name": "golden_desirae_e1_negate",
+  "description": "GOLDEN: Desirae e1 - Negate up to N cards on field (N = total Link Rating of equipped cards)",
+  "lua_reference": "c82135803.lua lines 10-20,38-55: QUICK_O, SetRange(LOCATION_MZONE), negate 1 to GetEquipGroup():GetSum(Card.GetLink)",
+  "test": {
+    "effect_id": "desirae_e1_negate",
+    "preconditions": [
+      "Desirae on field (mz OR emz - testing EMZ fix)",
+      "Equipped with Link monster (Requiem = Link 1)",
+      "Card on field to negate"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "negates_used": 1,
+      "opt_used": "20215:negates_used"
+    },
+    "regression_test": "Verifies fix from e626e68 - e1 now checks EMZ, not just MZ"
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [
+          {
+            "cid": "20215",
+            "name": "Fiendsmith's Desirae",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "summon_type": "fusion"},
+            "properly_summoned": true,
+            "equipped": [
+              {
+                "cid": "20225",
+                "name": "Fiendsmith's Requiem",
+                "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1}
+              }
+            ]
+          },
+          null
+        ],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

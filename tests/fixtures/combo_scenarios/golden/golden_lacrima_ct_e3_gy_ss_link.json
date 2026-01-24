@@ -1,0 +1,49 @@
+{
+  "name": "golden_lacrima_ct_e3_gy_ss_link",
+  "description": "GOLDEN: Lacrima CT e3 - On opponent's turn, shuffle self to deck; SS Fiendsmith Link from Extra",
+  "lua_reference": "c28803166.lua lines 21-33,51-70: QUICK_O, SetRange(LOCATION_GRAVE), condition IsTurnPlayer(1-tp), SS Fiendsmith Link",
+  "test": {
+    "effect_id": "lacrima_ct_e3_ss_link",
+    "preconditions": [
+      "Lacrima CT in GY",
+      "Fiendsmith Link in Extra (properly summoned previously)",
+      "Opponent's turn (OPP_TURN event)"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "lacrima_location": "deck",
+      "link_monster_location": "field",
+      "opt_used": "20490:e2"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [
+        {
+          "cid": "20490",
+          "name": "Lacrima the Crimson Tears",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+        },
+        {
+          "cid": "20225",
+          "name": "Fiendsmith's Requiem",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1, "summon_type": "link"},
+          "properly_summoned": true
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {},
+    "events": ["OPP_TURN"]
+  }
+}
