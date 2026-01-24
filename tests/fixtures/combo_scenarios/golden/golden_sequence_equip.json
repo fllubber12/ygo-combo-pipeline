@@ -1,0 +1,49 @@
+{
+  "name": "golden_sequence_equip",
+  "description": "GOLDEN: Sequence e2 - Equip self to non-Link LIGHT Fiend from field/GY",
+  "lua_reference": "c49867899.lua lines 24-34: IGNITION, SetRange(LOCATION_MZONE|LOCATION_GRAVE)",
+  "test": {
+    "effect_id": "sequence_equip",
+    "preconditions": [
+      "Sequence on field OR in GY",
+      "Non-Link LIGHT Fiend on field to equip to"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "sequence_location": "equipped",
+      "target_has_equipped": true,
+      "opt_used": "20238:e2"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [
+        {
+          "cid": "20238",
+          "name": "Fiendsmith's Sequence",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 2, "summon_type": "link"},
+          "properly_summoned": true
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+          },
+          null, null, null, null
+        ],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "golden_lacrima_fusion_recover",
+  "description": "GOLDEN: Lacrima Fusion e1 - On Fusion Summon: Add/SS LIGHT Fiend from GY/banished",
+  "lua_reference": "c46640168.lua lines 17-28: TRIGGER_O on EVENT_SPSUMMON_SUCCESS, condition IsFusionSummoned",
+  "test": {
+    "effect_id": "lacrima_fusion_recover_light_fiend",
+    "preconditions": [
+      "Lacrima Fusion on field (properly Fusion Summoned)",
+      "LIGHT Fiend in GY or banished",
+      "OPT not used"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "target_location": "hand_or_field",
+      "opt_used": "20214:e1"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [
+          {
+            "cid": "20214",
+            "name": "Fiendsmith's Lacrima",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "summon_type": "fusion"},
+            "properly_summoned": true
+          },
+          null, null, null, null
+        ],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

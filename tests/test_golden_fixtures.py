@@ -387,6 +387,82 @@ class TestDesiraeGoldenFixtures(unittest.TestCase):
             "Requiem should be shuffled out of GY as cost")
 
 
+class TestLacrimaFusionGoldenFixtures(unittest.TestCase):
+    """CID 20214 - Fiendsmith's Lacrima (Fusion) - Passcode: 46640168"""
+
+    def test_lacrima_fusion_recover(self):
+        """e1: On Fusion Summon, add/SS LIGHT Fiend from GY/banished"""
+        fixture = load_golden_fixture("golden_lacrima_fusion_recover")
+        state = GameState.from_snapshot(fixture["state"])
+
+        # Find e1 actions
+        actions = [a for a in enumerate_effect_actions(state)
+                   if a.cid == "20214" and a.effect_id and "recover" in a.effect_id.lower()]
+
+        self.assertGreaterEqual(len(actions), 1,
+            "Expected at least 1 recover action for Lacrima Fusion e1")
+
+
+class TestSequenceGoldenFixtures(unittest.TestCase):
+    """CID 20238 - Fiendsmith's Sequence (Link-2) - Passcode: 49867899"""
+
+    def test_sequence_fusion_gy(self):
+        """e1: Fusion Summon Fiend using GY materials (shuffle to deck)"""
+        fixture = load_golden_fixture("golden_sequence_fusion_gy")
+        state = GameState.from_snapshot(fixture["state"])
+
+        # Find e1 actions
+        actions = [a for a in enumerate_effect_actions(state)
+                   if a.cid == "20238" and a.effect_id and "fuse" in a.effect_id.lower()]
+
+        self.assertGreaterEqual(len(actions), 1,
+            "Expected at least 1 fusion action for Sequence e1")
+
+    def test_sequence_equip(self):
+        """e2: Equip self to non-Link LIGHT Fiend from field/GY"""
+        fixture = load_golden_fixture("golden_sequence_equip")
+        state = GameState.from_snapshot(fixture["state"])
+
+        # Find e2 actions
+        actions = [a for a in enumerate_effect_actions(state)
+                   if a.cid == "20238" and a.effect_id and "equip" in a.effect_id.lower()]
+
+        self.assertGreaterEqual(len(actions), 1,
+            "Expected at least 1 equip action for Sequence e2")
+
+
+class TestCaesarGoldenFixtures(unittest.TestCase):
+    """CID 13081 - D/D/D Wave High King Caesar"""
+
+    def test_caesar_negate(self):
+        """Quick Effect: Detach to negate"""
+        fixture = load_golden_fixture("golden_caesar_negate")
+        state = GameState.from_snapshot(fixture["state"])
+
+        # Find negate actions
+        actions = [a for a in enumerate_effect_actions(state)
+                   if a.cid == "13081"]
+
+        self.assertGreaterEqual(len(actions), 1,
+            "Expected at least 1 action for Caesar")
+
+
+class TestLurrieGoldenFixtures(unittest.TestCase):
+    """CID 8092 - Fabled Lurrie"""
+
+    def test_lurrie_discard_ss(self):
+        """When discarded: SS self from GY"""
+        fixture = load_golden_fixture("golden_lurrie_discard_ss")
+        state = GameState.from_snapshot(fixture["state"])
+
+        # Find SS actions
+        actions = [a for a in enumerate_effect_actions(state)
+                   if a.cid == "8092"]
+
+        self.assertGreaterEqual(len(actions), 1,
+            "Expected at least 1 SS action for Lurrie")
+
+
 class TestGoldenFixtureIntegrity(unittest.TestCase):
     """Meta-tests to verify golden fixtures are properly formatted"""
 
@@ -402,11 +478,11 @@ class TestGoldenFixtureIntegrity(unittest.TestCase):
                         f"Missing required field '{field}' in {fixture_path.name}")
 
     def test_golden_fixture_count(self):
-        """Should have golden fixtures for all 12 verified effects"""
+        """Should have golden fixtures for all verified effects"""
         fixtures = list(GOLDEN_DIR.glob("golden_*.json"))
-        # 3 Engraver + 2 Tract + 3 Requiem + 2 Lacrima CT + 2 Desirae = 12
-        self.assertGreaterEqual(len(fixtures), 11,
-            f"Expected at least 11 golden fixtures, found {len(fixtures)}")
+        # Original 11 + 5 new = 16 fixtures
+        self.assertGreaterEqual(len(fixtures), 16,
+            f"Expected at least 16 golden fixtures, found {len(fixtures)}")
 
 
 if __name__ == "__main__":

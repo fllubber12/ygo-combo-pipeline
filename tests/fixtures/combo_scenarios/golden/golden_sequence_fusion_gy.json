@@ -1,0 +1,61 @@
+{
+  "name": "golden_sequence_fusion_gy",
+  "description": "GOLDEN: Sequence e1 - Fusion Summon Fiend using GY materials (shuffle to deck)",
+  "lua_reference": "c49867899.lua lines 9-23: IGNITION, SetRange(LOCATION_MZONE), uses Fusion.ShuffleMaterial",
+  "test": {
+    "effect_id": "sequence_gy_fuse",
+    "preconditions": [
+      "Sequence on field",
+      "Fusion materials in GY",
+      "Fiend Fusion in Extra"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "materials_location": "deck",
+      "fusion_location": "field",
+      "opt_used": "20238:e1"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [
+        {
+          "cid": "20214",
+          "name": "Fiendsmith's Lacrima",
+          "metadata": {"summon_type": "fusion", "min_materials": 2, "attribute": "LIGHT", "race": "FIEND", "material_race": "FIEND"}
+        }
+      ],
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+        },
+        {
+          "cid": "20490",
+          "name": "Lacrima the Crimson Tears",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [
+          {
+            "cid": "20238",
+            "name": "Fiendsmith's Sequence",
+            "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 2, "summon_type": "link"},
+            "properly_summoned": true
+          },
+          null
+        ],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {}
+  }
+}

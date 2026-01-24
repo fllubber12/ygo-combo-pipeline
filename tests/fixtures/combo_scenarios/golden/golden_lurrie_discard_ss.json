@@ -1,0 +1,41 @@
+{
+  "name": "golden_lurrie_discard_ss",
+  "description": "GOLDEN: Fabled Lurrie - When discarded: SS self from GY",
+  "lua_reference": "External Lua - Trigger effect on discard, SS from GY",
+  "test": {
+    "effect_id": "lurrie_ss",
+    "preconditions": [
+      "Lurrie in GY with discard trigger pending",
+      "Open monster zone"
+    ],
+    "expected_action_count_min": 1,
+    "expected_outcome": {
+      "lurrie_location": "field"
+    }
+  },
+  "state": {
+    "zones": {
+      "hand": [],
+      "deck": [],
+      "extra": [],
+      "gy": [
+        {
+          "cid": "8092",
+          "name": "Fabled Lurrie",
+          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 1}
+        }
+      ],
+      "banished": [],
+      "field_zones": {
+        "mz": [null, null, null, null, null],
+        "emz": [null, null],
+        "stz": [null, null, null, null, null],
+        "fz": [null]
+      }
+    },
+    "phase": "Main Phase 1",
+    "opt_used": {},
+    "events": ["LURRIE_DISCARD_TRIGGER"],
+    "last_moved_to_gy": ["8092"]
+  }
+}
