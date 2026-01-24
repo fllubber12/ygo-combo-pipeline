@@ -51,7 +51,7 @@ Sanity run fixture:
 - `python3 scripts/combos/search_combo.py --scenario tests/fixtures/combo_scenarios/fixture_oppturn_agnumday_revive_desirae.json`
 
 ## Latest Diff Zip
-- `updates_20260122_101740.zip` (latest diff)
+- `updates_20260123_175800.zip` (latest diff)
 
 ## Notes / Constraints
 - Fail-closed: effects only enumerate when modeled.
@@ -1356,3 +1356,151 @@ Missing CIDs:
   - Tweaked opp-turn pop fixture to allow Desirae trigger within max_depth.
   - QA (this run): `python3 -m unittest discover -s tests` (FAILED, 13 failures); `python3 audit_effect_coverage.py` (Missing=0); `python3 audit_modeling_status.py --fail` (Modeled=25, Stub=0, Missing=0).
   - Updates zip: `updates_20260123_162828.zip`
+
+- Handoff refresh (2026-01-23 18:36)
+  - QA: `python3 -m unittest discover -s tests` (exit 0)
+  - Coverage audit: Missing CIDs (unknown) (exit 0)
+  - Modeling-status: Modeled unknown, Stub unknown, Missing unknown (exit 0)
+  - Latest diff zip: `updates_20260123_175800.zip`
+  - Bundles: `handoff_min_20260123_183611.zip`, `handoff_context_20260123_183611.zip`
+  - QA output:
+```text
+................................................................................................
+----------------------------------------------------------------------
+Ran 96 tests in 2.497s
+
+OK
+```
+  - Coverage output:
+```text
+Registered CIDs (28):
+  10942
+  13081
+  14856
+  17806
+  19188
+  20196
+  20214
+  20215
+  20225
+  20226
+  20238
+  20240
+  20241
+  20251
+  20389
+  20423
+  20427
+  20490
+  20521
+  20772
+  20774
+  20786
+  20816
+  21624
+  21625
+  21626
+  8092
+  DEMO_EXTENDER_001
+Inert CIDs (16):
+  90001
+  90002
+  DISCARD_1
+  DUMMY_1
+  DUMMY_2
+  DUMMY_3
+  DUMMY_4
+  FIENDSMITH_TOKEN
+  G_LIGHT_FIEND_A
+  G_LIGHT_FIEND_B
+  G_LINK_MAT
+  INERT_01
+  INERT_02
+  INERT_03
+  OPP_CARD_1
+  RANDOM_CARD
+Fixture CIDs (43):
+  10942
+  13081
+  14856
+  17806
+  19188
+  20196
+  20214
+  20215
+  20225
+  20226
+  20238
+  20240
+  20241
+  20251
+  20389
+  20423
+  20427
+  20490
+  20521
+  20772
+  20774
+  20786
+  20816
+  21624
+  21625
+  21626
+  8092
+  90001
+  90002
+  DEMO_EXTENDER_001
+  DISCARD_1
+  DUMMY_1
+  DUMMY_2
+  DUMMY_3
+  DUMMY_4
+  FIENDSMITH_TOKEN
+  G_LIGHT_FIEND_A
+  G_LIGHT_FIEND_B
+  G_LINK_MAT
+  INERT_01
+  INERT_02
+  INERT_03
+  OPP_CARD_1
+Decklist CIDs (27):
+  10942
+  13081
+  14856
+  17806
+  19188
+  20196
+  20214
+  20215
+  20225
+  20226
+  20238
+  20240
+  20241
+  20251
+  20389
+  20423
+  20427
+  20490
+  20521
+  20772
+  20774
+  20786
+  20816
+  21624
+  21625
+  21626
+  8092
+Missing CIDs (0):
+```
+  - Modeling-status output:
+```text
+Decklist CIDs: 25
+Modeled count: 25
+Stub count (excluding allowed): 0
+Missing count: 0
+Stub CIDs (excluding allowed):
+  (none)
+Missing CIDs:
+  (none)
+```
