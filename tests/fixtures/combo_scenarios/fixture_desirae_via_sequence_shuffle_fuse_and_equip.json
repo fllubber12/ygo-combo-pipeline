@@ -4,45 +4,31 @@
     "zones": {
       "gy": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver"
+          "cid": "20196"
         },
         {
-          "cid": "G_LIGHT_FIEND_A",
-          "name": "Light Fiend A",
-          "metadata": {
-            "attribute": "LIGHT",
-            "race": "FIEND"
-          }
+          "cid": "G_LIGHT_FIEND_A"
         },
         {
-          "cid": "G_LIGHT_FIEND_B",
-          "name": "Light Fiend B",
-          "metadata": {
-            "attribute": "LIGHT",
-            "race": "FIEND"
-          }
+          "cid": "G_LIGHT_FIEND_B"
         }
       ],
       "extra": [
         {
-          "cid": "20215",
-          "name": "Fiendsmith's Desirae",
-          "metadata": {
-            "summon_type": "fusion",
-            "min_materials": 3
-          }
+          "cid": "20215"
         }
       ],
       "field_zones": {
-        "mz": [null, null, null, null, null],
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "emz": [
           {
             "cid": "20238",
-            "name": "Fiendsmith's Sequence",
-            "metadata": {
-              "link_rating": 2
-            },
             "properly_summoned": true
           },
           null

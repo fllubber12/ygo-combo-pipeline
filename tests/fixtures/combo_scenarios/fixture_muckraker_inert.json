@@ -12,11 +12,6 @@
         "mz": [
           {
             "cid": "17806",
-            "name": "Muckraker From the Underworld",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 2
-            },
             "properly_summoned": true
           },
           null,

@@ -43,7 +43,7 @@ class TestFiendsmithRextremendeEffects(unittest.TestCase):
 
     def test_rextremende_discard_send(self):
         snapshot = self.run_scenario("fixture_rextremende_send_light_fiend")
-        self.assertIn("Discard Fodder", snapshot["zones"]["gy"])
+        self.assertIn("DISCARD_1", snapshot["zones"]["gy"])
         self.assertIn("Fiendsmith Engraver", snapshot["zones"]["gy"])
 
     def test_rextremende_recover(self):

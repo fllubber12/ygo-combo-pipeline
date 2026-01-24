@@ -2,29 +2,35 @@
   "name": "fixture_paradise_gy_send_rextremende",
   "state": {
     "phase": "Main Phase 1",
-    "events": ["OPP_SPECIAL_SUMMON"],
+    "events": [
+      "OPP_SPECIAL_SUMMON"
+    ],
     "zones": {
       "gy": [
         {
-          "cid": "20251",
-          "name": "Fiendsmith in Paradise"
+          "cid": "20251"
         }
       ],
       "extra": [
         {
-          "cid": "20774",
-          "name": "Fiendsmith's Rextremende",
-          "metadata": {
-            "summon_type": "fusion"
-          }
+          "cid": "20774"
         }
       ],
       "deck": [],
       "hand": [],
       "banished": [],
       "field_zones": {
-        "mz": [null, null, null, null, null],
-        "emz": [null, null]
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
       }
     },
     "opt_used": {},

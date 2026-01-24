@@ -16,7 +16,7 @@
       "Buio the Dawn's Light"
     ],
     "gy": [
-      "Discard Fodder"
+      "DISCARD_1"
     ],
     "banished": [],
     "deck": [],

@@ -22,9 +22,7 @@
       "extra": [],
       "gy": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+          "cid": "20196"
         }
       ],
       "banished": [],
@@ -32,15 +30,27 @@
         "mz": [
           {
             "cid": "20214",
-            "name": "Fiendsmith's Lacrima",
-            "metadata": {"attribute": "LIGHT", "race": "FIEND", "summon_type": "fusion"},
             "properly_summoned": true
           },
-          null, null, null, null
+          null,
+          null,
+          null,
+          null
         ],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",

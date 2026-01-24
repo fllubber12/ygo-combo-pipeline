@@ -7,39 +7,21 @@
     "zones": {
       "hand": [
         {
-          "cid": "21626",
-          "name": "Mutiny in the Sky"
+          "cid": "21626"
         }
       ],
       "gy": [
         {
           "cid": "20427",
-          "name": "Aerial Eater",
-          "metadata": {
-            "summon_type": "fusion",
-            "level": 6,
-            "race": "FIEND"
-          },
           "properly_summoned": true
         },
         {
-          "cid": "21624",
-          "name": "Buio the Dawn's Light",
-          "metadata": {
-            "level": 3,
-            "race": "FIEND"
-          }
+          "cid": "21624"
         }
       ],
       "extra": [
         {
-          "cid": "21625",
-          "name": "Luce the Dusk's Dark",
-          "metadata": {
-            "summon_type": "fusion",
-            "level": 8,
-            "race": "FIEND"
-          }
+          "cid": "21625"
         }
       ],
       "field_zones": {

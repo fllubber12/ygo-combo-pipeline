@@ -11,14 +11,21 @@ from sim.state import GameState  # noqa: E402
 
 
 def make_state(hand=None, field=None, extra=None, normal_used=False):
+    """Create a test GameState with proper test CIDs."""
+    # Convert simple strings to CID dicts
+    def to_cid(item):
+        if isinstance(item, str):
+            return {"cid": f"INERT_MONSTER_LIGHT_FIEND_4"}
+        return item
+
     snapshot = {
         "zones": {
-            "hand": hand or [],
-            "field": field or [],
+            "hand": [to_cid(c) for c in (hand or [])],
+            "field": [to_cid(c) for c in (field or [])],
             "gy": [],
             "banished": [],
             "deck": [],
-            "extra": extra or [],
+            "extra": [to_cid(c) for c in (extra or [])],
         },
         "normal_summon_set_used": normal_used,
     }
@@ -27,30 +34,26 @@ def make_state(hand=None, field=None, extra=None, normal_used=False):
 
 class TestSimLegality(unittest.TestCase):
     def test_normal_summon_budget(self):
-        state = make_state(hand=["Test Monster"], field=[], normal_used=False)
+        state = make_state(hand=[{"cid": "INERT_MONSTER_LIGHT_FIEND_4"}], field=[], normal_used=False)
         new_state = state.clone()
         apply_normal_summon(new_state, hand_index=0, mz_index=0)
         with self.assertRaises(IllegalActionError):
             apply_normal_summon(new_state, hand_index=0, mz_index=1)
 
     def test_zone_capacity(self):
-        field_cards = [f"Monster {i}" for i in range(5)]
-        state = make_state(hand=["Extra Monster"], field=field_cards)
+        field_cards = [{"cid": f"INERT_MONSTER_LIGHT_FIEND_4"} for i in range(5)]
+        state = make_state(hand=[{"cid": "INERT_MONSTER_LIGHT_FIEND_4"}], field=field_cards)
         with self.assertRaises(IllegalActionError):
             apply_special_summon(state, hand_index=0, mz_index=0)
 
     def test_link_summon_requires_emz(self):
-        extra = [
-            {
-                "name": "Link Boss",
-                "metadata": {"summon_type": "link", "link_rating": 2, "min_materials": 2},
-            }
-        ]
+        # Use real Sequence (Link-2) from CDB
+        extra = [{"cid": "20238"}]  # Fiendsmith's Sequence
         snapshot = {
             "zones": {
                 "hand": [],
-                "field": ["Mat A", "Mat B"],
-                "emz": ["EMZ 1", "EMZ 2"],
+                "field": [{"cid": "INERT_MONSTER_LIGHT_FIEND_4"}, {"cid": "INERT_MONSTER_LIGHT_FIEND_4"}],
+                "emz": [{"cid": "INERT_MONSTER_LIGHT_FIEND_4"}, {"cid": "INERT_MONSTER_LIGHT_FIEND_4"}],
                 "gy": [],
                 "banished": [],
                 "deck": [],
@@ -69,18 +72,14 @@ class TestSimLegality(unittest.TestCase):
             )
 
     def test_link_material_counting(self):
-        extra = [
-            {
-                "name": "Link-3 Boss",
-                "metadata": {"summon_type": "link", "link_rating": 3, "min_materials": 2},
-            }
-        ]
+        # Use real Agnumday (Link-3) from CDB
+        extra = [{"cid": "20521"}]  # Fiendsmith's Agnumday
         snapshot = {
             "zones": {
                 "hand": [],
                 "field": [
-                    {"name": "Link-2 Material", "metadata": {"link_rating": 2}},
-                    {"name": "Monster Material", "metadata": {}},
+                    {"cid": "20238"},  # Fiendsmith's Sequence (Link-2)
+                    {"cid": "INERT_MONSTER_LIGHT_FIEND_4"},
                 ],
                 "emz": [None, None],
                 "gy": [],
@@ -98,7 +97,7 @@ class TestSimLegality(unittest.TestCase):
             link_rating=3,
             min_materials=2,
         )
-        self.assertEqual(state.field.emz[0].name, "Link-3 Boss")
+        self.assertEqual(state.field.emz[0].name, "Fiendsmith's Agnumday")
 
 
 if __name__ == "__main__":

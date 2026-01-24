@@ -12,12 +12,6 @@
         "mz": [
           {
             "cid": "21624",
-            "name": "Buio the Dawn's Light",
-            "metadata": {
-              "level": 3,
-              "attribute": "DARK",
-              "race": "FIEND"
-            },
             "properly_summoned": true
           },
           null,

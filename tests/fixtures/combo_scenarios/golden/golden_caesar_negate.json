@@ -25,27 +25,40 @@
         "mz": [
           {
             "cid": "13081",
-            "name": "D/D/D Wave High King Caesar",
-            "metadata": {"attribute": "DARK", "race": "FIEND", "summon_type": "xyz", "rank": 6},
-            "properly_summoned": true,
             "equipped": [
-              {"cid": "MATERIAL_1", "name": "Xyz Material 1", "metadata": {}}
-            ]
+              {
+                "cid": "MATERIAL_1"
+              }
+            ],
+            "properly_summoned": true
           },
           {
-            "cid": "TARGET_1",
-            "name": "Target Monster",
-            "metadata": {}
+            "cid": "TARGET_1"
           },
-          null, null, null
+          null,
+          null,
+          null
         ],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",
     "opt_used": {},
-    "events": ["OPP_ACTIVATED_EFFECT"]
+    "events": [
+      "OPP_ACTIVATED_EFFECT"
+    ]
   }
 }

@@ -7,11 +7,6 @@
         "mz": [
           {
             "cid": "10942",
-            "name": "Evilswarm Exciton Knight",
-            "metadata": {
-              "summon_type": "xyz",
-              "rank": 4
-            },
             "properly_summoned": true
           },
           null,
@@ -19,7 +14,10 @@
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       },
       "hand": [],
       "deck": [],

@@ -5,18 +5,13 @@
     "zones": {
       "gy": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver"
+          "cid": "20196"
         }
       ],
       "field_zones": {
         "mz": [
           {
             "cid": "20214",
-            "name": "Fiendsmith's Lacrima",
-            "metadata": {
-              "summon_type": "fusion"
-            },
             "properly_summoned": true
           },
           null,
@@ -24,7 +19,10 @@
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       },
       "hand": [],
       "deck": [],
@@ -33,7 +31,9 @@
     },
     "opt_used": {},
     "last_moved_to_gy": [],
-    "restrictions": ["LACRIMA_ATK_REDUCTION"]
+    "restrictions": [
+      "LACRIMA_ATK_REDUCTION"
+    ]
   },
   "search": {
     "max_depth": 1,

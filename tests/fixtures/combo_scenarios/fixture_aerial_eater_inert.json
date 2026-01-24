@@ -12,11 +12,6 @@
         "mz": [
           {
             "cid": "20427",
-            "name": "Aerial Eater",
-            "metadata": {
-              "summon_type": "fusion",
-              "level": 6
-            },
             "properly_summoned": true
           },
           null,

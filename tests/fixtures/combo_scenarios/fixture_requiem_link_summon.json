@@ -5,24 +5,21 @@
       "field_zones": {
         "mz": [
           {
-            "name": "Material A"
+            "cid": "INERT_MONSTER_LIGHT_FIEND_4"
           },
           null,
           null,
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       },
       "extra": [
         {
-          "cid": "20225",
-          "name": "Fiendsmith's Requiem",
-          "metadata": {
-            "summon_type": "link",
-            "link_rating": 1,
-            "min_materials": 1
-          }
+          "cid": "20225"
         }
       ]
     }
@@ -30,6 +27,8 @@
   "search": {
     "max_depth": 1,
     "beam_width": 10,
-    "allowed_actions": ["extra_deck_summon"]
+    "allowed_actions": [
+      "extra_deck_summon"
+    ]
   }
 }

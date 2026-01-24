@@ -24,14 +24,10 @@
       "gy": [
         {
           "cid": "20215",
-          "name": "Fiendsmith's Desirae",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "summon_type": "fusion"},
           "properly_summoned": true
         },
         {
           "cid": "20225",
-          "name": "Fiendsmith's Requiem",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1},
           "properly_summoned": true
         }
       ],
@@ -39,20 +35,36 @@
       "field_zones": {
         "mz": [
           {
-            "cid": "20196",
-            "name": "Fiendsmith Engraver",
-            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+            "cid": "20196"
           },
-          null, null, null, null
+          null,
+          null,
+          null,
+          null
         ],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",
     "opt_used": {},
-    "pending_triggers": ["SENT_TO_GY:20215"],
-    "last_moved_to_gy": ["20215"]
+    "pending_triggers": [
+      "SENT_TO_GY:20215"
+    ],
+    "last_moved_to_gy": [
+      "20215"
+    ]
   }
 }

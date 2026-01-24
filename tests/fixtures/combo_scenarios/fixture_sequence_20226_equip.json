@@ -8,8 +8,7 @@
       "field_zones": {
         "mz": [
           {
-            "cid": "20196",
-            "name": "Fiendsmith Engraver"
+            "cid": "20196"
           },
           null,
           null,
@@ -19,11 +18,6 @@
         "emz": [
           {
             "cid": "20226",
-            "name": "Fiendsmith's Sequence",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 2
-            },
             "properly_summoned": true
           },
           null

@@ -15,7 +15,7 @@
       "Fiendsmith's Rextremende"
     ],
     "gy": [
-      "Discard Fodder",
+      "DISCARD_1",
       "Fiendsmith Engraver"
     ],
     "banished": [],

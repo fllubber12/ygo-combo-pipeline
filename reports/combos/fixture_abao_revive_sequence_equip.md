@@ -16,7 +16,7 @@
       "Fiendsmith Engraver"
     ],
     "gy": [
-      "Discard Fodder"
+      "DISCARD_1"
     ],
     "banished": [
       "A Bao A Qu, the Lightless Shadow"

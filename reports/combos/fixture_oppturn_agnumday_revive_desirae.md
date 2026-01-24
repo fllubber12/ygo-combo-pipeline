@@ -4,7 +4,7 @@
 (none)
 
 ## Effect Actions
-1. Fiendsmith's Lacrima [20490] gy_shuffle_ss_fiendsmith_link: {'gy_index': 0, 'target_gy_index': 1, 'emz_index': 0}
+1. Lacrima the Crimson Tears [20490] gy_shuffle_ss_fiendsmith_link: {'gy_index': 0, 'target_gy_index': 1, 'emz_index': 0}
 2. Fiendsmith's Agnumday [20521] agnumday_revive_equip: {'zone': 'emz', 'field_index': 0, 'gy_index': 0, 'mz_index': 0}
 
 ## Final Snapshot
@@ -18,7 +18,7 @@
     "gy": [],
     "banished": [],
     "deck": [
-      "Fiendsmith's Lacrima"
+      "Lacrima the Crimson Tears"
     ],
     "extra": []
   },

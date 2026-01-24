@@ -4,22 +4,18 @@
     "zones": {
       "hand": [
         {
-          "cid": "DISCARD_1",
-          "name": "Discard Fodder"
+          "cid": "DISCARD_1"
         }
       ],
       "deck": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver"
+          "cid": "20196"
         }
       ],
       "field_zones": {
         "mz": [
           {
             "cid": "20774",
-            "name": "Fiendsmith's Rextremende",
-            "metadata": {"summon_type": "fusion"},
             "properly_summoned": true
           },
           null,
@@ -27,11 +23,16 @@
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",
-    "pending_triggers": ["SUMMON:20774"]
+    "pending_triggers": [
+      "SUMMON:20774"
+    ]
   },
   "search": {
     "max_depth": 1,

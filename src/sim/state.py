@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .errors import IllegalActionError
-from .ygopro_cdb import enrich_metadata
+from .ygopro_cdb import enrich_metadata_strict
 
 @dataclass
 class CardInstance:
@@ -17,37 +17,45 @@ class CardInstance:
 
     @staticmethod
     def from_raw(raw: Any) -> "CardInstance":
+        """
+        Create a CardInstance from raw input.
+
+        IMPORTANT: All metadata comes from CDB - the single source of truth.
+        Input should only contain CID (and optionally equipped/properly_summoned).
+        Any hardcoded metadata in input is IGNORED.
+        """
         if isinstance(raw, CardInstance):
             return raw
+
+        # Extract CID - this is the ONLY thing we trust from input
         if isinstance(raw, dict):
-            cid = str(raw.get("cid", raw.get("name", ""))).strip()
-            name = str(raw.get("name", raw.get("cid", ""))).strip()
-            metadata = raw.get("metadata", {}) or {}
-            metadata = dict(metadata)
-            metadata = enrich_metadata(cid, name=name, existing=metadata)
-            try:
-                if int(metadata.get("link_rating", 0)) > 0 and not metadata.get("from_extra"):
-                    metadata["from_extra"] = True
-            except (TypeError, ValueError):
-                pass
-            try:
-                summon_type = str(metadata.get("summon_type", "")).lower()
-                if summon_type in {"fusion", "synchro", "xyz", "link"} and not metadata.get("from_extra"):
-                    metadata["from_extra"] = True
-            except (TypeError, ValueError):
-                pass
-            equipped_raw = raw.get("equipped", []) or []
-            equipped = [CardInstance.from_raw(item) for item in equipped_raw]
-            properly_summoned = bool(raw.get("properly_summoned", False))
-            return CardInstance(
-                cid=cid,
-                name=name,
-                metadata=metadata,
-                equipped=equipped,
-                properly_summoned=properly_summoned,
-            )
-        name = str(raw).strip()
-        return CardInstance(cid=name, name=name, metadata={})
+            cid = str(raw.get("cid", "")).strip()
+        else:
+            cid = str(raw).strip()
+
+        if not cid:
+            raise ValueError("CardInstance requires a CID")
+
+        # ALL metadata comes from CDB - no exceptions
+        metadata = enrich_metadata_strict(cid)
+
+        # Get name from CDB metadata
+        name = metadata.get("name", cid)
+
+        # Handle equipped cards (recursive)
+        equipped_raw = raw.get("equipped", []) if isinstance(raw, dict) else []
+        equipped = [CardInstance.from_raw(item) for item in equipped_raw]
+
+        # properly_summoned is runtime state, not card data - allow from input
+        properly_summoned = bool(raw.get("properly_summoned", False)) if isinstance(raw, dict) else False
+
+        return CardInstance(
+            cid=cid,
+            name=name,
+            metadata=metadata,
+            equipped=equipped,
+            properly_summoned=properly_summoned,
+        )
 
 
 @dataclass

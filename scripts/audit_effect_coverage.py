@@ -30,6 +30,9 @@ INERT_CIDS = {
     "INERT_02",
     "INERT_03",
     "RANDOM_CARD",
+    # New INERT_MONSTER_* format CIDs
+    "INERT_MONSTER_LIGHT_FIEND_4",
+    "INERT_MONSTER_DARK_FIEND_6",
 }
 
 
@@ -77,7 +80,16 @@ def main() -> int:
     required_cids = fixture_cids | decklist_cids
     registered = set(EFFECT_REGISTRY.keys())
     inert = set(INERT_CIDS)
-    missing = sorted(cid for cid in required_cids if cid not in registered and cid not in inert)
+
+    # Check for inert patterns (INERT_*, DEMO_*, DUMMY_*, etc.)
+    inert_prefixes = ("INERT_", "DEMO_", "DUMMY_", "TEST_", "MOCK_", "OPP_", "G_", "DEAD_", "TOKEN_", "DISCARD_")
+
+    def is_inert(cid: str) -> bool:
+        if cid in inert:
+            return True
+        return any(cid.startswith(prefix) for prefix in inert_prefixes)
+
+    missing = sorted(cid for cid in required_cids if cid not in registered and not is_inert(cid))
 
     print(f"Registered CIDs ({len(registered)}):")
     for cid in sorted(registered):

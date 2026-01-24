@@ -9,11 +9,6 @@
         "mz": [
           {
             "cid": "21625",
-            "name": "Luce the Dusk's Dark",
-            "metadata": {
-              "summon_type": "fusion",
-              "level": 8
-            },
             "properly_summoned": true
           },
           null,
@@ -27,8 +22,7 @@
         ],
         "stz": [
           {
-            "cid": "OPP_CARD_1",
-            "name": "Opponent Card"
+            "cid": "OPP_CARD_1"
           },
           null,
           null,
@@ -41,11 +35,7 @@
       },
       "deck": [
         {
-          "cid": "21624",
-          "name": "Buio the Dawn's Light",
-          "metadata": {
-            "race": "FIEND"
-          }
+          "cid": "21624"
         }
       ],
       "hand": [],
@@ -55,7 +45,9 @@
     },
     "opt_used": {},
     "last_moved_to_gy": [],
-    "restrictions": ["LR_MZ_INDESTRUCTIBLE"]
+    "restrictions": [
+      "LR_MZ_INDESTRUCTIBLE"
+    ]
   },
   "search": {
     "max_depth": 1,

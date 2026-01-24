@@ -4,40 +4,34 @@
     "zones": {
       "gy": [
         {
-          "cid": "20240",
-          "name": "Fiendsmith's Tract"
+          "cid": "20240"
         }
       ],
       "hand": [
         {
-          "cid": "20225",
-          "name": "Fiendsmith's Requiem"
+          "cid": "20225"
         }
       ],
       "field_zones": {
         "mz": [
           {
-            "cid": "20196",
-            "name": "Fiendsmith Engraver"
+            "cid": "20196"
           },
           {
-            "cid": "20214",
-            "name": "Fiendsmith's Lacrima"
+            "cid": "20214"
           },
           null,
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       },
       "extra": [
         {
-          "cid": "20215",
-          "name": "Fiendsmith's Desirae",
-          "metadata": {
-            "summon_type": "fusion",
-            "min_materials": 3
-          }
+          "cid": "20215"
         }
       ]
     }

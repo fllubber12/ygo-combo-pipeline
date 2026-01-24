@@ -1,0 +1,346 @@
+[
+  {
+    "name": "Engraver e3: alone in GY",
+    "cid": "20196",
+    "effect": "e3",
+    "python_effect_id": "gy_shuffle_light_fiend_then_ss_self",
+    "tp": 0,
+    "state": {
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 6
+        }
+      ]
+    }
+  },
+  {
+    "name": "Engraver e3: other LIGHT Fiend in GY",
+    "cid": "20196",
+    "effect": "e3",
+    "python_effect_id": "gy_shuffle_light_fiend_then_ss_self",
+    "tp": 0,
+    "state": {
+      "gy": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 6
+        },
+        {
+          "cid": "8092",
+          "name": "Fabled Lurrie",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 1
+        }
+      ]
+    }
+  },
+  {
+    "name": "Tract e2: Engraver missing",
+    "cid": "20240",
+    "effect": "e2",
+    "python_effect_id": "gy_banish_fuse_fiendsmith",
+    "tp": 0,
+    "state": {
+      "gy": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "type": "SPELL"
+        }
+      ],
+      "hand": [
+        {
+          "cid": "8092",
+          "name": "Fabled Lurrie",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 1
+        },
+        {
+          "cid": "90001",
+          "name": "Generic LIGHT Fiend",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 4
+        }
+      ],
+      "extra": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "type": "MONSTER"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Tract e2: Engraver + 1 LIGHT Fiend",
+    "cid": "20240",
+    "effect": "e2",
+    "python_effect_id": "gy_banish_fuse_fiendsmith",
+    "tp": 0,
+    "state": {
+      "gy": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "type": "SPELL"
+        }
+      ],
+      "hand": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 6
+        },
+        {
+          "cid": "8092",
+          "name": "Fabled Lurrie",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 1
+        }
+      ],
+      "extra": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "type": "MONSTER"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Tract e2: Engraver + 2 LIGHT Fiends",
+    "cid": "20240",
+    "effect": "e2",
+    "python_effect_id": "gy_banish_fuse_fiendsmith",
+    "tp": 0,
+    "state": {
+      "gy": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "type": "SPELL"
+        }
+      ],
+      "hand": [
+        {
+          "cid": "20196",
+          "name": "Fiendsmith Engraver",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 6
+        },
+        {
+          "cid": "8092",
+          "name": "Fabled Lurrie",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 1
+        },
+        {
+          "cid": "90001",
+          "name": "Generic LIGHT Fiend",
+          "attribute": "LIGHT",
+          "race": "FIEND",
+          "type": "MONSTER",
+          "level": 4
+        }
+      ],
+      "extra": [
+        {
+          "cid": "20215",
+          "name": "Fiendsmith's Desirae",
+          "type": "MONSTER"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Requiem e2: only Link LIGHT Fiend on field",
+    "cid": "20225",
+    "effect": "e2",
+    "python_effect_id": "equip_requiem_to_fiend",
+    "tp": 0,
+    "state": {
+      "field": {
+        "mz": [
+          {
+            "cid": "20225",
+            "name": "Fiendsmith's Requiem",
+            "type": "MONSTER",
+            "is_link": true,
+            "link": 1
+          },
+          {
+            "cid": "20226",
+            "name": "Fiendsmith's Sequence",
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "type": "MONSTER",
+            "is_link": true,
+            "link": 2
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Requiem e2: non-Link LIGHT Fiend on field",
+    "cid": "20225",
+    "effect": "e2",
+    "python_effect_id": "equip_requiem_to_fiend",
+    "tp": 0,
+    "state": {
+      "field": {
+        "mz": [
+          {
+            "cid": "20225",
+            "name": "Fiendsmith's Requiem",
+            "type": "MONSTER",
+            "is_link": true,
+            "link": 1
+          },
+          {
+            "cid": "20196",
+            "name": "Fiendsmith Engraver",
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "type": "MONSTER",
+            "level": 6
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Lacrima CT e1: no Fiendsmith in deck",
+    "cid": "20490",
+    "effect": "e1",
+    "python_effect_id": "send_fiendsmith_from_deck",
+    "tp": 0,
+    "state": {
+      "field": {
+        "mz": [
+          {
+            "cid": "20490",
+            "name": "Lacrima the Crimson Tears",
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "type": "MONSTER",
+            "level": 4
+          }
+        ]
+      },
+      "deck": [
+        {
+          "cid": "DUMMY_1",
+          "name": "Non-Fiendsmith",
+          "type": "MONSTER"
+        }
+      ],
+      "pending_triggers": ["SUMMON:20490"]
+    }
+  },
+  {
+    "name": "Lacrima CT e1: Fiendsmith in deck",
+    "cid": "20490",
+    "effect": "e1",
+    "python_effect_id": "send_fiendsmith_from_deck",
+    "tp": 0,
+    "state": {
+      "field": {
+        "mz": [
+          {
+            "cid": "20490",
+            "name": "Lacrima the Crimson Tears",
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "type": "MONSTER",
+            "level": 4
+          }
+        ]
+      },
+      "deck": [
+        {
+          "cid": "20240",
+          "name": "Fiendsmith's Tract",
+          "type": "SPELL"
+        }
+      ],
+      "pending_triggers": ["SUMMON:20490"]
+    }
+  },
+  {
+    "name": "Desirae e1: no equips",
+    "cid": "20215",
+    "effect": "e1",
+    "python_effect_id": "desirae_negate",
+    "tp": 0,
+    "state": {
+      "field": {
+        "mz": [
+          {
+            "cid": "20215",
+            "name": "Fiendsmith's Desirae",
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "type": "MONSTER",
+            "level": 8
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Desirae e1: with equip",
+    "cid": "20215",
+    "effect": "e1",
+    "python_effect_id": "desirae_negate",
+    "tp": 0,
+    "state": {
+      "field": {
+        "mz": [
+          {
+            "cid": "20215",
+            "name": "Fiendsmith's Desirae",
+            "attribute": "LIGHT",
+            "race": "FIEND",
+            "type": "MONSTER",
+            "level": 8,
+            "equipped": [
+              {
+                "cid": "20225",
+                "name": "Fiendsmith's Requiem",
+                "type": "MONSTER",
+                "is_equip": true,
+                "is_link": true,
+                "link": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

@@ -7,14 +7,12 @@
     "zones": {
       "gy": [
         {
-          "cid": "21624",
-          "name": "Buio the Dawn's Light"
+          "cid": "21624"
         }
       ],
       "deck": [
         {
-          "cid": "21626",
-          "name": "Mutiny in the Sky"
+          "cid": "21626"
         }
       ],
       "field_zones": {

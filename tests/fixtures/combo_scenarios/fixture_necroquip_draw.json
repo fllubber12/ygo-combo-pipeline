@@ -9,11 +9,6 @@
         "mz": [
           {
             "cid": "20423",
-            "name": "Necroquip Princess",
-            "metadata": {
-              "summon_type": "fusion",
-              "level": 6
-            },
             "properly_summoned": true
           },
           null,
@@ -28,8 +23,7 @@
       },
       "deck": [
         {
-          "cid": "DISCARD_1",
-          "name": "Draw Fodder"
+          "cid": "DISCARD_1"
         }
       ],
       "hand": [],

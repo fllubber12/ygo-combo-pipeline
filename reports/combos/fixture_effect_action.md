@@ -11,7 +11,7 @@
 {
   "zones": {
     "hand": [
-      "Demo Extender"
+      "DEMO_EXTENDER_001"
     ],
     "field": [],
     "gy": [],

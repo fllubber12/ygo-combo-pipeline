@@ -17,7 +17,26 @@ class Action:
         return f"{self.action_type}: {self.params}"
 
 
+def is_token(card: CardInstance) -> bool:
+    """Check if a card is a Token. Tokens cease to exist when leaving the field (Rule T1)."""
+    if card.metadata.get("subtype") == "token":
+        return True
+    cid = card.cid.upper()
+    if cid.startswith("TOKEN_") or cid.endswith("_TOKEN") or "TOKEN" in cid:
+        return True
+    # Fiendsmith Token created by Sanct
+    if card.name and "Token" in card.name:
+        return True
+    return False
+
+
 def move_card_to_gy(state: GameState, zone: str, index: int) -> None:
+    """
+    Move a card from a field zone to the GY.
+
+    Rule T1: Tokens cannot exist outside the field.
+    When a Token would be sent to GY, it ceases to exist instead.
+    """
     if zone == "mz":
         card = state.field.mz[index]
         state.field.mz[index] = None
@@ -28,6 +47,12 @@ def move_card_to_gy(state: GameState, zone: str, index: int) -> None:
         raise IllegalActionError(f"Unsupported zone for material removal: {zone}")
     if card is None:
         raise IllegalActionError("Material missing from field.")
+
+    # Rule T1: Tokens cease to exist instead of going to GY
+    if is_token(card):
+        # Token ceases to exist - do NOT add to GY
+        return
+
     state.gy.append(card)
     state.pending_triggers.append(f"SENT_TO_GY:{card.cid}")
 
@@ -272,6 +297,11 @@ def generate_actions(state: GameState, allowed: list[str]) -> list[Action]:
         hand_entries.sort(key=lambda x: (x[1].name.lower(), x[0]))
 
         for hand_index, card in hand_entries:
+            # Only monsters can be Normal Summoned
+            card_type = str(card.metadata.get("card_type", "")).lower()
+            if card_type and card_type != "monster":
+                continue
+
             level = int(card.metadata.get("level", 4))
             required = tributes_required(level)
 
@@ -323,8 +353,12 @@ def generate_actions(state: GameState, allowed: list[str]) -> list[Action]:
             # Fusion summons are enumerated by effect implementations, not as core actions.
             if summon_type == "fusion":
                 continue
-            min_materials = int(extra_card.metadata.get("min_materials", 2))
             link_rating = extra_card.metadata.get("link_rating")
+            # For Link monsters, default min_materials to link_rating if not specified
+            if summon_type == "link" and link_rating:
+                min_materials = int(extra_card.metadata.get("min_materials", int(link_rating)))
+            else:
+                min_materials = int(extra_card.metadata.get("min_materials", 2))
             xyz_rank = extra_card.metadata.get("rank")
             action_added = False
             for count in range(min_materials, len(materials_pool) + 1):

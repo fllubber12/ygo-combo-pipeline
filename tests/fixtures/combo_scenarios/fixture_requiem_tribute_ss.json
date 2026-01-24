@@ -5,17 +5,21 @@
       "field_zones": {
         "emz": [
           {
-            "cid": "20225",
-            "name": "Fiendsmith's Requiem"
+            "cid": "20225"
           },
           null
         ],
-        "mz": [null, null, null, null, null]
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
       },
       "deck": [
         {
-          "cid": "20490",
-          "name": "Lacrima the Crimson Tears"
+          "cid": "20490"
         }
       ],
       "hand": [],

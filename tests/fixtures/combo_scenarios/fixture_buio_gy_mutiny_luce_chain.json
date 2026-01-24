@@ -22,36 +22,21 @@
       "hand": [],
       "deck": [
         {
-          "cid": "21626",
-          "name": "Mutiny in the Sky"
+          "cid": "21626"
         }
       ],
       "gy": [
         {
-          "cid": "21624",
-          "name": "Buio the Dawn's Light",
-          "metadata": {
-            "race": "FIEND"
-          }
+          "cid": "21624"
         },
         {
-          "cid": "20427",
-          "name": "Aerial Eater",
-          "metadata": {
-            "summon_type": "fusion",
-            "race": "FIEND"
-          }
+          "cid": "20427"
         }
       ],
       "banished": [],
       "extra": [
         {
-          "cid": "21625",
-          "name": "Luce the Dusk's Dark",
-          "metadata": {
-            "summon_type": "fusion",
-            "race": "FIEND"
-          }
+          "cid": "21625"
         }
       ]
     },

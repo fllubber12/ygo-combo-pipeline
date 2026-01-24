@@ -5,161 +5,82 @@
     "zones": {
       "hand": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver",
-          "metadata": {
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "level": 6
-          }
+          "cid": "20196"
         },
         {
-          "cid": "DUMMY_1",
-          "name": "Placeholder 1",
-          "metadata": {
-            "attribute": "WATER",
-            "race": "AQUA",
-            "level": 1
-          }
+          "cid": "DUMMY_1"
         },
         {
-          "cid": "DUMMY_2",
-          "name": "Placeholder 2",
-          "metadata": {
-            "attribute": "WATER",
-            "race": "AQUA",
-            "level": 1
-          }
+          "cid": "DUMMY_2"
         },
         {
-          "cid": "DUMMY_3",
-          "name": "Placeholder 3",
-          "metadata": {
-            "attribute": "WATER",
-            "race": "AQUA",
-            "level": 1
-          }
+          "cid": "DUMMY_3"
         },
         {
-          "cid": "DUMMY_4",
-          "name": "Placeholder 4",
-          "metadata": {
-            "attribute": "WATER",
-            "race": "AQUA",
-            "level": 1
-          }
+          "cid": "DUMMY_4"
         }
       ],
       "deck": [
         {
-          "cid": "20240",
-          "name": "Fiendsmith's Tract"
+          "cid": "20240"
         },
         {
-          "cid": "20241",
-          "name": "Fiendsmith's Sanct"
+          "cid": "20241"
         },
         {
-          "cid": "20251",
-          "name": "Fiendsmith in Paradise"
+          "cid": "20251"
         },
         {
-          "cid": "20816",
-          "name": "Fiendsmith Kyrie"
+          "cid": "20816"
         },
         {
-          "cid": "20490",
-          "name": "Lacrima the Crimson Tears",
-          "metadata": {
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "level": 4
-          }
+          "cid": "20490"
         }
       ],
       "extra": [
         {
-          "cid": "20215",
-          "name": "Fiendsmith's Desirae",
-          "metadata": {
-            "summon_type": "fusion",
-            "min_materials": 3,
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "link_rating": 3,
-            "material_attribute": "LIGHT",
-            "material_race": "FIEND"
-          }
+          "cid": "20215"
         },
         {
-          "cid": "20225",
-          "name": "Fiendsmith's Requiem",
-          "metadata": {
-            "summon_type": "link",
-            "link_rating": 1,
-            "min_materials": 1,
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "material_attribute": "LIGHT",
-            "material_race": "FIEND"
-          }
+          "cid": "20225"
         },
         {
-          "cid": "20238",
-          "name": "Fiendsmith's Sequence",
-          "metadata": {
-            "summon_type": "link",
-            "link_rating": 2,
-            "min_materials": 2,
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "material_attribute": "LIGHT",
-            "material_race": "FIEND"
-          }
+          "cid": "20238"
         },
         {
-          "cid": "20214",
-          "name": "Fiendsmith's Lacrima",
-          "metadata": {
-            "summon_type": "fusion",
-            "min_materials": 2,
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "material_race": "FIEND"
-          }
+          "cid": "20214"
         },
         {
-          "cid": "20521",
-          "name": "Fiendsmith's Agnumday",
-          "metadata": {
-            "summon_type": "link",
-            "link_rating": 3,
-            "min_materials": 2,
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "material_attribute": "LIGHT",
-            "material_race": "FIEND"
-          }
+          "cid": "20521"
         },
         {
-          "cid": "20774",
-          "name": "Fiendsmith's Rextremende",
-          "metadata": {
-            "summon_type": "fusion",
-            "min_materials": 2,
-            "attribute": "LIGHT",
-            "race": "FIEND",
-            "material_race": "FIEND"
-          }
+          "cid": "20774"
         }
       ],
       "gy": [],
       "banished": [],
       "field_zones": {
-        "mz": [null, null, null, null, null],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "normal_summon_set_used": false,

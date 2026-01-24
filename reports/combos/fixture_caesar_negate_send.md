@@ -15,7 +15,7 @@
       "D/D/D Wave High King Caesar"
     ],
     "gy": [
-      "Opponent Card"
+      "OPP_CARD_1"
     ],
     "banished": [],
     "deck": [],

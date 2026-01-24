@@ -6,27 +6,18 @@
     "zones": {
       "gy": [
         {
-          "cid": "20816",
-          "name": "Fiendsmith Kyrie"
+          "cid": "20816"
         }
       ],
       "extra": [
         {
-          "cid": "20774",
-          "name": "Fiendsmith's Rextremende",
-          "metadata": {
-            "summon_type": "fusion"
-          }
+          "cid": "20774"
         }
       ],
       "field_zones": {
         "mz": [
           {
             "cid": "20215",
-            "name": "Fiendsmith's Desirae",
-            "metadata": {
-              "summon_type": "fusion"
-            },
             "properly_summoned": true
           },
           null,
@@ -37,10 +28,6 @@
         "emz": [
           {
             "cid": "20238",
-            "name": "Fiendsmith's Sequence",
-            "metadata": {
-              "link_rating": 2
-            },
             "properly_summoned": true
           },
           null

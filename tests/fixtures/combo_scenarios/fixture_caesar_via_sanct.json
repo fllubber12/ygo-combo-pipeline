@@ -7,38 +7,23 @@
       "field_zones": {
         "mz": [
           {
-            "cid": "20196",
-            "name": "Fiendsmith Engraver",
-            "metadata": {
-              "level": 6,
-              "attribute": "LIGHT",
-              "race": "FIEND"
-            }
+            "cid": "20196"
           },
           {
-            "cid": "20196",
-            "name": "Fiendsmith Engraver",
-            "metadata": {
-              "level": 6,
-              "attribute": "LIGHT",
-              "race": "FIEND"
-            }
+            "cid": "20196"
           },
           null,
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       },
       "extra": [
         {
-          "cid": "13081",
-          "name": "D/D/D Wave High King Caesar",
-          "metadata": {
-            "summon_type": "xyz",
-            "min_materials": 2,
-            "rank": 6
-          }
+          "cid": "13081"
         }
       ]
     }
@@ -46,6 +31,8 @@
   "search": {
     "max_depth": 2,
     "beam_width": 10,
-    "allowed_actions": ["extra_deck_summon"]
+    "allowed_actions": [
+      "extra_deck_summon"
+    ]
   }
 }

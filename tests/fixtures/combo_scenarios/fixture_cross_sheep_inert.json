@@ -12,11 +12,6 @@
         "mz": [
           {
             "cid": "14856",
-            "name": "Cross-Sheep",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 2
-            },
             "properly_summoned": true
           },
           null,

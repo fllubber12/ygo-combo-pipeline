@@ -11,7 +11,7 @@
 {
   "zones": {
     "hand": [
-      "Draw Fodder"
+      "DISCARD_1"
     ],
     "field": [
       "Necroquip Princess"

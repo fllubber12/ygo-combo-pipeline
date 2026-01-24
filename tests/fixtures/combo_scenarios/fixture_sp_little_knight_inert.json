@@ -12,11 +12,6 @@
         "mz": [
           {
             "cid": "19188",
-            "name": "S:P Little Knight",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 2
-            },
             "properly_summoned": true
           },
           null,

@@ -51,7 +51,8 @@ class TestSimSearchRunner(unittest.TestCase):
         self.assertTrue(report.exists())
         content = report.read_text(encoding="utf-8")
         self.assertIn("Effect Actions", content)
-        self.assertIn("Demo Extender", content)
+        # Test card uses CID as name with strict CDB lookup
+        self.assertIn("DEMO_EXTENDER_001", content)
 
 
 if __name__ == "__main__":

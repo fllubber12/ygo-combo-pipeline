@@ -8,7 +8,7 @@
 2. Fiendsmith's Requiem [20225] tribute_self_ss_fiendsmith: {'zone': 'emz', 'field_index': 0, 'source': 'deck', 'source_index': 1, 'mz_index': 0}
 3. Lacrima the Crimson Tears [20490] send_fiendsmith_from_deck: {'zone': 'mz', 'field_index': 0, 'deck_index': 0}
 4. Fiendsmith in Paradise [20251] paradise_gy_banish_send_fiendsmith: {'gy_index': 2, 'send_source': 'extra', 'send_index': 0}
-5. Opponent Card [20215] gy_desirae_send_field: {'desirae_gy_index': 2, 'cost_gy_index': 0, 'target_zone': 'stz', 'target_index': 0}
+5. OPP_CARD_1 [20215] gy_desirae_send_field: {'desirae_gy_index': 2, 'cost_gy_index': 0, 'target_zone': 'stz', 'target_index': 0}
 
 ## Final Snapshot
 ```json
@@ -21,14 +21,14 @@
     "gy": [
       "Fiendsmith's Requiem",
       "Fiendsmith's Desirae",
-      "Opponent Card"
+      "OPP_CARD_1"
     ],
     "banished": [
       "Fiendsmith in Paradise"
     ],
     "deck": [
       "Lacrima the Crimson Tears",
-      "Generic LIGHT Fiend"
+      "G_LIGHT_FIEND_A"
     ],
     "extra": []
   },

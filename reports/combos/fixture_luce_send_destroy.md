@@ -16,7 +16,7 @@
     ],
     "gy": [
       "Buio the Dawn's Light",
-      "Opponent Card"
+      "OPP_CARD_1"
     ],
     "banished": [],
     "deck": [],

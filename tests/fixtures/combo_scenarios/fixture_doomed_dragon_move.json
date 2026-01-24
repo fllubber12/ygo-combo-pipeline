@@ -9,20 +9,10 @@
         "mz": [
           {
             "cid": "20772",
-            "name": "Snake-Eyes Doomed Dragon",
-            "metadata": {
-              "summon_type": "fusion",
-              "level": 8
-            },
             "properly_summoned": true
           },
           {
-            "cid": "21624",
-            "name": "Buio the Dawn's Light",
-            "metadata": {
-              "race": "FIEND",
-              "level": 3
-            }
+            "cid": "21624"
           },
           null,
           null,

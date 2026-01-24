@@ -9,11 +9,6 @@
         "mz": [
           {
             "cid": "20786",
-            "name": "A Bao A Qu, the Lightless Shadow",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 4
-            },
             "properly_summoned": true
           },
           null,
@@ -28,18 +23,12 @@
       },
       "hand": [
         {
-          "cid": "DISCARD_1",
-          "name": "Discard Fodder"
+          "cid": "DISCARD_1"
         }
       ],
       "gy": [
         {
-          "cid": "21624",
-          "name": "Buio the Dawn's Light",
-          "metadata": {
-            "attribute": "DARK",
-            "race": "FIEND"
-          }
+          "cid": "21624"
         }
       ],
       "deck": [],

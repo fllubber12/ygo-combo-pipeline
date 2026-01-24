@@ -4,12 +4,10 @@
     "zones": {
       "hand": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver"
+          "cid": "20196"
         },
         {
-          "cid": "20240",
-          "name": "Fiendsmith's Tract"
+          "cid": "20240"
         }
       ],
       "field": [],
@@ -17,12 +15,10 @@
       "banished": [],
       "deck": [
         {
-          "cid": "20816",
-          "name": "Fiendsmith Kyrie"
+          "cid": "20816"
         },
         {
-          "cid": "20214",
-          "name": "Fiendsmith's Lacrima"
+          "cid": "20214"
         }
       ],
       "extra": []

@@ -7,10 +7,6 @@
         "mz": [
           {
             "cid": "20215",
-            "name": "Fiendsmith's Desirae",
-            "metadata": {
-              "summon_type": "fusion"
-            },
             "properly_summoned": true
           },
           null,
@@ -28,11 +24,6 @@
       "gy": [
         {
           "cid": "20225",
-          "name": "Fiendsmith's Requiem",
-          "metadata": {
-            "link_rating": 1,
-            "summon_type": "link"
-          },
           "properly_summoned": true
         }
       ],

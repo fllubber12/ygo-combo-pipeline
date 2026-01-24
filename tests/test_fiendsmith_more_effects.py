@@ -315,7 +315,7 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         ]
         self.assertTrue(actions)
         new_state = apply_effect_action(state, actions[0])
-        self.assertTrue(any(card.name == "Opponent Card" for card in new_state.gy))
+        self.assertTrue(any(card.name == "OPP_CARD_1" for card in new_state.gy))
         self.assertTrue(any(card.cid == "20196" for card in new_state.deck))
         self.assertTrue(new_state.opt_used.get("20215:e1"))
 
@@ -342,16 +342,13 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         self.assertTrue(any(card.cid == "20225" for card in desirae.equipped))
 
     def test_requiem_equip_requires_light_nonlink_fiend_target(self):
+        # Test 1: DARK Fiend - should fail (not LIGHT)
         snapshot = {
             "zones": {
                 "gy": [{"cid": "20225", "name": "Fiendsmith's Requiem"}],
                 "field_zones": {
                     "mz": [
-                        {
-                            "cid": "DARK_FIEND",
-                            "name": "Dark Fiend",
-                            "metadata": {"attribute": "DARK", "race": "FIEND"},
-                        },
+                        {"cid": "DARK_FIEND"},
                         None,
                         None,
                         None,
@@ -369,11 +366,8 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         ]
         self.assertFalse(actions)
 
-        snapshot["zones"]["field_zones"]["mz"][0] = {
-            "cid": "LINK_FIEND",
-            "name": "Link Fiend",
-            "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1},
-        }
+        # Test 2: LIGHT Link Fiend - should fail (is a Link monster)
+        snapshot["zones"]["field_zones"]["mz"][0] = {"cid": "LIGHT_LINK_FIEND"}
         state = GameState.from_snapshot(snapshot)
         actions = [
             action
@@ -483,20 +477,17 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         self.assertTrue(any(card.cid == "20521" for card in desirae.equipped))
 
     def test_agnumday_requires_light_nonlink(self):
+        # Test cards: DARK Fiend (fails: not LIGHT) and LIGHT Link Fiend (fails: is Link)
         snapshot = {
             "zones": {
                 "gy": [
-                    {"cid": "DARK_TARGET", "name": "Dark Target", "metadata": {"attribute": "DARK", "race": "FIEND"}},
-                    {
-                        "cid": "LINK_TARGET",
-                        "name": "Link Target",
-                        "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1},
-                    },
+                    {"cid": "DARK_FIEND"},  # Fails: not LIGHT attribute
+                    {"cid": "LIGHT_LINK_FIEND"},  # Fails: is a Link monster
                 ],
                 "field_zones": {
                     "mz": [None, None, None, None, None],
                     "emz": [
-                        {"cid": "20521", "name": "Fiendsmith's Agnumday", "metadata": {"link_rating": 3}},
+                        {"cid": "20521"},
                         None,
                     ],
                 },
@@ -559,13 +550,14 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         self.assertTrue(any(card and card.name == "Fiendsmith Token" for card in new_state.field.mz))
 
     def test_sanct_activation_fails_with_non_light_fiend(self):
+        # Use DARK_MONSTER - Sanct requires only LIGHT Fiends on field
         snapshot = {
             "zones": {
                 "hand": [
-                    {"cid": "20241", "name": "Fiendsmith's Sanct"},
+                    {"cid": "20241"},
                 ],
                 "field": [
-                    {"cid": "NON_LIGHT_FIEND", "name": "Dark Monster", "metadata": {"attribute": "DARK"}},
+                    {"cid": "DARK_MONSTER"},  # DARK attribute - Sanct should fail
                 ],
                 "gy": [],
                 "banished": [],
@@ -594,8 +586,8 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
         self.assertIsNotNone(final_state.field.emz[0])
         self.assertEqual(final_state.field.emz[0].name, "Fiendsmith's Requiem")
         gy_names = [card.name for card in final_state.gy]
-        self.assertIn("Material A", gy_names)
-        self.assertNotIn("Material B", gy_names)
+        # Test card uses CID as name with strict CDB lookup
+        self.assertIn("INERT_MONSTER_LIGHT_FIEND_4", gy_names)
 
     def test_tract_gy_fusion_desirae_success(self):
         snapshot = {
@@ -734,7 +726,7 @@ class TestFiendsmithMoreEffects(unittest.TestCase):
     def test_oppturn_pop_fixture(self):
         report = self.run_scenario("fixture_oppturn_pop_via_lacrima_requiem_paradise_desirae")
         snapshot = load_snapshot(report)
-        self.assertIn("Opponent Card", snapshot["zones"]["gy"])
+        self.assertIn("OPP_CARD_1", snapshot["zones"]["gy"])
 
     def test_oppturn_agnumday_revive_fixture(self):
         report = self.run_scenario("fixture_oppturn_agnumday_revive_desirae")

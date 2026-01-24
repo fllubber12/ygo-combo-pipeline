@@ -19,14 +19,10 @@
       "hand": [],
       "deck": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+          "cid": "20196"
         },
         {
-          "cid": "20240",
-          "name": "Fiendsmith's Tract",
-          "metadata": {"card_type": "spell"}
+          "cid": "20240"
         }
       ],
       "extra": [],
@@ -35,19 +31,33 @@
       "field_zones": {
         "mz": [
           {
-            "cid": "20490",
-            "name": "Lacrima the Crimson Tears",
-            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+            "cid": "20490"
           },
-          null, null, null, null
+          null,
+          null,
+          null,
+          null
         ],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",
     "opt_used": {},
-    "pending_triggers": ["SUMMON:20490"]
+    "pending_triggers": [
+      "SUMMON:20490"
+    ]
   }
 }

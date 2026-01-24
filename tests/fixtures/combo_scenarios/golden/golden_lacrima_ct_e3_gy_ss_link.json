@@ -23,27 +23,42 @@
       "extra": [],
       "gy": [
         {
-          "cid": "20490",
-          "name": "Lacrima the Crimson Tears",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+          "cid": "20490"
         },
         {
           "cid": "20225",
-          "name": "Fiendsmith's Requiem",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1, "summon_type": "link"},
           "properly_summoned": true
         }
       ],
       "banished": [],
       "field_zones": {
-        "mz": [null, null, null, null, null],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",
     "opt_used": {},
-    "events": ["OPP_TURN"]
+    "events": [
+      "OPP_TURN"
+    ]
   }
 }

@@ -44,12 +44,12 @@ class TestModeledExtraDeckEffects(unittest.TestCase):
     def test_exciton_knight_wipe(self):
         snapshot = self.run_scenario("fixture_exciton_knight_wipe")
         self.assertIn("Evilswarm Exciton Knight", snapshot["zones"]["field"])
-        self.assertIn("Opponent Card", snapshot["zones"]["gy"])
+        self.assertIn("OPP_CARD_1", snapshot["zones"]["gy"])
 
     def test_caesar_negate_send(self):
         snapshot = self.run_scenario("fixture_caesar_negate_send")
         self.assertIn("D/D/D Wave High King Caesar", snapshot["zones"]["field"])
-        self.assertIn("Opponent Card", snapshot["zones"]["gy"])
+        self.assertIn("OPP_CARD_1", snapshot["zones"]["gy"])
 
 
 class TestInertEffects(unittest.TestCase):

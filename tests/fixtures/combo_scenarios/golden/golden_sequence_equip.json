@@ -23,8 +23,6 @@
       "gy": [
         {
           "cid": "20238",
-          "name": "Fiendsmith's Sequence",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 2, "summon_type": "link"},
           "properly_summoned": true
         }
       ],
@@ -32,15 +30,27 @@
       "field_zones": {
         "mz": [
           {
-            "cid": "20196",
-            "name": "Fiendsmith Engraver",
-            "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+            "cid": "20196"
           },
-          null, null, null, null
+          null,
+          null,
+          null,
+          null
         ],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",

@@ -16,7 +16,7 @@
     ],
     "gy": [],
     "banished": [
-      "Opponent Card"
+      "OPP_CARD_1"
     ],
     "deck": [],
     "extra": []

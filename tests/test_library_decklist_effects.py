@@ -56,11 +56,11 @@ class TestLibraryDecklistEffects(unittest.TestCase):
     def test_muckraker_revive(self):
         snapshot = run_scenario("fixture_muckraker_revive")
         self.assertIn("Buio the Dawn's Light", snapshot["zones"]["field"])
-        self.assertIn("Discard Fodder", snapshot["zones"]["gy"])
+        self.assertIn("DISCARD_1", snapshot["zones"]["gy"])
 
     def test_sp_little_knight_banish(self):
         snapshot = run_scenario("fixture_sp_little_knight_banish")
-        self.assertIn("Opponent Card", snapshot["zones"]["banished"])
+        self.assertIn("OPP_CARD_1", snapshot["zones"]["banished"])
 
     def test_sequence_20226_equip(self):
         snapshot = run_scenario("fixture_sequence_20226_equip")
@@ -82,7 +82,7 @@ class TestLibraryDecklistEffects(unittest.TestCase):
 
     def test_necroquip_draw(self):
         snapshot = run_scenario("fixture_necroquip_draw")
-        self.assertIn("Draw Fodder", snapshot["zones"]["hand"])
+        self.assertIn("DISCARD_1", snapshot["zones"]["hand"])
 
     def test_aerial_eater_send(self):
         snapshot = run_scenario("fixture_aerial_eater_send")
@@ -92,7 +92,7 @@ class TestLibraryDecklistEffects(unittest.TestCase):
         snapshot = run_scenario("fixture_abao_revive")
         self.assertIn("Buio the Dawn's Light", snapshot["zones"]["field"])
         self.assertIn("A Bao A Qu, the Lightless Shadow", snapshot["zones"]["banished"])
-        self.assertIn("Discard Fodder", snapshot["zones"]["gy"])
+        self.assertIn("DISCARD_1", snapshot["zones"]["gy"])
 
     def test_abao_revive_sequence_equip(self):
         snapshot = run_scenario("fixture_abao_revive_sequence_equip")
@@ -134,11 +134,11 @@ class TestLibraryDecklistEffects(unittest.TestCase):
     def test_luce_send_destroy(self):
         snapshot = run_scenario("fixture_luce_send_destroy")
         self.assertIn("Buio the Dawn's Light", snapshot["zones"]["gy"])
-        self.assertIn("Opponent Card", snapshot["zones"]["gy"])
+        self.assertIn("OPP_CARD_1", snapshot["zones"]["gy"])
 
     def test_luce_destroy_trigger(self):
         snapshot = run_scenario("fixture_luce_destroy_trigger")
-        self.assertIn("Opponent Card", snapshot["zones"]["gy"])
+        self.assertIn("OPP_CARD_1", snapshot["zones"]["gy"])
 
     def test_mutiny_fusion(self):
         snapshot = run_scenario("fixture_mutiny_fusion")

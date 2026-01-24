@@ -21,32 +21,40 @@
       "hand": [],
       "deck": [
         {
-          "cid": "20490",
-          "name": "Lacrima the Crimson Tears",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 4}
+          "cid": "20490"
         },
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+          "cid": "20196"
         }
       ],
       "extra": [],
       "gy": [],
       "banished": [],
       "field_zones": {
-        "mz": [null, null, null, null, null],
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "emz": [
           {
             "cid": "20225",
-            "name": "Fiendsmith's Requiem",
-            "metadata": {"attribute": "LIGHT", "race": "FIEND", "link_rating": 1, "summon_type": "link"},
             "properly_summoned": true
           },
           null
         ],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",

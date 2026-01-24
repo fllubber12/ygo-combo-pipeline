@@ -20,26 +20,39 @@
     "zones": {
       "hand": [
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 6}
+          "cid": "20196"
         }
       ],
       "deck": [
         {
-          "cid": "20240",
-          "name": "Fiendsmith's Tract",
-          "metadata": {"card_type": "spell"}
+          "cid": "20240"
         }
       ],
       "extra": [],
       "gy": [],
       "banished": [],
       "field_zones": {
-        "mz": [null, null, null, null, null],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",

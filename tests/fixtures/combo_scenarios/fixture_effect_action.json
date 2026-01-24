@@ -4,8 +4,7 @@
     "zones": {
       "hand": [
         {
-          "cid": "DEMO_EXTENDER_001",
-          "name": "Demo Extender"
+          "cid": "DEMO_EXTENDER_001"
         }
       ],
       "field": [],

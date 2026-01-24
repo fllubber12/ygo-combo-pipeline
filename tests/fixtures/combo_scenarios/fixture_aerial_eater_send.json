@@ -9,11 +9,6 @@
         "mz": [
           {
             "cid": "20427",
-            "name": "Aerial Eater",
-            "metadata": {
-              "summon_type": "fusion",
-              "level": 6
-            },
             "properly_summoned": true
           },
           null,
@@ -28,11 +23,7 @@
       },
       "deck": [
         {
-          "cid": "21624",
-          "name": "Buio the Dawn's Light",
-          "metadata": {
-            "race": "FIEND"
-          }
+          "cid": "21624"
         }
       ],
       "hand": [],

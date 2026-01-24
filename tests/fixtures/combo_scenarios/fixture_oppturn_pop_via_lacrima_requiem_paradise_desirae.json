@@ -4,58 +4,60 @@
     "zones": {
       "gy": [
         {
-          "cid": "20490",
-          "name": "Lacrima the Crimson Tears"
+          "cid": "20490"
         },
         {
           "cid": "20225",
-          "name": "Fiendsmith's Requiem",
           "properly_summoned": true
         },
         {
-          "cid": "G_LIGHT_FIEND_A",
-          "name": "Generic LIGHT Fiend",
-          "metadata": { "attribute": "LIGHT", "race": "FIEND" }
+          "cid": "G_LIGHT_FIEND_A"
         }
       ],
       "deck": [
         {
-          "cid": "20251",
-          "name": "Fiendsmith in Paradise"
+          "cid": "20251"
         },
         {
-          "cid": "20490",
-          "name": "Lacrima the Crimson Tears"
+          "cid": "20490"
         }
       ],
       "extra": [
         {
-          "cid": "20215",
-          "name": "Fiendsmith's Desirae",
-          "metadata": {
-            "summon_type": "fusion",
-            "min_materials": 3
-          }
+          "cid": "20215"
         }
       ],
       "field_zones": {
-        "mz": [null, null, null, null, null],
-        "emz": [null, null],
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ],
         "stz": [
           {
-            "cid": "OPP_CARD_1",
-            "name": "Opponent Card"
+            "cid": "OPP_CARD_1"
           },
           null,
           null,
           null,
           null
         ],
-        "fz": [null]
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",
-    "events": ["OPP_TURN", "OPP_SPECIAL_SUMMON"]
+    "events": [
+      "OPP_TURN",
+      "OPP_SPECIAL_SUMMON"
+    ]
   },
   "search": {
     "max_depth": 6,

@@ -13,10 +13,10 @@
     "hand": [],
     "field": [
       "Fiendsmith's Rextremende",
-      "Dummy 1",
-      "Dummy 2",
-      "Dummy 3",
-      "Dummy 4",
+      "DUMMY_1",
+      "DUMMY_2",
+      "DUMMY_3",
+      "DUMMY_4",
       "Fiendsmith's Sequence"
     ],
     "gy": [],
@@ -24,7 +24,7 @@
     "deck": [],
     "extra": [
       "Fiendsmith's Desirae",
-      "Generic Link Material"
+      "G_LINK_MAT"
     ]
   },
   "equipped_link_totals": []

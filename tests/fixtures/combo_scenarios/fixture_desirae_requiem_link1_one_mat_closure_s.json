@@ -4,22 +4,24 @@
     "zones": {
       "field_zones": {
         "mz": [
-          { "cid": "20215", "name": "Fiendsmith's Desirae" },
-          { "cid": "20389", "name": "The Duke of Demise" },
+          {
+            "cid": "20215"
+          },
+          {
+            "cid": "20389"
+          },
           null,
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       },
       "extra": [
         {
-          "cid": "20225",
-          "name": "Fiendsmith's Requiem",
-          "metadata": {
-            "summon_type": "link",
-            "link_rating": 1
-          }
+          "cid": "20225"
         }
       ]
     }

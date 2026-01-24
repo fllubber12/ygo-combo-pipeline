@@ -7,23 +7,13 @@
     "zones": {
       "gy": [
         {
-          "cid": "21624",
-          "name": "Buio the Dawn's Light",
-          "metadata": {
-            "level": 3,
-            "race": "FIEND"
-          }
+          "cid": "21624"
         }
       ],
       "field_zones": {
         "mz": [
           {
             "cid": "14856",
-            "name": "Cross-Sheep",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 2
-            },
             "properly_summoned": true
           },
           null,

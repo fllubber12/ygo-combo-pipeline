@@ -6,21 +6,25 @@
     "zones": {
       "gy": [
         {
-          "cid": "20214",
-          "name": "Fiendsmith's Lacrima"
+          "cid": "20214"
         },
         {
           "cid": "20238",
-          "name": "Fiendsmith's Sequence",
-          "metadata": {
-            "link_rating": 2
-          },
           "properly_summoned": true
         }
       ],
       "field_zones": {
-        "mz": [null, null, null, null, null],
-        "emz": [null, null]
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ]
       },
       "hand": [],
       "deck": [],
@@ -28,8 +32,12 @@
       "extra": []
     },
     "opt_used": {},
-    "last_moved_to_gy": ["20214"],
-    "pending_triggers": ["SENT_TO_GY:20214"]
+    "last_moved_to_gy": [
+      "20214"
+    ],
+    "pending_triggers": [
+      "SENT_TO_GY:20214"
+    ]
   },
   "search": {
     "max_depth": 1,

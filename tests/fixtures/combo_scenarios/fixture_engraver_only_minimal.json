@@ -1,0 +1,77 @@
+{
+  "name": "engraver_only_minimal",
+  "description": "Absolute minimal test: 1 Engraver in hand with search targets in deck",
+  "state": {
+    "zones": {
+      "hand": [
+        {
+          "cid": "20196"
+        }
+      ],
+      "deck": [
+        {
+          "cid": "20240"
+        },
+        {
+          "cid": "20241"
+        },
+        {
+          "cid": "20251"
+        },
+        {
+          "cid": "20816"
+        }
+      ],
+      "gy": [],
+      "banished": [],
+      "extra": [
+        {
+          "cid": "20215"
+        },
+        {
+          "cid": "20225"
+        },
+        {
+          "cid": "20238"
+        },
+        {
+          "cid": "20214"
+        },
+        {
+          "cid": "20521"
+        },
+        {
+          "cid": "20774"
+        }
+      ],
+      "field_zones": {
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
+      }
+    },
+    "opt_used": {},
+    "events": [],
+    "pending_triggers": [],
+    "turn_number": 1,
+    "phase": "Main Phase 1"
+  }
+}

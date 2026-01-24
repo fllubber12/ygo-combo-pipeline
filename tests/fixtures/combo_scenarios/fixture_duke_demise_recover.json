@@ -7,16 +7,10 @@
     "zones": {
       "gy": [
         {
-          "cid": "20389",
-          "name": "The Duke of Demise"
+          "cid": "20389"
         },
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver",
-          "metadata": {
-            "level": 6,
-            "race": "FIEND"
-          }
+          "cid": "20196"
         }
       ],
       "field_zones": {

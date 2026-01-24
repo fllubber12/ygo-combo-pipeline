@@ -19,8 +19,8 @@
     "banished": [],
     "deck": [
       "Fiendsmith Engraver",
-      "Light Fiend A",
-      "Light Fiend B"
+      "G_LIGHT_FIEND_A",
+      "G_LIGHT_FIEND_B"
     ],
     "extra": []
   },

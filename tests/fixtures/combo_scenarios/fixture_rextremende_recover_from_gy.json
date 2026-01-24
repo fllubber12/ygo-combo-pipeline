@@ -4,21 +4,22 @@
     "zones": {
       "gy": [
         {
-          "cid": "20774",
-          "name": "Fiendsmith's Rextremende",
-          "metadata": {"summon_type": "fusion"}
+          "cid": "20774"
         }
       ],
       "banished": [
         {
-          "cid": "20240",
-          "name": "Fiendsmith's Tract"
+          "cid": "20240"
         }
       ]
     },
-    "last_moved_to_gy": ["20774"],
+    "last_moved_to_gy": [
+      "20774"
+    ],
     "phase": "Main Phase 1",
-    "pending_triggers": ["SENT_TO_GY:20774"]
+    "pending_triggers": [
+      "SENT_TO_GY:20774"
+    ]
   },
   "search": {
     "max_depth": 1,

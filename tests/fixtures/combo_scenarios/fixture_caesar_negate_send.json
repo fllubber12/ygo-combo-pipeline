@@ -9,11 +9,6 @@
         "mz": [
           {
             "cid": "13081",
-            "name": "D/D/D Wave High King Caesar",
-            "metadata": {
-              "summon_type": "xyz",
-              "rank": 6
-            },
             "properly_summoned": true
           },
           null,
@@ -27,8 +22,7 @@
         ],
         "stz": [
           {
-            "cid": "OPP_CARD_1",
-            "name": "Opponent Card"
+            "cid": "OPP_CARD_1"
           },
           null,
           null,

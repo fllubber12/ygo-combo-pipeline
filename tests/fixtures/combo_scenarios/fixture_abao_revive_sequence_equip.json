@@ -17,11 +17,6 @@
         "emz": [
           {
             "cid": "20786",
-            "name": "A Bao A Qu, the Lightless Shadow",
-            "metadata": {
-              "summon_type": "link",
-              "link_rating": 3
-            },
             "properly_summoned": true
           },
           null
@@ -29,28 +24,17 @@
       },
       "hand": [
         {
-          "cid": "DISCARD_1",
-          "name": "Discard Fodder"
+          "cid": "DISCARD_1"
         }
       ],
       "deck": [],
       "gy": [
         {
           "cid": "20226",
-          "name": "Fiendsmith's Sequence",
-          "metadata": {
-            "summon_type": "link",
-            "link_rating": 2
-          },
           "properly_summoned": true
         },
         {
-          "cid": "20196",
-          "name": "Fiendsmith Engraver",
-          "metadata": {
-            "attribute": "LIGHT",
-            "level": 4
-          }
+          "cid": "20196"
         }
       ],
       "banished": [],

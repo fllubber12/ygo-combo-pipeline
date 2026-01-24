@@ -7,30 +7,26 @@
       "field_zones": {
         "mz": [
           {
-            "name": "Material A",
-            "metadata": {"level": 6}
+            "cid": "INERT_MONSTER_DARK_FIEND_6"
           },
           {
-            "name": "Material B",
-            "metadata": {"level": 6}
+            "cid": "INERT_MONSTER_DARK_FIEND_6"
           },
           null,
           null,
           null
         ],
-        "emz": [null, null]
+        "emz": [
+          null,
+          null
+        ]
       },
       "gy": [],
       "banished": [],
       "deck": [],
       "extra": [
         {
-          "name": "D/D/D Wave High King Caesar",
-          "metadata": {
-            "summon_type": "xyz",
-            "min_materials": 2,
-            "rank": 6
-          }
+          "cid": "13081"
         }
       ]
     },
@@ -39,6 +35,8 @@
   "search": {
     "max_depth": 1,
     "beam_width": 5,
-    "allowed_actions": ["extra_deck_summon"]
+    "allowed_actions": [
+      "extra_deck_summon"
+    ]
   }
 }

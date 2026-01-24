@@ -15,7 +15,7 @@
       "Luce the Dusk's Dark"
     ],
     "gy": [
-      "Opponent Card"
+      "OPP_CARD_1"
     ],
     "banished": [],
     "deck": [],

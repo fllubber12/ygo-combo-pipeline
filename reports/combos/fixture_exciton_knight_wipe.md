@@ -15,7 +15,7 @@
       "Evilswarm Exciton Knight"
     ],
     "gy": [
-      "Opponent Card"
+      "OPP_CARD_1"
     ],
     "banished": [],
     "deck": [],

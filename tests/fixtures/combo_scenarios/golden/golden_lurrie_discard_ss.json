@@ -20,22 +20,41 @@
       "extra": [],
       "gy": [
         {
-          "cid": "8092",
-          "name": "Fabled Lurrie",
-          "metadata": {"attribute": "LIGHT", "race": "FIEND", "level": 1}
+          "cid": "8092"
         }
       ],
       "banished": [],
       "field_zones": {
-        "mz": [null, null, null, null, null],
-        "emz": [null, null],
-        "stz": [null, null, null, null, null],
-        "fz": [null]
+        "mz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "emz": [
+          null,
+          null
+        ],
+        "stz": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "fz": [
+          null
+        ]
       }
     },
     "phase": "Main Phase 1",
     "opt_used": {},
-    "events": ["LURRIE_DISCARD_TRIGGER"],
-    "last_moved_to_gy": ["8092"]
+    "events": [
+      "LURRIE_DISCARD_TRIGGER"
+    ],
+    "last_moved_to_gy": [
+      "8092"
+    ]
   }
 }
