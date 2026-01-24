@@ -644,6 +644,8 @@ For **full game simulation**, these bugs would need fixing.
 1. [x] ~~Fix Engraver e2: Add field check~~ ✅ DONE (e626e68)
 2. [x] ~~Fix Requiem e2: Add field location option~~ ✅ DONE (e626e68)
 3. [x] ~~Fix Desirae e1: Add emz check~~ ✅ DONE (e626e68)
-4. [ ] Create golden fixtures for each verified effect
+4. [x] ~~Create golden fixtures for each verified effect~~ ✅ DONE (44507ee)
+   - 11 fixtures in `tests/fixtures/combo_scenarios/golden/`
+   - 15 tests in `tests/test_golden_fixtures.py`
 5. [ ] Document remaining 20 cards in same format
 6. [ ] (Optional) Add opponent targeting to Engraver e2 / Desirae e2

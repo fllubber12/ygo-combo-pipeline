@@ -15,8 +15,12 @@ This will:
 
 ## Current State (Updated 2026-01-23)
 
+### Phase 3: Complete Library Verification (IN PROGRESS)
+- **107 tests passing** (92 unit + 15 golden fixtures)
+- Golden fixtures created for 5 core cards (12 effects)
+- 3 critical bugs FIXED and regression-tested (e626e68)
+
 ### Validation Framework (Phase 2 Complete)
-- **253/263 tests passing (96%)**
 - Rules engine: `src/sim/rules.py`
 - Validation script: `scripts/validate_effects_comprehensive.py`
 - 10 documented limitations (trap STZ activation, continuous effects, summoning procedures)
@@ -26,16 +30,23 @@ This will:
 - 25/25 decklist cards modeled
 - 0 stubs, 0 missing
 
+### Golden Fixtures (NEW)
+- `tests/fixtures/combo_scenarios/golden/` - 11 minimal test fixtures
+- `tests/test_golden_fixtures.py` - 15 unit tests with regression coverage
+- Each fixture documents Lua reference, preconditions, expected outcomes
+
 ### Verified Effects
 - ✅ verified_effects.json complete for all 25+ cards
 - ✅ Engraver e3: cost is "shuffle OTHER LIGHT Fiend", NO "different name" restriction
 - ✅ All effects documented with source verification
+- ✅ 12/12 effects for 5 core cards verified against Lua
 
 ### Key Files
 - `src/sim/effects/registry.py` - Effect registration and validation
 - `src/sim/effects/fiendsmith_effects.py` - Fiendsmith card implementations
 - `config/verified_effects.json` - Verified effect metadata
-- `tests/` - 92 unit tests
+- `docs/EFFECT_VERIFICATION_CHECKLIST.md` - Lua vs Python comparison
+- `tests/` - 107 unit tests (92 core + 15 golden)
 
 ## Next Steps (Priority Order)
 
@@ -66,7 +77,8 @@ bash scripts/prepare_handoff.sh
 ```
 
 ## Recent Commits
+- 44507ee: Add golden fixtures for 5 core verified cards
+- ddb283d: Update verification checklist to reflect fixed bugs
+- e626e68: Fix 3 critical bugs (Engraver e2, Requiem e2, Desirae e1)
 - b83e749: Comprehensive effect validation framework
 - 689933c: Add verified_effects.json structure, document Engraver effects
-- b075d44: Add Xyz enumeration, fix scoring, create verified_effects.json
-- 38eddaa: Fix scoring to count S-tier pieces, remove early exit
