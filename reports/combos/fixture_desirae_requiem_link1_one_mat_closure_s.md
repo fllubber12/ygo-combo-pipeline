@@ -4,7 +4,7 @@
 1. extra_deck_summon: {'extra_index': 0, 'summon_type': 'link', 'materials': [('mz', 1)], 'min_materials': 1, 'link_rating': 1}
 
 ## Effect Actions
-1. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'emz', 'source_index': 0, 'target_mz_index': 0}
+1. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'emz', 'source_index': 0, 'target_zone': 'mz', 'target_index': 0}
 
 ## Final Snapshot
 ```json

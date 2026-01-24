@@ -6,7 +6,7 @@
 ## Effect Actions
 1. Fiendsmith's Tract [20240] gy_banish_fuse_fiendsmith: {'gy_index': 0, 'extra_index': 0, 'mz_index': 2, 'materials': [{'source': 'hand', 'index': 0}, {'source': 'mz', 'index': 0}, {'source': 'mz', 'index': 1}]}
 2. Fiendsmith Engraver [20196] gy_shuffle_light_fiend_then_ss_self: {'gy_index': 1, 'target_gy_index': 0, 'mz_index': 0}
-3. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'emz', 'source_index': 0, 'target_mz_index': 2}
+3. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'emz', 'source_index': 0, 'target_zone': 'mz', 'target_index': 2}
 
 ## Final Snapshot
 ```json

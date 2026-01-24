@@ -4,7 +4,7 @@
 (none)
 
 ## Effect Actions
-1. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'gy', 'source_index': 0, 'target_mz_index': 0}
+1. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'gy', 'source_index': 0, 'target_zone': 'mz', 'target_index': 0}
 
 ## Final Snapshot
 ```json

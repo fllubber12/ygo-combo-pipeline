@@ -255,52 +255,66 @@ class FiendsmithEngraverEffect(EffectImpl):
                     )
 
         # e2: Target 1 Fiendsmith Equip + 1 monster on field; send both to GY
+        # Per Lua: e2:SetRange(LOCATION_MZONE) - Engraver must be on field to use this effect
+        # Per Lua: Can target ANY monster on field (yours or opponent's)
+        # NOTE: Opponent field not modeled in current simulation - targets your monsters only
         if not state.opt_used.get(f"{FIENDSMITH_ENGRAVER_CID}:e2"):
-            equip_entries: list[tuple[str, int, int, CardInstance]] = []
-            for mz_idx, monster in enumerate(state.field.mz):
-                if monster:
-                    for eq_idx, eq_card in enumerate(monster.equipped):
-                        if eq_card.cid in FIENDSMITH_EQUIP_CIDS:
-                            equip_entries.append(("mz", mz_idx, eq_idx, eq_card))
-            for emz_idx, monster in enumerate(state.field.emz):
-                if monster:
-                    for eq_idx, eq_card in enumerate(monster.equipped):
-                        if eq_card.cid in FIENDSMITH_EQUIP_CIDS:
-                            equip_entries.append(("emz", emz_idx, eq_idx, eq_card))
+            # Check if Engraver is on field (required by Lua LOCATION_MZONE)
+            engraver_on_field = any(
+                card and card.cid == FIENDSMITH_ENGRAVER_CID
+                for card in state.field.mz
+            ) or any(
+                card and card.cid == FIENDSMITH_ENGRAVER_CID
+                for card in state.field.emz
+            )
+            if not engraver_on_field:
+                pass  # Skip e2 enumeration if Engraver not on field
+            else:
+                equip_entries: list[tuple[str, int, int, CardInstance]] = []
+                for mz_idx, monster in enumerate(state.field.mz):
+                    if monster:
+                        for eq_idx, eq_card in enumerate(monster.equipped):
+                            if eq_card.cid in FIENDSMITH_EQUIP_CIDS:
+                                equip_entries.append(("mz", mz_idx, eq_idx, eq_card))
+                for emz_idx, monster in enumerate(state.field.emz):
+                    if monster:
+                        for eq_idx, eq_card in enumerate(monster.equipped):
+                            if eq_card.cid in FIENDSMITH_EQUIP_CIDS:
+                                equip_entries.append(("emz", emz_idx, eq_idx, eq_card))
 
-            monster_targets: list[tuple[str, int, CardInstance]] = []
-            for mz_idx, monster in enumerate(state.field.mz):
-                if monster:
-                    monster_targets.append(("mz", mz_idx, monster))
-            for emz_idx, monster in enumerate(state.field.emz):
-                if monster:
-                    monster_targets.append(("emz", emz_idx, monster))
+                monster_targets: list[tuple[str, int, CardInstance]] = []
+                for mz_idx, monster in enumerate(state.field.mz):
+                    if monster:
+                        monster_targets.append(("mz", mz_idx, monster))
+                for emz_idx, monster in enumerate(state.field.emz):
+                    if monster:
+                        monster_targets.append(("emz", emz_idx, monster))
 
-            for eq_zone, eq_host_idx, eq_idx, eq_card in equip_entries:
-                for mon_zone, mon_idx, mon_card in monster_targets:
-                    actions.append(
-                        EffectAction(
-                            cid=FIENDSMITH_ENGRAVER_CID,
-                            name=eq_card.name,
-                            effect_id="send_equip_and_monster_to_gy",
-                            params={
-                                "equip_zone": eq_zone,
-                                "equip_host_index": eq_host_idx,
-                                "equip_index": eq_idx,
-                                "monster_zone": mon_zone,
-                                "monster_index": mon_idx,
-                            },
-                            sort_key=(
-                                FIENDSMITH_ENGRAVER_CID,
-                                "send_equip_and_monster_to_gy",
-                                eq_zone,
-                                eq_host_idx,
-                                eq_idx,
-                                mon_zone,
-                                mon_idx,
-                            ),
+                for eq_zone, eq_host_idx, eq_idx, eq_card in equip_entries:
+                    for mon_zone, mon_idx, mon_card in monster_targets:
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_ENGRAVER_CID,
+                                name=eq_card.name,
+                                effect_id="send_equip_and_monster_to_gy",
+                                params={
+                                    "equip_zone": eq_zone,
+                                    "equip_host_index": eq_host_idx,
+                                    "equip_index": eq_idx,
+                                    "monster_zone": mon_zone,
+                                    "monster_index": mon_idx,
+                                },
+                                sort_key=(
+                                    FIENDSMITH_ENGRAVER_CID,
+                                    "send_equip_and_monster_to_gy",
+                                    eq_zone,
+                                    eq_host_idx,
+                                    eq_idx,
+                                    mon_zone,
+                                    mon_idx,
+                                ),
+                            )
                         )
-                    )
 
         if not state.opt_used.get(f"{FIENDSMITH_ENGRAVER_CID}:e3"):
             open_mz = state.open_mz_indices()
@@ -2267,6 +2281,7 @@ class FiendsmithLacrimaEffect(EffectImpl):
 class FiendsmithDesiraeEffect(EffectImpl):
     def enumerate_actions(self, state: GameState) -> list[EffectAction]:
         actions: list[EffectAction] = []
+        # e1: Negate effect - check both mz AND emz for Desirae
         for mz_index, card in enumerate(state.field.mz):
             if not card or card.cid != FIENDSMITH_DESIRAE_CID:
                 continue
@@ -2278,11 +2293,33 @@ class FiendsmithDesiraeEffect(EffectImpl):
                         cid=FIENDSMITH_DESIRAE_CID,
                         name=card.name,
                         effect_id="desirae_negate",
-                        params={"mz_index": mz_index},
+                        params={"zone": "mz", "field_index": mz_index},
                         sort_key=(
                             FIENDSMITH_DESIRAE_CID,
                             "desirae_negate",
+                            "mz",
                             mz_index,
+                            used,
+                        ),
+                    )
+                )
+        for emz_index, card in enumerate(state.field.emz):
+            if not card or card.cid != FIENDSMITH_DESIRAE_CID:
+                continue
+            total = total_equipped_link_rating(card)
+            used = int(state.opt_used.get(f"{FIENDSMITH_DESIRAE_CID}:negates_used", 0))
+            if total > used:
+                actions.append(
+                    EffectAction(
+                        cid=FIENDSMITH_DESIRAE_CID,
+                        name=card.name,
+                        effect_id="desirae_negate",
+                        params={"zone": "emz", "field_index": emz_index},
+                        sort_key=(
+                            FIENDSMITH_DESIRAE_CID,
+                            "desirae_negate",
+                            "emz",
+                            emz_index,
                             used,
                         ),
                     )
@@ -2307,6 +2344,9 @@ class FiendsmithDesiraeEffect(EffectImpl):
         if not light_fiend_indices:
             return actions
 
+        # e2: Target any card on field to send to GY
+        # Per Lua: Can target ANY card on field (yours OR opponent's)
+        # NOTE: Opponent field not modeled in current simulation - targets your field only
         field_targets: list[tuple[str, int, CardInstance]] = []
         for idx, card in enumerate(state.field.mz):
             if card:
@@ -2424,14 +2464,28 @@ class FiendsmithDesiraeEffect(EffectImpl):
         return new_state
 
     def _apply_negate(self, state: GameState, action: EffectAction) -> GameState:
-        mz_index = action.params.get("mz_index")
-        if mz_index is None:
+        # Support both old format (mz_index) and new format (zone, field_index)
+        zone = action.params.get("zone", "mz")
+        field_index = action.params.get("field_index")
+        if field_index is None:
+            field_index = action.params.get("mz_index")
+        if field_index is None:
             raise SimModelError("Missing params for Fiendsmith's Desirae negate.")
-        if not isinstance(mz_index, int):
+        if not isinstance(field_index, int):
             raise SimModelError("Invalid index type for Fiendsmith's Desirae negate.")
-        if mz_index < 0 or mz_index >= len(state.field.mz):
-            raise IllegalActionError("MZ index out of range for Fiendsmith's Desirae negate.")
-        desirae = state.field.mz[mz_index]
+
+        # Get Desirae from the appropriate zone
+        if zone == "mz":
+            if field_index < 0 or field_index >= len(state.field.mz):
+                raise IllegalActionError("Field index out of range for Fiendsmith's Desirae negate.")
+            desirae = state.field.mz[field_index]
+        elif zone == "emz":
+            if field_index < 0 or field_index >= len(state.field.emz):
+                raise IllegalActionError("Field index out of range for Fiendsmith's Desirae negate.")
+            desirae = state.field.emz[field_index]
+        else:
+            raise SimModelError("Invalid zone for Fiendsmith's Desirae negate.")
+
         if not desirae or desirae.cid != FIENDSMITH_DESIRAE_CID:
             raise IllegalActionError("Fiendsmith's Desirae not found for negate.")
 
@@ -2621,61 +2675,83 @@ class FiendsmithRequiemEffect(EffectImpl):
                             )
                         )
 
-        targets = []
-        for mz_index, card in enumerate(state.field.mz):
-            if not card:
-                continue
-            if not is_light_fiend_card(card):
-                continue
-            if is_link_monster(card):
-                continue
-            targets.append((mz_index, card))
-
-        if targets:
-            for gy_index, card in enumerate(state.gy):
-                if card.cid != FIENDSMITH_REQUIEM_CID:
+        # e2: Equip Requiem to non-Link LIGHT Fiend you control
+        # Per Lua: e2:SetRange(LOCATION_MZONE|LOCATION_GRAVE) - works from field OR GY
+        # Per Lua: e2:SetCountLimit(1,id) - Hard OPT
+        if not state.opt_used.get(f"{FIENDSMITH_REQUIEM_CID}:e2"):
+            # Build targets: non-Link LIGHT Fiend monsters you control (mz AND emz)
+            targets: list[tuple[str, int, CardInstance]] = []
+            for mz_index, card in enumerate(state.field.mz):
+                if not card:
                     continue
-                for mz_index, target in targets:
-                    actions.append(
-                        EffectAction(
-                            cid=FIENDSMITH_REQUIEM_CID,
-                            name=card.name,
-                            effect_id="equip_requiem_to_fiend",
-                            params={
-                                "source": "gy",
-                                "source_index": gy_index,
-                                "target_mz_index": mz_index,
-                            },
-                            sort_key=(
-                                FIENDSMITH_REQUIEM_CID,
-                                "equip_requiem_to_fiend",
-                                "gy",
-                                gy_index,
-                                mz_index,
-                            ),
+                if not is_light_fiend_card(card):
+                    continue
+                if is_link_monster(card):
+                    continue
+                targets.append(("mz", mz_index, card))
+            for emz_index, card in enumerate(state.field.emz):
+                if not card:
+                    continue
+                if not is_light_fiend_card(card):
+                    continue
+                if is_link_monster(card):
+                    continue
+                targets.append(("emz", emz_index, card))
+
+            if targets:
+                # Equip from GY
+                for gy_index, card in enumerate(state.gy):
+                    if card.cid != FIENDSMITH_REQUIEM_CID:
+                        continue
+                    for target_zone, target_index, target in targets:
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_REQUIEM_CID,
+                                name=card.name,
+                                effect_id="equip_requiem_to_fiend",
+                                params={
+                                    "source": "gy",
+                                    "source_index": gy_index,
+                                    "target_zone": target_zone,
+                                    "target_index": target_index,
+                                },
+                                sort_key=(
+                                    FIENDSMITH_REQUIEM_CID,
+                                    "equip_requiem_to_fiend",
+                                    "gy",
+                                    gy_index,
+                                    target_zone,
+                                    target_index,
+                                ),
+                            )
                         )
-                    )
-            for zone, field_index, card in field_entries:
-                for mz_index, target in targets:
-                    actions.append(
-                        EffectAction(
-                            cid=FIENDSMITH_REQUIEM_CID,
-                            name=card.name,
-                            effect_id="equip_requiem_to_fiend",
-                            params={
-                                "source": zone,
-                                "source_index": field_index,
-                                "target_mz_index": mz_index,
-                            },
-                            sort_key=(
-                                FIENDSMITH_REQUIEM_CID,
-                                "equip_requiem_to_fiend",
-                                zone,
-                                field_index,
-                                mz_index,
-                            ),
+                # Equip from field (Requiem on field equips itself to another monster)
+                for zone, field_index, card in field_entries:
+                    for target_zone, target_index, target in targets:
+                        # Can't equip to itself
+                        if zone == target_zone and field_index == target_index:
+                            continue
+                        actions.append(
+                            EffectAction(
+                                cid=FIENDSMITH_REQUIEM_CID,
+                                name=card.name,
+                                effect_id="equip_requiem_to_fiend",
+                                params={
+                                    "source": zone,
+                                    "source_index": field_index,
+                                    "target_zone": target_zone,
+                                    "target_index": target_index,
+                                },
+                                sort_key=(
+                                    FIENDSMITH_REQUIEM_CID,
+                                    "equip_requiem_to_fiend",
+                                    zone,
+                                    field_index,
+                                    target_zone,
+                                    target_index,
+                                ),
+                            )
                         )
-                    )
 
         return actions
 
@@ -2747,17 +2823,33 @@ class FiendsmithRequiemEffect(EffectImpl):
         return new_state
 
     def _apply_equip(self, state: GameState, action: EffectAction) -> GameState:
+        if state.opt_used.get(f"{FIENDSMITH_REQUIEM_CID}:e2"):
+            raise IllegalActionError("Fiendsmith's Requiem e2 effect already used.")
+
         source = action.params.get("source")
         source_index = action.params.get("source_index")
-        target_index = action.params.get("target_mz_index")
+        # Support both old format (target_mz_index) and new format (target_zone, target_index)
+        target_zone = action.params.get("target_zone", "mz")
+        target_index = action.params.get("target_index")
+        if target_index is None:
+            target_index = action.params.get("target_mz_index")
         if None in (source, source_index, target_index):
             raise SimModelError("Missing params for Fiendsmith's Requiem equip effect.")
         if not isinstance(source_index, int) or not isinstance(target_index, int):
             raise SimModelError("Invalid index types for Fiendsmith's Requiem equip effect.")
-        if target_index < 0 or target_index >= len(state.field.mz):
-            raise IllegalActionError("Target index out of range for Fiendsmith's Requiem equip.")
 
-        target = state.field.mz[target_index]
+        # Validate and get target monster
+        if target_zone == "mz":
+            if target_index < 0 or target_index >= len(state.field.mz):
+                raise IllegalActionError("Target index out of range for Fiendsmith's Requiem equip.")
+            target = state.field.mz[target_index]
+        elif target_zone == "emz":
+            if target_index < 0 or target_index >= len(state.field.emz):
+                raise IllegalActionError("Target index out of range for Fiendsmith's Requiem equip.")
+            target = state.field.emz[target_index]
+        else:
+            raise SimModelError("Invalid target zone for Fiendsmith's Requiem equip.")
+
         if not target or not is_light_fiend_card(target) or is_link_monster(target):
             raise IllegalActionError("Target is not a LIGHT non-Link Fiend monster.")
 
@@ -2797,5 +2889,11 @@ class FiendsmithRequiemEffect(EffectImpl):
         if "link_rating" not in requiem_card.metadata:
             requiem_card.metadata["link_rating"] = LINK_RATING_BY_CID.get(requiem_card.cid, 1)
 
-        new_state.equip_card(requiem_card, new_state.field.mz[target_index])
+        # Equip to target
+        if target_zone == "mz":
+            new_state.equip_card(requiem_card, new_state.field.mz[target_index])
+        else:
+            new_state.equip_card(requiem_card, new_state.field.emz[target_index])
+
+        new_state.opt_used[f"{FIENDSMITH_REQUIEM_CID}:e2"] = True
         return new_state

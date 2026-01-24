@@ -8,18 +8,17 @@
 1. Fiendsmith Engraver [20196] discard_search_fiendsmith_st: {'hand_index': 0, 'deck_index': 0}
 2. Fiendsmith Engraver [20196] gy_shuffle_light_fiend_then_ss_self: {'gy_index': 1, 'target_gy_index': 0, 'mz_index': 0}
 3. Fiendsmith's Tract [20240] search_light_fiend_then_discard: {'hand_index': 3, 'deck_index': 4, 'discard_hand_index': 1}
-4. Fiendsmith's Tract [20240] gy_banish_fuse_fiendsmith: {'gy_index': 0, 'extra_index': 0, 'mz_index': 1, 'materials': [{'source': 'emz', 'index': 0}, {'source': 'hand', 'index': 0}, {'source': 'hand', 'index': 2}]}
-5. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'gy', 'source_index': 1, 'target_mz_index': 1}
-6. Fiendsmith's Desirae [20215] desirae_negate: {'mz_index': 1}
-7. Fiendsmith's Requiem [20196] send_equip_and_monster_to_gy: {'equip_zone': 'mz', 'equip_host_index': 1, 'equip_index': 0, 'monster_zone': 'mz', 'monster_index': 0}
-8. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'gy', 'source_index': 3, 'target_mz_index': 1}
+4. Fiendsmith's Tract [20240] gy_banish_fuse_fiendsmith: {'gy_index': 0, 'extra_index': 0, 'mz_index': 1, 'materials': [{'source': 'emz', 'index': 0}, {'source': 'hand', 'index': 0}, {'source': 'mz', 'index': 0}]}
+5. Fiendsmith's Requiem [20225] equip_requiem_to_fiend: {'source': 'gy', 'source_index': 1, 'target_zone': 'mz', 'target_index': 1}
+6. Fiendsmith's Desirae [20215] desirae_negate: {'zone': 'mz', 'field_index': 1}
 
 ## Final Snapshot
 ```json
 {
   "zones": {
     "hand": [
-      "Inert Card 2"
+      "Inert Card 2",
+      "Fiendsmith Engraver"
     ],
     "field": [
       "Fiendsmith's Desirae"
@@ -27,7 +26,6 @@
     "gy": [
       "Inert Card 1",
       "Fabled Lurrie",
-      "Fiendsmith Engraver",
       "Fiendsmith Engraver"
     ],
     "banished": [
