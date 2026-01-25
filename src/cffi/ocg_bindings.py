@@ -15,6 +15,7 @@ Usage:
 
 from cffi import FFI
 from pathlib import Path
+import platform
 
 ffi = FFI()
 
@@ -141,11 +142,25 @@ ffi.cdef("""
 """)
 
 
+def _get_lib_extension() -> str:
+    """Get platform-appropriate shared library extension."""
+    system = platform.system()
+    if system == "Darwin":
+        return ".dylib"
+    elif system == "Windows":
+        return ".dll"
+    return ".so"  # Linux and others
+
+
 def load_library():
     """Load the libygo shared library."""
-    lib_path = Path(__file__).parent / "build" / "libygo.dylib"
+    ext = _get_lib_extension()
+    lib_path = Path(__file__).parent / "build" / f"libygo{ext}"
     if not lib_path.exists():
-        raise FileNotFoundError(f"libygo.dylib not found at {lib_path}")
+        raise FileNotFoundError(
+            f"libygo{ext} not found at {lib_path}. "
+            f"Expected extension for {platform.system()}: {ext}"
+        )
     return ffi.dlopen(str(lib_path))
 
 
@@ -161,8 +176,11 @@ def get_lib():
     return _lib
 
 
-# Convenience access
-lib = property(lambda self: get_lib())
+def __getattr__(name):
+    """Module-level lazy loading for 'lib' attribute."""
+    if name == "lib":
+        return get_lib()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 # Location constants (from common.h)
@@ -186,6 +204,35 @@ POS_FACEDOWN = POS_FACEDOWN_ATTACK | POS_FACEDOWN_DEFENSE
 
 # Duel flags (MR5 = Master Rule 5)
 DUEL_FLAGS_MR5 = (5 << 16)
+
+# Message types (from common.h)
+MSG_RETRY = 1
+MSG_HINT = 2
+MSG_START = 4
+MSG_WIN = 5
+MSG_SELECT_BATTLECMD = 10
+MSG_IDLE = 11
+MSG_SELECT_CARD = 15
+MSG_SELECT_CHAIN = 16
+MSG_SELECT_PLACE = 18
+MSG_SELECT_POSITION = 19
+MSG_SELECT_EFFECTYN = 21
+MSG_SELECT_YESNO = 22
+MSG_SELECT_OPTION = 23
+MSG_SELECT_UNSELECT_CARD = 25
+MSG_SHUFFLE_DECK = 32
+MSG_NEW_TURN = 40
+MSG_NEW_PHASE = 41
+MSG_DRAW = 90
+
+# Card type flags
+TYPE_MONSTER = 0x1
+TYPE_SPELL = 0x2
+TYPE_TRAP = 0x4
+TYPE_FUSION = 0x40
+TYPE_SYNCHRO = 0x2000
+TYPE_XYZ = 0x800000
+TYPE_LINK = 0x4000000
 
 
 if __name__ == "__main__":

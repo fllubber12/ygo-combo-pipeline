@@ -11,20 +11,33 @@ This test validates that we can:
 """
 
 import io
+import os
 import sqlite3
 import struct
+import sys
 from pathlib import Path
+
+# Add src/cffi to path for imports
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
 
 from ocg_bindings import (
     ffi, load_library,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
+    MSG_RETRY, MSG_HINT, MSG_START, MSG_WIN, MSG_SELECT_BATTLECMD,
+    MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN, MSG_SELECT_PLACE,
+    MSG_SELECT_POSITION, MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO,
+    MSG_SHUFFLE_DECK, MSG_NEW_TURN, MSG_NEW_PHASE, MSG_DRAW,
+    TYPE_LINK, TYPE_SYNCHRO, TYPE_XYZ, TYPE_FUSION,
 )
 
 
 # Paths
 CDB_PATH = Path(__file__).parents[2] / "cards.cdb"
-SCRIPT_PATH = Path("/tmp/ygopro-scripts")
+SCRIPT_PATH = Path(os.environ.get(
+    "YGOPRO_SCRIPTS_PATH",
+    "/tmp/ygopro-scripts"  # Default fallback
+))
 
 # Fiendsmith card IDs (verified from cards.cdb)
 ENGRAVER = 60764609      # Level 6 monster, hand effect to search
@@ -33,31 +46,6 @@ REQUIEM = 2463794        # Fiendsmith's Requiem - Link-1 monster
 DESIRAE = 82135803       # Fiendsmith's Desirae - Level 9 Synchro
 KYRIE = 26434972         # Fiendsmith Kyrie - Level 4 tuner
 LACRIMA = 46640168       # Fiendsmith's Lacrima - Continuous Spell
-
-# Card type flags
-TYPE_LINK = 0x4000000
-TYPE_SYNCHRO = 0x2000
-TYPE_XYZ = 0x800000
-TYPE_FUSION = 0x40
-
-# Message types
-MSG_RETRY = 1
-MSG_HINT = 2
-MSG_WIN = 5
-MSG_SELECT_BATTLECMD = 10
-MSG_IDLE = 11
-MSG_SELECT_CARD = 15
-MSG_SELECT_CHAIN = 16
-MSG_SELECT_PLACE = 18
-MSG_SELECT_POSITION = 19
-MSG_SELECT_EFFECTYN = 21
-MSG_SELECT_YESNO = 22
-MSG_SHUFFLE_DECK = 32
-MSG_NEW_TURN = 40
-MSG_NEW_PHASE = 41
-MSG_DRAW = 90
-MSG_START = 4
-
 
 # Global state
 _card_db = None
@@ -296,8 +284,8 @@ def get_card_name(code):
         row = cursor.fetchone()
         if row:
             return row[0]
-    except:
-        pass
+    except (sqlite3.Error, TypeError, KeyError):
+        pass  # Return fallback name below
     return f"Card#{code}"
 
 
@@ -611,7 +599,8 @@ def create_fiendsmith_duel():
     # Build deck with some Fiendsmith Spells/Traps (for Engraver to search)
     main_deck = [
         TRACT, TRACT,     # 2x more Fiendsmith's Tract in deck
-        KYRIE, KYRIE,     # 2x Fiendsmith Kyrie (Trap) in deck
+        KYRIE, KYRIE,     # 2x Fiendsmith Kyrie in deck
+        LACRIMA,          # 1x Fiendsmith's Lacrima (Continuous Spell)
     ]
     # Fill rest with normal monsters
     while len(main_deck) < 40:
@@ -634,7 +623,6 @@ def create_fiendsmith_duel():
     extra_deck = [
         REQUIEM,    # Fiendsmith's Requiem (Link-1)
         DESIRAE,    # Fiendsmith's Desirae (Level 9 Synchro)
-        LACRIMA,    # Fiendsmith's Lacrima (Level 6 Synchro)
     ]
 
     for i, code in enumerate(extra_deck):
