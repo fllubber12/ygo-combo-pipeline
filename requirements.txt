@@ -1,5 +1,14 @@
+# Core dependencies
+cffi>=1.15.0
+
+# Data processing
 pandas
 openpyxl
+
+# Web scraping (for card database updates)
 requests
 beautifulsoup4
 lxml
+
+# Testing
+pytest>=7.0

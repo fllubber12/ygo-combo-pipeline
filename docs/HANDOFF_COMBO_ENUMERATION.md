@@ -175,7 +175,7 @@ struct.pack("<i", -1)  # -1 to decline
 ## Running the Enumeration Engine
 
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing/src/cffi
+cd src/cffi
 
 # Quick test (20 paths)
 python3 combo_enumeration.py --max-depth 12 --max-paths 20 -v

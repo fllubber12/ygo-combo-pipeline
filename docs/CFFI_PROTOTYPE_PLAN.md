@@ -46,8 +46,8 @@ Estimated time: 8-16 hours.
 
 ```bash
 # Create working directory
-mkdir -p /Users/zacharyhartley/Desktop/Testing/cffi_prototype
-cd /Users/zacharyhartley/Desktop/Testing/cffi_prototype
+mkdir -p cffi_prototype
+cd cffi_prototype
 
 # Install Python dependencies
 pip install cffi
@@ -63,7 +63,7 @@ git clone --depth 1 https://github.com/Fluorohydride/ygopro-scripts ./vendor/ygo
 ### Step 1.2: Compile Lua 5.3 for macOS (1 hour)
 
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing/cffi_prototype/vendor
+cd cffi_prototype/vendor
 
 # Download Lua 5.3.5
 wget https://www.lua.org/ftp/lua-5.3.5.tar.gz
@@ -87,7 +87,7 @@ make posix CC=clang CFLAGS='-O2 -fPIC -arch arm64' LDFLAGS='-arch arm64'
 ### Step 1.3: Compile ygopro-core to shared library (2 hours)
 
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing/cffi_prototype/vendor
+cd cffi_prototype/vendor
 
 # Apply patches from yugioh-game (if any)
 # Check reference/yugioh-game/etc/ for patches
@@ -172,7 +172,7 @@ if __name__ == "__main__":
 
 Run and verify:
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing/cffi_prototype
+cd cffi_prototype
 python duel_build.py
 
 # Should create _duel.cpython-*.so

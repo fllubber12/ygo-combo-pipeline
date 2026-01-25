@@ -1,6 +1,6 @@
 # Combo Pipeline Roadmap
 
-> Last Updated: 2026-01-24
+> Last Updated: 2026-01-25
 > Status: Phase 1 Complete, Phase 2 In Progress
 
 ---
@@ -12,7 +12,7 @@
 | **Current Phase** | 2.1 (Search Strategy Decision) |
 | **Blocking On** | State space analysis to choose exhaustive vs MCTS |
 | **Next Action** | Run depth 30/35/40 measurements |
-| **Last Verified** | 2026-01-24 |
+| **Last Verified** | 2026-01-25 |
 
 ### Key Numbers to Remember
 
@@ -25,16 +25,22 @@ Best found:     S:P Little Knight at depth 22
 Target board:   Caesar + A Bao A Qu + Rextremende + Kyrie
 ```
 
+### Environment Variables
+
+```bash
+# Required: Path to ygopro-scripts directory (Lua card scripts)
+export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-scripts
+```
+
 ### Quick Commands
 
 ```bash
 # Verify everything works
-cd /Users/zacharyhartley/Desktop/Testing/src/cffi
-python3 test_state.py                                    # 19 tests
-python3 combo_enumeration.py --max-depth 15 --max-paths 100  # Quick test
+python3 -m pytest tests/ -v                                   # All tests
+python3 src/cffi/combo_enumeration.py --max-depth 15 --max-paths 100  # Quick test
 
 # Run verification
-python3 combo_enumeration.py --max-depth 25 --max-paths 1000 --output verify.json
+python3 src/cffi/combo_enumeration.py --max-depth 25 --max-paths 1000 --output verify.json
 ```
 
 ---
@@ -106,7 +112,7 @@ Build a system that can analyze Yu-Gi-Oh! combo decks to answer:
 | Component | File | Purpose |
 |-----------|------|---------|
 | **CFFI Bindings** | `ocg_bindings.py` | Low-level ygopro-core FFI interface |
-| **Duel Manager** | `test_fiendsmith_duel.py` | Duel creation, card loading, script handling |
+| **Duel Manager** | `tests/integration/test_fiendsmith_duel.py` | Duel creation, card loading, script handling |
 | **Combo Enumerator** | `combo_enumeration.py` | Exhaustive path exploration with branching |
 | **State Representation** | `state_representation.py` | BoardSignature, IntermediateState, ActionSpec |
 | **Transposition Table** | `transposition_table.py` | Memoization for explored states |
@@ -184,6 +190,7 @@ Max depth seen:                 24
 ### Where We Are Now
 
 - **Phase 1 (Foundation)**: Complete
+- **Code Cleanup**: Complete (16 issues resolved, all tests passing)
 - **Phase 2 (Search Strategy)**: In Progress - decision pending
 - **Blocking issue:** Not finding strong boards (Caesar, A Bao A Qu) consistently
 
@@ -193,10 +200,13 @@ Max depth seen:                 24
 |-----------|--------|-------|
 | CFFI engine integration | ✅ Working | All rules enforced correctly |
 | State representation | ✅ Working | 3-layer model (board/intermediate/replay) |
-| Transposition table | ✅ Working | 39.3% hit rate verified |
+| Transposition table | ✅ Working | 39.3% hit rate, depth-prioritized eviction |
 | Basic enumeration | ✅ Working | But depth-first, not optimal |
 | Position/zone collapse | ✅ Working | Reduces branching significantly |
 | Board grouping | ✅ Working | 64 boards with multiple paths |
+| Cross-platform support | ✅ Working | .dylib/.so/.dll auto-detection |
+| Graceful shutdown | ✅ Working | SIGINT/SIGTERM handling |
+| Type hints | ✅ Working | All public functions annotated |
 
 ### Known Limitations
 
@@ -306,10 +316,10 @@ Options:
 
 **Verification Commands**:
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing/src/cffi
+cd src/cffi
 
 # 1. Run state representation tests (expect: 19 passing)
-python3 test_state.py
+python3 -m pytest tests/unit/test_state.py -v
 
 # 2. Quick enumeration test (expect: ~50 terminals)
 python3 combo_enumeration.py --max-depth 15 --max-paths 100
@@ -373,7 +383,7 @@ python3 -c "import json; d=json.load(open('verify.json')); print(f\"Terminals: {
 
 **Verification Commands**:
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing/src/cffi
+cd src/cffi
 
 # 1. State space measurement at different depths
 for depth in 25 30 35; do
@@ -1128,10 +1138,10 @@ python3 combo_enumeration.py --max-depth 10 --max-paths 50 --verbose
 ### Test Commands
 
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing/src/cffi
+cd src/cffi
 
 # Unit tests (19 tests)
-python3 test_state.py
+python3 -m pytest tests/unit/test_state.py -v
 
 # Integration test (quick)
 python3 combo_enumeration.py --max-depth 15 --max-paths 100
@@ -1234,7 +1244,7 @@ print('Cards found:', codes)
 Run this verification before major changes:
 
 ```bash
-cd /Users/zacharyhartley/Desktop/Testing
+cd .
 
 # Verify passcodes match
 grep -r "79559912" docs/ src/cffi/  # Caesar
@@ -1578,13 +1588,13 @@ Option 3: **Breadth-first at low depths**
 | `src/cffi/state_representation.py` | BoardSignature, IntermediateState | ✅ Working |
 | `src/cffi/transposition_table.py` | Memoization cache | ✅ Working |
 | `src/cffi/ocg_bindings.py` | CFFI FFI interface | ✅ Working |
-| `src/cffi/test_fiendsmith_duel.py` | Duel creation utilities | ✅ Working |
+| `tests/integration/test_fiendsmith_duel.py` | Duel creation utilities | ✅ Working |
 
 ### Test Files
 
 | File | Tests | Status |
 |------|-------|--------|
-| `src/cffi/test_state.py` | 19 unit tests | ✅ All passing |
+| `tests/unit/test_state.py` | 19 unit tests | ✅ All passing |
 
 ### Configuration
 
@@ -1749,6 +1759,11 @@ Everything else (Phase 3, 5, 6, 7) provides additional value but isn't blocking.
 | 2026-01-24 | Verification run: 1000 paths, 39.3% hit rate |
 | 2026-01-24 | Discovered Tract vs Sanct ordering issue |
 | 2026-01-24 | Roadmap created with full documentation |
+| 2026-01-25 | Project reorganization: archived deprecated code, consolidated directories |
+| 2026-01-25 | Issues 1-5 fixed (critical: MSG_SELECT_OPTION, circular import, eviction, shutdown) |
+| 2026-01-25 | Issues 9-16 fixed (CFFI layer: platform compat, constants, test locations) |
+| 2026-01-25 | Issues 6-8 fixed (minor: test constants, docs, type hints) |
+| 2026-01-25 | Test files relocated to tests/unit/ and tests/integration/ |
 
 ---
 
@@ -1766,6 +1781,6 @@ If current approach fails, fallback options:
 
 ---
 
-*Document version: 3.0*
-*Last updated: 2026-01-24*
+*Document version: 3.1*
+*Last updated: 2026-01-25*
 *This document is a living roadmap. Update as work progresses.*
