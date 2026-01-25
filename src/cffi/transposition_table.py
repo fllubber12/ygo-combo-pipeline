@@ -47,11 +47,24 @@ class TranspositionTable:
         self.table[state_hash] = entry
 
     def _evict(self):
-        """Remove least valuable entries when full."""
-        # Simple strategy: remove oldest (FIFO)
-        # Could improve: LRU, or prioritize by depth
-        keys = list(self.table.keys())
-        for key in keys[:len(keys)//10]:  # Remove 10%
+        """Remove least valuable entries when full.
+
+        Strategy: Prioritize keeping entries with higher depth_to_terminal
+        (those closer to good boards are more valuable to cache).
+        Entries with low visit counts are also deprioritized.
+        """
+        if not self.table:
+            return
+
+        # Sort by (depth_to_terminal, visit_count) ascending - remove shallow/low-visit entries first
+        sorted_entries = sorted(
+            self.table.items(),
+            key=lambda x: (x[1].depth_to_terminal, x[1].visit_count)
+        )
+
+        # Remove bottom 10%
+        to_remove = max(1, len(sorted_entries) // 10)
+        for key, _ in sorted_entries[:to_remove]:
             del self.table[key]
 
     def stats(self) -> dict:

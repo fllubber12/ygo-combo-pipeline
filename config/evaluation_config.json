@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "description": "Board evaluation configuration for combo scoring",
+    "version": "1.0.0"
+  },
+  "tier_thresholds": {
+    "S": 100,
+    "A": 70,
+    "B": 40,
+    "C": 20
+  },
+  "score_weights": {
+    "boss_monster": 50,
+    "interaction_piece": 30,
+    "equipped_link": 20,
+    "monster_on_field": 5,
+    "fiendsmith_in_gy": 10
+  },
+  "boss_monsters": [
+    79559912,
+    4731783,
+    32991300,
+    82135803,
+    11464648,
+    29301450,
+    45409943
+  ],
+  "boss_monster_names": {
+    "79559912": "D/D/D Wave High King Caesar",
+    "4731783": "A Bao A Qu, the Lightless Shadow",
+    "32991300": "Fiendsmith's Agnumday",
+    "82135803": "Fiendsmith's Desirae",
+    "11464648": "Fiendsmith's Rextremende",
+    "29301450": "S:P Little Knight",
+    "45409943": "Luce the Dusk's Dark"
+  },
+  "interaction_pieces": [
+    79559912,
+    29301450,
+    4731783
+  ],
+  "fiendsmith_gy_targets": [
+    2463794,
+    49867899,
+    60764609
+  ],
+  "fiendsmith_gy_target_names": {
+    "2463794": "Fiendsmith's Requiem",
+    "49867899": "Fiendsmith's Sequence",
+    "60764609": "Fiendsmith Engraver"
+  }
+}

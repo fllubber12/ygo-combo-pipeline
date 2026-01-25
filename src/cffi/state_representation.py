@@ -125,7 +125,7 @@ class BoardSignature:
         )
 
     @classmethod
-    def from_engine(cls, lib, duel, capture_func=None) -> "BoardSignature":
+    def from_engine(cls, lib, duel, capture_func) -> "BoardSignature":
         """
         Capture board signature directly from engine.
 
@@ -133,14 +133,16 @@ class BoardSignature:
             lib: OCG library handle
             duel: Duel pointer
             capture_func: Function to capture board state (lib, duel) -> dict
-                         If None, imports from combo_enumeration
+                         Required to avoid circular imports.
 
         Returns:
             BoardSignature for current board state
+
+        Raises:
+            ValueError: If capture_func is None
         """
         if capture_func is None:
-            from combo_enumeration import capture_board_state
-            capture_func = capture_board_state
+            raise ValueError("capture_func is required to avoid circular imports")
 
         board_state = capture_func(lib, duel)
         return cls.from_board_state(board_state)
@@ -269,7 +271,7 @@ class IntermediateState:
         return cls(board=board, legal_actions=frozenset(a.spec for a in actions))
 
     @classmethod
-    def from_engine(cls, lib, duel, idle_data: dict, capture_func=None) -> "IntermediateState":
+    def from_engine(cls, lib, duel, idle_data: dict, capture_func) -> "IntermediateState":
         """
         Extract intermediate state directly from engine.
 
@@ -280,15 +282,16 @@ class IntermediateState:
             duel: Duel pointer
             idle_data: Parsed MSG_IDLE data
             capture_func: Function to capture board state (lib, duel) -> dict
-                         If None, imports from combo_enumeration
+                         Required to avoid circular imports.
 
         Returns:
             IntermediateState with current board and legal actions
+
+        Raises:
+            ValueError: If capture_func is None
         """
         if capture_func is None:
-            # Late import to avoid circular dependency
-            from combo_enumeration import capture_board_state
-            capture_func = capture_board_state
+            raise ValueError("capture_func is required to avoid circular imports")
 
         board_state = capture_func(lib, duel)
         return cls.from_idle_data(idle_data, board_state)

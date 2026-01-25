@@ -16,10 +16,25 @@ import json
 import struct
 import hashlib
 import io
+import signal
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
+
+# Global flag for graceful shutdown
+_shutdown_requested = False
+
+
+def _signal_handler(signum, frame):
+    """Handle interrupt signals for graceful shutdown."""
+    global _shutdown_requested
+    if not _shutdown_requested:
+        print("\n\nShutdown requested - finishing current path and saving results...")
+        _shutdown_requested = True
+    else:
+        print("\nForce quit - results may be incomplete.")
+        raise KeyboardInterrupt
 
 # Import from existing infrastructure
 from test_fiendsmith_duel import (
@@ -483,6 +498,31 @@ def parse_select_unselect_card(data):
     }
 
 
+def parse_select_option(data):
+    """Parse MSG_SELECT_OPTION to extract available options.
+
+    Format:
+    - player (1 byte)
+    - count (1 byte)
+    - options[] (count * 8 bytes each - u64 desc for each option)
+    """
+    buf = io.BytesIO(data) if isinstance(data, bytes) else data
+
+    player = read_u8(buf)
+    count = read_u8(buf)
+
+    options = []
+    for i in range(count):
+        desc = read_u64(buf)
+        options.append({"index": i, "desc": desc})
+
+    return {
+        "player": player,
+        "count": count,
+        "options": options,
+    }
+
+
 # =============================================================================
 # RESPONSE BUILDERS
 # =============================================================================
@@ -740,6 +780,11 @@ class EnumerationEngine:
 
     def _enumerate_recursive(self, action_history: List[Action]):
         """Recursively explore all paths from current action history."""
+        global _shutdown_requested
+
+        # Check for graceful shutdown
+        if _shutdown_requested:
+            return
 
         # Safety limits
         if len(action_history) >= MAX_DEPTH:
@@ -1149,16 +1194,20 @@ class EnumerationEngine:
     def _handle_select_option(self, duel, action_history, msg_data):
         """Handle MSG_SELECT_OPTION - select from multiple options."""
         depth = len(action_history)
-        # TODO: Parse option count from msg_data
-        # For now, assume 2 options
-        for opt in range(2):
+        count = msg_data.get("count", 2) if msg_data else 2  # Fallback to 2 if parsing failed
+        options = msg_data.get("options", []) if msg_data else []
+
+        self.log(f"SELECT_OPTION: {count} options available", depth)
+
+        for opt in range(count):
+            desc = options[opt]["desc"] if opt < len(options) else 0
             response = struct.pack("<I", opt)
             action = Action(
                 action_type="SELECT_OPTION",
                 message_type=MSG_SELECT_OPTION,
                 response_value=opt,
                 response_bytes=response,
-                description=f"Option {opt}",
+                description=f"Option {opt} (desc={desc})",
             )
             self.log(f"Branch: Option {opt}", depth)
             self._enumerate_recursive(action_history + [action])
@@ -1254,6 +1303,9 @@ class EnumerationEngine:
             elif msg_type == MSG_SELECT_UNSELECT_CARD:
                 msg_data = parse_select_unselect_card(msg_body)
                 messages.append((MSG_SELECT_UNSELECT_CARD, msg_data))
+            elif msg_type == MSG_SELECT_OPTION:
+                msg_data = parse_select_option(msg_body)
+                messages.append((MSG_SELECT_OPTION, msg_data))
             else:
                 # Unhandled message type
                 messages.append((msg_type, None))
@@ -1333,6 +1385,10 @@ class EnumerationEngine:
 def main():
     global MAX_DEPTH, MAX_PATHS
     import argparse
+
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, _signal_handler)
+    signal.signal(signal.SIGTERM, _signal_handler)
 
     parser = argparse.ArgumentParser(description="Exhaustive combo enumeration")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
