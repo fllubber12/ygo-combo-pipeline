@@ -1614,8 +1614,10 @@ Option 3: **Breadth-first at low depths**
 
 | File | Purpose |
 |------|---------|
-| `bin/libocgcore.dylib` | ygopro-core library (macOS) |
-| `script/*.lua` | Card effect scripts |
+| `src/cffi/build/libygo.dylib` | ygopro-core library (macOS) |
+| `src/cffi/build/libygo.so` | ygopro-core library (Linux) |
+| `src/cffi/build/libygo.dll` | ygopro-core library (Windows) |
+| `script/*.lua` | Card effect scripts (set via YGOPRO_SCRIPTS_PATH) |
 
 ---
 

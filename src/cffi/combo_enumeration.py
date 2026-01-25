@@ -44,7 +44,12 @@ from test_fiendsmith_duel import (
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
 )
-from ocg_bindings import LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED
+from ocg_bindings import (
+    LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
+    # Import canonical MSG_* constants from ocg_bindings
+    MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO, MSG_SELECT_OPTION,
+    MSG_SELECT_UNSELECT_CARD as MSG_SELECT_UNSELECT_CARD_BINDING,
+)
 from state_representation import (
     BoardSignature, IntermediateState, ActionSpec,
     evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
@@ -63,21 +68,22 @@ ENGRAVER = 60764609
 HOLACTIE = 10000040  # Dead card
 
 # Message types we handle (require branching decisions)
+# Core selection messages (values from ocg_bindings.py - the canonical source)
 MSG_IDLE = 11  # MSG_SELECT_IDLECMD
+MSG_SELECT_BATTLECMD = 10
 MSG_SELECT_CARD = 15
 MSG_SELECT_CHAIN = 16
 MSG_SELECT_PLACE = 18
 MSG_SELECT_POSITION = 19
-MSG_SELECT_EFFECTYN = 12
-MSG_SELECT_YESNO = 13
-MSG_SELECT_OPTION = 14
-MSG_SELECT_UNSELECT_CARD = 26
 MSG_SELECT_TRIBUTE = 20
-MSG_SELECT_BATTLECMD = 10
-MSG_SELECT_COUNTER = 22
-MSG_SELECT_SUM = 23
-MSG_SELECT_DISFIELD = 24
-MSG_SORT_CARD = 25
+# MSG_SELECT_EFFECTYN = 21 (imported from ocg_bindings)
+# MSG_SELECT_YESNO = 22 (imported from ocg_bindings)
+# MSG_SELECT_OPTION = 23 (imported from ocg_bindings)
+MSG_SELECT_COUNTER = 24
+MSG_SELECT_UNSELECT_CARD = MSG_SELECT_UNSELECT_CARD_BINDING  # = 25 from ocg_bindings
+MSG_SELECT_SUM = 26
+MSG_SORT_CARD = 27
+MSG_SELECT_DISFIELD = 28
 
 # Query flags (for OCG_DuelQueryLocation)
 QUERY_CODE = 0x1
@@ -527,15 +533,26 @@ def parse_select_option(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
 # RESPONSE BUILDERS
 # =============================================================================
 
+# IDLE response types (from field_processor.cpp OCG_DuelSetResponse for MSG_SELECT_IDLECMD)
+IDLE_RESPONSE_SUMMON = 0       # Normal summon
+IDLE_RESPONSE_SPSUMMON = 1     # Special summon
+IDLE_RESPONSE_REPOSITION = 2   # Change position
+IDLE_RESPONSE_MSET = 3         # Monster set
+IDLE_RESPONSE_SSET = 4         # Spell/trap set
+IDLE_RESPONSE_ACTIVATE = 5     # Activate effect
+IDLE_RESPONSE_TO_BATTLE = 6    # Go to battle phase
+IDLE_RESPONSE_TO_END = 7       # End turn / pass
+
+
 def build_activate_response(index: int) -> Tuple[int, bytes]:
     """Build response to activate effect from IDLE."""
-    value = (index << 16) | 5
+    value = (index << 16) | IDLE_RESPONSE_ACTIVATE
     return value, struct.pack("<I", value)
 
 
 def build_pass_response() -> Tuple[int, bytes]:
     """Build response to end main phase (PASS)."""
-    return 7, struct.pack("<I", 7)
+    return IDLE_RESPONSE_TO_END, struct.pack("<I", IDLE_RESPONSE_TO_END)
 
 
 def build_select_card_response(indices: List[int]) -> Tuple[List[int], bytes]:
