@@ -16,11 +16,15 @@ import json
 import struct
 import hashlib
 import io
+import logging
 import signal
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional, Tuple, Union, BinaryIO
 from datetime import datetime
+
+# Configure module logger
+logger = logging.getLogger(__name__)
 
 # Global flag for graceful shutdown
 _shutdown_requested = False
@@ -65,7 +69,10 @@ LOCKED_LIBRARY_PATH = Path(__file__).parents[2] / "config" / "locked_library.jso
 
 # Starting state
 ENGRAVER = 60764609
-HOLACTIE = 10000040  # Dead card
+
+# Standardized filler/dead card: Holactie cannot be summoned normally and has no
+# relevant effects during combo testing. Use this for deck padding and hand filler.
+HOLACTIE = 10000040  # Holactie the Creator of Light
 
 # Message types we handle (require branching decisions)
 # Core selection messages (values from ocg_bindings.py - the canonical source)
@@ -232,7 +239,7 @@ def load_locked_library():
         library = json.load(f)
 
     if library.get("_meta", {}).get("verification_required", True):
-        print("WARNING: Locked library not yet verified!")
+        logger.warning("Locked library not yet verified!")
 
     return library
 
@@ -581,6 +588,7 @@ def parse_query_response(data: bytes) -> list:
     - Field block: [size(u16)][flag(u32)][value(varies)]
     """
     if len(data) < 4:
+        logger.warning(f"parse_query_response: data too short ({len(data)} bytes), expected at least 4")
         return []
 
     buf = io.BytesIO(data)
@@ -1244,11 +1252,12 @@ class EnumerationEngine:
 
         # If finishable and we have unselect options, we can finish
         if finishable and unselect_cards:
-            response = struct.pack("<I", 0xFFFFFFFF)
+            # Response -1 (signed int32) signals finish per ygopro-core
+            response = struct.pack("<i", -1)
             action = Action(
                 action_type="SELECT_UNSELECT_FINISH",
                 message_type=MSG_SELECT_UNSELECT_CARD,
-                response_value=0xFFFFFFFF,
+                response_value=-1,
                 response_bytes=response,
                 description="Finish selection",
             )
@@ -1264,11 +1273,12 @@ class EnumerationEngine:
             seen_codes.add(code)
 
             name = get_card_name(code)
-            response = struct.pack("<ii", 1, i)  # type=1 (select), index
+            # Response is just the index (single int32) per ygopro-core field_processor.cpp
+            response = struct.pack("<i", i)
             action = Action(
                 action_type="SELECT_UNSELECT_SELECT",
                 message_type=MSG_SELECT_UNSELECT_CARD,
-                response_value=(1, i),
+                response_value=i,
                 response_bytes=response,
                 description=f"Select {name}",
                 card_code=code,
@@ -1371,7 +1381,7 @@ class EnumerationEngine:
                 if board_hash in self.seen_board_sigs:
                     self.duplicate_boards_skipped += 1
                     if self.verbose:
-                        print(f"  SKIPPED duplicate board at depth {len(action_history)}")
+                        logger.debug(f"SKIPPED duplicate board at depth {len(action_history)}")
                     return  # Skip recording this duplicate
                 self.seen_board_sigs.add(board_hash)
 
@@ -1424,9 +1434,9 @@ def main():
     MAX_PATHS = args.max_paths
 
     # Initialize
-    print("Loading card database...")
+    logger.info("Loading card database...")
     if not init_card_database():
-        print("ERROR: Failed to load card database")
+        logger.error("Failed to load card database")
         return 1
 
     print("Loading library...")

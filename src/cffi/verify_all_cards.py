@@ -121,8 +121,9 @@ _setcode_cache = {}
 _setcode_arrays = {}
 _script_errors = []
 
-# Generic filler card for opponent deck
-FILLER_CARD = 28803166  # Lacrima CT
+# Filler card for opponent deck - using Lacrima CT for Fiendsmith archetype tests
+# Standard filler for non-Fiendsmith tests: HOLACTIE (10000040)
+FILLER_CARD = 28803166  # Fiendsmith Lacrima (for archetype-specific tests)
 
 
 def init_card_database():

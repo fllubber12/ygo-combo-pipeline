@@ -20,16 +20,13 @@ import hashlib
 import io
 import struct
 
-# Location constants
-LOCATION_DECK = 0x01
-LOCATION_HAND = 0x02
-LOCATION_MZONE = 0x04
-LOCATION_SZONE = 0x08
-LOCATION_GRAVE = 0x10
-LOCATION_REMOVED = 0x20
-LOCATION_EXTRA = 0x40
+# Import location constants from canonical source (ocg_bindings.py)
+from ocg_bindings import (
+    LOCATION_DECK, LOCATION_HAND, LOCATION_MZONE, LOCATION_SZONE,
+    LOCATION_GRAVE, LOCATION_REMOVED, LOCATION_EXTRA,
+)
 
-# Query flags
+# Query flags (keep local as these are specific to state capture)
 QUERY_CODE = 0x1
 QUERY_POSITION = 0x2
 QUERY_EQUIP_CARD = 0x10

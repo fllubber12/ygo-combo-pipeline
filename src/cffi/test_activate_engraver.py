@@ -32,7 +32,8 @@ KYRIE = 26434972
 REQUIEM = 2463794
 DESIRAE = 82135803
 LACRIMA = 46640168
-FILLER = 32864  # The 13th Grave
+# Standardized filler card - has no relevant effects during combo testing
+FILLER = 10000040  # Holactie the Creator of Light (cannot be summoned normally)
 
 # Message types (values from ygopro-core common.h)
 MSG_RETRY = 1

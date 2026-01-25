@@ -32,12 +32,10 @@ from ocg_bindings import (
 )
 
 
-# Paths
-CDB_PATH = Path(__file__).parents[2] / "cards.cdb"
-SCRIPT_PATH = Path(os.environ.get(
-    "YGOPRO_SCRIPTS_PATH",
-    "/tmp/ygopro-scripts"  # Default fallback
-))
+# Paths - import from centralized paths module
+from paths import CDB_PATH, get_scripts_path, verify_scripts_path
+
+SCRIPT_PATH = get_scripts_path()
 
 # Fiendsmith card IDs (verified from cards.cdb)
 ENGRAVER = 60764609      # Level 6 monster, hand effect to search
@@ -86,8 +84,10 @@ def get_setcodes(setcode_value):
     return setcodes
 
 
-# Pre-allocate setcode arrays to avoid GC issues
+# Pre-allocate setcode arrays to avoid GC issues during duel
+# Note: These persist for the process lifetime to prevent use-after-free
 _setcode_arrays = {}
+
 
 def get_setcode_array(setcodes):
     """Get or create a persistent setcode array."""
@@ -100,6 +100,16 @@ def get_setcode_array(setcodes):
         arr[len(setcodes)] = 0
         _setcode_arrays[key] = arr
     return _setcode_arrays[key]
+
+
+def clear_setcode_cache():
+    """Clear the setcode arrays cache.
+
+    Call this between duels if memory is a concern, but only after
+    ensuring no duel is referencing the arrays.
+    """
+    global _setcode_arrays
+    _setcode_arrays.clear()
 
 
 @ffi.callback("void(void*, uint32_t, OCG_CardData*)")
@@ -460,6 +470,9 @@ def process_messages(lib, duel):
 
 def preload_utility_scripts(lib, duel):
     """Load all required utility scripts before card scripts."""
+    # Verify scripts directory exists before attempting to load
+    verify_scripts_path()
+
     # Order matters - load in dependency order
     utility_scripts = [
         "constant.lua",

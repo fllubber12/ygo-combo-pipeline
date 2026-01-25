@@ -347,6 +347,68 @@ class TestBoardEvaluation(unittest.TestCase):
         self.assertEqual(s_eval["tier"], "S")
         self.assertEqual(brick_eval["tier"], "brick")
 
+    def test_tier_a_boundary(self):
+        """A-tier: score 70-99 (one boss + non-boss monsters)."""
+        # Use Desirae (boss but NOT interaction piece) to avoid double-counting
+        DESIRAE = 82135803  # Fiendsmith's Desirae - boss only
+        # 1 boss (50 + 5) + 3 unique non-boss monsters (15) = 70
+        a_board = {
+            "player0": {
+                "monsters": [
+                    {"code": DESIRAE},     # Boss only (50 + 5 = 55)
+                    {"code": 3000001},     # Non-boss (5)
+                    {"code": 3000002},     # Non-boss (5)
+                    {"code": 3000003},     # Non-boss (5) = total 70
+                ],
+                "spells": [], "graveyard": [], "hand": [],
+                "banished": [], "extra": [],
+            }
+        }
+
+        sig = BoardSignature.from_board_state(a_board)
+        eval_result = evaluate_board_quality(sig)
+
+        self.assertEqual(eval_result["tier"], "A")
+        self.assertGreaterEqual(eval_result["score"], 70)
+        self.assertLess(eval_result["score"], 100)
+
+    def test_tier_b_boundary(self):
+        """B-tier: score 40-69 (monsters only, no boss)."""
+        # 8 unique non-boss monsters = 8 * 5 = 40
+        # Using unique passcodes to avoid set deduplication
+        b_board = {
+            "player0": {
+                "monsters": [{"code": 1000000 + i} for i in range(8)],
+                "spells": [], "graveyard": [], "hand": [],
+                "banished": [], "extra": [],
+            }
+        }
+
+        sig = BoardSignature.from_board_state(b_board)
+        eval_result = evaluate_board_quality(sig)
+
+        self.assertEqual(eval_result["tier"], "B")
+        self.assertGreaterEqual(eval_result["score"], 40)
+        self.assertLess(eval_result["score"], 70)
+
+    def test_tier_c_boundary(self):
+        """C-tier: score 20-39 (minimal board presence)."""
+        # 4 unique non-boss monsters = 4 * 5 = 20
+        c_board = {
+            "player0": {
+                "monsters": [{"code": 2000000 + i} for i in range(4)],
+                "spells": [], "graveyard": [], "hand": [],
+                "banished": [], "extra": [],
+            }
+        }
+
+        sig = BoardSignature.from_board_state(c_board)
+        eval_result = evaluate_board_quality(sig)
+
+        self.assertEqual(eval_result["tier"], "C")
+        self.assertGreaterEqual(eval_result["score"], 20)
+        self.assertLess(eval_result["score"], 40)
+
 
 class TestTranspositionTable(unittest.TestCase):
     """Test transposition table operations."""
