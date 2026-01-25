@@ -28,27 +28,57 @@ from ocg_bindings import (
 CDB_PATH = Path(__file__).parents[2] / "cards.cdb"
 SCRIPT_PATH = Path("/tmp/ygopro-scripts")
 
-# Cards to verify - CORRECTED passcodes from cards.cdb
+# Cards to verify - All 26 library cards from cdb_aliases.json
 CARDS_TO_VERIFY = {
+    # ===========================================
+    # FIENDSMITH ARCHETYPE (12 cards)
+    # ===========================================
     # Main Deck Monsters
     "20196": {"name": "Fiendsmith Engraver", "passcode": 60764609},
     "20490": {"name": "Lacrima the Crimson Tears", "passcode": 28803166},
 
     # Main Deck Spells
-    "20240": {"name": "Fiendsmith's Tract", "passcode": 98567237},  # Was 74875003 (Ra's Disciple)
+    "20240": {"name": "Fiendsmith's Tract", "passcode": 98567237},
     "20241": {"name": "Fiendsmith's Sanct", "passcode": 35552985},
 
     # Main Deck Traps
     "20251": {"name": "Fiendsmith in Paradise", "passcode": 99989863},
     "20816": {"name": "Fiendsmith Kyrie", "passcode": 26434972},
 
-    # Extra Deck
+    # Fiendsmith Extra Deck
     "20215": {"name": "Fiendsmith's Desirae", "passcode": 82135803},
     "20225": {"name": "Fiendsmith's Requiem", "passcode": 2463794},
     "20238": {"name": "Fiendsmith's Sequence", "passcode": 49867899},
     "20214": {"name": "Fiendsmith's Lacrima", "passcode": 46640168},
     "20521": {"name": "Fiendsmith's Agnumday", "passcode": 32991300},
     "20774": {"name": "Fiendsmith's Rextremende", "passcode": 11464648},
+
+    # ===========================================
+    # NON-FIENDSMITH LIBRARY CARDS (14 cards)
+    # ===========================================
+    # Main Deck
+    "8092": {"name": "Fabled Lurrie", "passcode": 97651498},
+    "20389": {"name": "Mutiny in the Sky", "passcode": 71593652},
+
+    # Extra Deck - Xyz
+    "10942": {"name": "Evilswarm Exciton Knight", "passcode": 46772449},
+    "13081": {"name": "D/D/D Wave High King Caesar", "passcode": 79559912},
+
+    # Extra Deck - Link-2
+    "14856": {"name": "Cross-Sheep", "passcode": 50277355},
+    "17806": {"name": "Muckraker From the Underworld", "passcode": 71607202},
+    "19188": {"name": "S:P Little Knight", "passcode": 29301450},
+    "20423": {"name": "Necroquip Princess", "passcode": 93860227},
+    "20427": {"name": "The Duke of Demise", "passcode": 45445571},
+
+    # Extra Deck - Link-3
+    "20786": {"name": "A Bao A Qu, the Lightless Shadow", "passcode": 4731783},
+    "20772": {"name": "Aerial Eater", "passcode": 28143384},
+
+    # Extra Deck - Link-4
+    "21624": {"name": "Buio the Dawn's Light", "passcode": 19000848},
+    "21625": {"name": "Luce the Dusk's Dark", "passcode": 45409943},
+    "21626": {"name": "Snake-Eyes Doomed Dragon", "passcode": 58071334},
 }
 
 # Message types

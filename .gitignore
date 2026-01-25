@@ -1,11 +1,90 @@
-.venv/
-.git/
+# ===== Python =====
 __pycache__/
-*.pyc
-.DS_Store
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
 dist/
-Testing.zip
-updates_*.zip
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ===== Virtual Environments =====
+.venv/
+venv/
+ENV/
+env/
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===== OS =====
+.DS_Store
+.DS_Store?
+Thumbs.db
+
+# ===== Testing =====
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# ===== Project Specific =====
+
+# Generated enumeration output (large JSON files)
+enumeration_*.json
+verification_run.json
+output/
+results/
+
+# Compiled binaries (should be built locally)
+*.dylib
+*.so
+*.dll
+*.a
+libygo.*
+
+# Lua build artifacts (third-party dependency)
+deps/lua-*/src/*.o
+deps/lua-*/src/lua
+deps/lua-*/src/luac
+deps/lua-*/src/liblua.a
+
+# Backup archives
+*.zip
+!config/*.zip
+
+# Card database (large, obtain separately)
+# Uncomment if you want to exclude:
+# cards.cdb
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Card database (large binary, download separately)
 cards.cdb
+
+# Generated reports (regeneratable by running scripts)
 reports/
-handoff_*.zip
