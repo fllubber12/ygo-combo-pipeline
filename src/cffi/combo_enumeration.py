@@ -19,7 +19,7 @@ import io
 import signal
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Union, BinaryIO
 from datetime import datetime
 
 # Global flag for graceful shutdown
@@ -349,14 +349,14 @@ def create_duel(lib, main_deck_cards, extra_deck_cards):
 # MESSAGE PARSING
 # =============================================================================
 
-def read_u8(buf): return struct.unpack("<B", buf.read(1))[0]
-def read_u16(buf): return struct.unpack("<H", buf.read(2))[0]
-def read_u32(buf): return struct.unpack("<I", buf.read(4))[0]
-def read_i32(buf): return struct.unpack("<i", buf.read(4))[0]
-def read_u64(buf): return struct.unpack("<Q", buf.read(8))[0]
+def read_u8(buf: BinaryIO) -> int: return struct.unpack("<B", buf.read(1))[0]
+def read_u16(buf: BinaryIO) -> int: return struct.unpack("<H", buf.read(2))[0]
+def read_u32(buf: BinaryIO) -> int: return struct.unpack("<I", buf.read(4))[0]
+def read_i32(buf: BinaryIO) -> int: return struct.unpack("<i", buf.read(4))[0]
+def read_u64(buf: BinaryIO) -> int: return struct.unpack("<Q", buf.read(8))[0]
 
 
-def parse_idle(data):
+def parse_idle(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_IDLE to extract all legal actions."""
     buf = io.BytesIO(data) if isinstance(data, bytes) else data
 
@@ -398,7 +398,7 @@ def parse_idle(data):
     }
 
 
-def parse_select_card(data):
+def parse_select_card(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_CARD to extract selection options."""
     buf = io.BytesIO(data) if isinstance(data, bytes) else data
 
@@ -426,7 +426,7 @@ def parse_select_card(data):
     }
 
 
-def parse_select_chain(data):
+def parse_select_chain(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_CHAIN."""
     buf = io.BytesIO(data) if isinstance(data, bytes) else data
 
@@ -442,7 +442,7 @@ def parse_select_chain(data):
     }
 
 
-def parse_select_place(data):
+def parse_select_place(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_PLACE."""
     buf = io.BytesIO(data) if isinstance(data, bytes) else data
 
@@ -457,7 +457,7 @@ def parse_select_place(data):
     }
 
 
-def parse_select_unselect_card(data):
+def parse_select_unselect_card(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_UNSELECT_CARD."""
     buf = io.BytesIO(data) if isinstance(data, bytes) else data
 
@@ -498,7 +498,7 @@ def parse_select_unselect_card(data):
     }
 
 
-def parse_select_option(data):
+def parse_select_option(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_OPTION to extract available options.
 
     Format:
@@ -527,18 +527,18 @@ def parse_select_option(data):
 # RESPONSE BUILDERS
 # =============================================================================
 
-def build_activate_response(index):
+def build_activate_response(index: int) -> Tuple[int, bytes]:
     """Build response to activate effect from IDLE."""
     value = (index << 16) | 5
     return value, struct.pack("<I", value)
 
 
-def build_pass_response():
+def build_pass_response() -> Tuple[int, bytes]:
     """Build response to end main phase (PASS)."""
     return 7, struct.pack("<I", 7)
 
 
-def build_select_card_response(indices):
+def build_select_card_response(indices: List[int]) -> Tuple[List[int], bytes]:
     """Build response to select cards."""
     data = struct.pack("<iI", 0, len(indices))
     for idx in indices:
@@ -546,7 +546,7 @@ def build_select_card_response(indices):
     return indices, data
 
 
-def build_decline_chain_response():
+def build_decline_chain_response() -> Tuple[int, bytes]:
     """Build response to decline chain opportunity."""
     return -1, struct.pack("<i", -1)
 

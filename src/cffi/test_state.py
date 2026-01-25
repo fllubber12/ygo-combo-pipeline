@@ -18,6 +18,14 @@ from state_representation import (
 )
 from transposition_table import TranspositionTable, TranspositionEntry
 
+# Card passcode constants for test clarity
+CAESAR = 79559912           # D/D/D Wave High King Caesar
+REQUIEM = 2463794           # Fiendsmith's Requiem (Link-1)
+ENGRAVER = 60764609         # Fiendsmith Engraver
+SEQUENCE = 49867899         # Fiendsmith's Sequence
+SP_LITTLE_KNIGHT = 29301450 # S:P Little Knight
+HOLACTIE = 10000040         # Holactie the Creator of Light
+
 
 class TestBoardSignature(unittest.TestCase):
     """Test BoardSignature hashing and equality."""
@@ -27,11 +35,11 @@ class TestBoardSignature(unittest.TestCase):
         board_state = {
             "player0": {
                 "monsters": [
-                    {"code": 79559912, "name": "Caesar"},
-                    {"code": 2463794, "name": "Requiem"},
+                    {"code": CAESAR, "name": "Caesar"},
+                    {"code": REQUIEM, "name": "Requiem"},
                 ],
                 "spells": [],
-                "graveyard": [{"code": 60764609, "name": "Engraver"}],
+                "graveyard": [{"code": ENGRAVER, "name": "Engraver"}],
                 "hand": [],
                 "banished": [],
                 "extra": [],
@@ -51,14 +59,14 @@ class TestBoardSignature(unittest.TestCase):
         """Different monsters produce different hashes."""
         board1 = {
             "player0": {
-                "monsters": [{"code": 79559912}],
+                "monsters": [{"code": CAESAR}],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
         }
         board2 = {
             "player0": {
-                "monsters": [{"code": 2463794}],
+                "monsters": [{"code": REQUIEM}],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
@@ -75,7 +83,7 @@ class TestBoardSignature(unittest.TestCase):
         # Card on field
         board1 = {
             "player0": {
-                "monsters": [{"code": 60764609}],
+                "monsters": [{"code": ENGRAVER}],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
@@ -84,7 +92,7 @@ class TestBoardSignature(unittest.TestCase):
         board2 = {
             "player0": {
                 "monsters": [],
-                "spells": [], "graveyard": [{"code": 60764609}], "hand": [],
+                "spells": [], "graveyard": [{"code": ENGRAVER}], "hand": [],
                 "banished": [], "extra": [],
             }
         }
@@ -98,14 +106,14 @@ class TestBoardSignature(unittest.TestCase):
         """Order of cards in same zone doesn't affect hash."""
         board1 = {
             "player0": {
-                "monsters": [{"code": 79559912}, {"code": 2463794}],
+                "monsters": [{"code": CAESAR}, {"code": REQUIEM}],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
         }
         board2 = {
             "player0": {
-                "monsters": [{"code": 2463794}, {"code": 79559912}],
+                "monsters": [{"code": REQUIEM}, {"code": CAESAR}],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
@@ -122,16 +130,16 @@ class TestBoardSignature(unittest.TestCase):
         # Board with equip
         board1 = {
             "player0": {
-                "monsters": [{"code": 79559912, "zone_index": 0}],
-                "spells": [{"code": 2463794, "equip_target": 0}],  # Requiem equipped
+                "monsters": [{"code": CAESAR, "zone_index": 0}],
+                "spells": [{"code": REQUIEM, "equip_target": 0}],  # Requiem equipped
                 "graveyard": [], "hand": [], "banished": [], "extra": [],
             }
         }
         # Same cards, no equip
         board2 = {
             "player0": {
-                "monsters": [{"code": 79559912, "zone_index": 0}],
-                "spells": [{"code": 2463794}],  # Requiem not equipped
+                "monsters": [{"code": CAESAR, "zone_index": 0}],
+                "spells": [{"code": REQUIEM}],  # Requiem not equipped
                 "graveyard": [], "hand": [], "banished": [], "extra": [],
             }
         }
@@ -165,10 +173,10 @@ class TestIntermediateState(unittest.TestCase):
         """All action types are extracted from idle_data."""
         idle_data = {
             "activatable": [
-                {"code": 60764609, "loc": LOCATION_HAND, "desc": 0},
-                {"code": 60764609, "loc": LOCATION_GRAVE, "desc": 2},
+                {"code": ENGRAVER, "loc": LOCATION_HAND, "desc": 0},
+                {"code": ENGRAVER, "loc": LOCATION_GRAVE, "desc": 2},
             ],
-            "spsummon": [{"code": 2463794}],
+            "spsummon": [{"code": REQUIEM}],
             "summonable": [{"code": 12345678}],
             "mset": [{"code": 11111111}],
             "sset": [{"code": 22222222}],
@@ -189,9 +197,9 @@ class TestIntermediateState(unittest.TestCase):
 
         # Check specific action specs
         actions = state.legal_actions
-        self.assertIn("act:60764609:0", actions)
-        self.assertIn("act:60764609:2", actions)
-        self.assertIn("ss:2463794", actions)
+        self.assertIn(f"act:{ENGRAVER}:0", actions)
+        self.assertIn(f"act:{ENGRAVER}:2", actions)
+        self.assertIn(f"ss:{REQUIEM}", actions)
         self.assertIn("ns:12345678", actions)
         self.assertIn("mset:11111111", actions)
         self.assertIn("sset:22222222", actions)
@@ -201,7 +209,7 @@ class TestIntermediateState(unittest.TestCase):
         """Different legal actions produce different hashes."""
         board_state = {
             "player0": {
-                "monsters": [{"code": 79559912}],
+                "monsters": [{"code": CAESAR}],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
@@ -209,7 +217,7 @@ class TestIntermediateState(unittest.TestCase):
 
         # State with one activatable
         idle1 = {
-            "activatable": [{"code": 60764609, "loc": LOCATION_HAND, "desc": 0}],
+            "activatable": [{"code": ENGRAVER, "loc": LOCATION_HAND, "desc": 0}],
             "spsummon": [],
             "to_ep": True,
         }
@@ -229,13 +237,13 @@ class TestIntermediateState(unittest.TestCase):
     def test_hash_determinism(self):
         """Same state produces same hash."""
         idle_data = {
-            "activatable": [{"code": 60764609, "loc": LOCATION_HAND, "desc": 0}],
-            "spsummon": [{"code": 2463794}],
+            "activatable": [{"code": ENGRAVER, "loc": LOCATION_HAND, "desc": 0}],
+            "spsummon": [{"code": REQUIEM}],
             "to_ep": True,
         }
         board_state = {
             "player0": {
-                "monsters": [{"code": 79559912}],
+                "monsters": [{"code": CAESAR}],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
@@ -252,12 +260,12 @@ class TestActionSpec(unittest.TestCase):
 
     def test_factory_methods(self):
         """Factory methods create correct spec strings."""
-        act = ActionSpec.activate(60764609, 0, LOCATION_HAND)
-        self.assertEqual(act.spec, "act:60764609:0")
+        act = ActionSpec.activate(ENGRAVER, 0, LOCATION_HAND)
+        self.assertEqual(act.spec, f"act:{ENGRAVER}:0")
         self.assertEqual(act.action_type, "activate")
 
-        ss = ActionSpec.special_summon(2463794)
-        self.assertEqual(ss.spec, "ss:2463794")
+        ss = ActionSpec.special_summon(REQUIEM)
+        self.assertEqual(ss.spec, f"ss:{REQUIEM}")
         self.assertEqual(ss.action_type, "spsummon")
 
         ns = ActionSpec.normal_summon(12345678)
@@ -275,8 +283,8 @@ class TestActionSpec(unittest.TestCase):
 
     def test_equality_by_spec(self):
         """ActionSpecs are equal if their specs match."""
-        act1 = ActionSpec.activate(60764609, 0, LOCATION_HAND)
-        act2 = ActionSpec.activate(60764609, 0, LOCATION_GRAVE)  # Different loc
+        act1 = ActionSpec.activate(ENGRAVER, 0, LOCATION_HAND)
+        act2 = ActionSpec.activate(ENGRAVER, 0, LOCATION_GRAVE)  # Different loc
 
         # Should be equal because spec only includes code:effect_idx
         self.assertEqual(act1.spec, act2.spec)
@@ -290,7 +298,7 @@ class TestBoardEvaluation(unittest.TestCase):
         """Boss monsters are detected."""
         board = {
             "player0": {
-                "monsters": [{"code": 79559912}],  # Caesar
+                "monsters": [{"code": CAESAR}],  # Caesar
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
             }
@@ -308,8 +316,8 @@ class TestBoardEvaluation(unittest.TestCase):
         s_board = {
             "player0": {
                 "monsters": [
-                    {"code": 79559912},  # Caesar
-                    {"code": 29301450},  # S:P Little Knight
+                    {"code": CAESAR},  # Caesar
+                    {"code": SP_LITTLE_KNIGHT},  # S:P Little Knight
                 ],
                 "spells": [], "graveyard": [], "hand": [],
                 "banished": [], "extra": [],
@@ -422,15 +430,15 @@ class TestIntegration(unittest.TestCase):
         board_state = {
             "player0": {
                 "monsters": [
-                    {"code": 79559912, "name": "Caesar", "zone_index": 0},
-                    {"code": 2463794, "name": "Requiem", "zone_index": 1},
+                    {"code": CAESAR, "name": "Caesar", "zone_index": 0},
+                    {"code": REQUIEM, "name": "Requiem", "zone_index": 1},
                 ],
                 "spells": [],
                 "graveyard": [
-                    {"code": 60764609, "name": "Engraver"},
-                    {"code": 49867899, "name": "Sequence"},
+                    {"code": ENGRAVER, "name": "Engraver"},
+                    {"code": SEQUENCE, "name": "Sequence"},
                 ],
-                "hand": [{"code": 10000040, "name": "Holactie"}],
+                "hand": [{"code": HOLACTIE, "name": "Holactie"}],
                 "banished": [],
                 "extra": [],
             }
@@ -438,7 +446,7 @@ class TestIntegration(unittest.TestCase):
 
         idle_data = {
             "activatable": [
-                {"code": 79559912, "loc": LOCATION_MZONE, "desc": 1},  # Caesar effect
+                {"code": CAESAR, "loc": LOCATION_MZONE, "desc": 1},  # Caesar effect
             ],
             "spsummon": [],
             "to_ep": True,

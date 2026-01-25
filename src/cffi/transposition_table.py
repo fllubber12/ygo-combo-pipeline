@@ -8,12 +8,17 @@ from dataclasses import dataclass
 
 @dataclass
 class TranspositionEntry:
-    """Cached result for an intermediate state."""
+    """
+    Cached result for an intermediate state.
+
+    Note: Intentionally mutable (not frozen). The visit_count field is
+    incremented on cache hits to track access frequency for eviction decisions.
+    """
     state_hash: str
     best_terminal_hash: str     # Best board reachable from here
     best_terminal_value: float  # Evaluation score (once we have it)
     depth_to_terminal: int      # How many actions to reach best terminal
-    visit_count: int            # How many times we've seen this state
+    visit_count: int            # How many times we've seen this state (mutated on lookup)
 
 
 class TranspositionTable:
