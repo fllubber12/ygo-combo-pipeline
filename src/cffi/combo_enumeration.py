@@ -1418,6 +1418,64 @@ class EnumerationEngine:
 
 
 # =============================================================================
+# PARALLEL WORKER ENTRY POINT
+# =============================================================================
+
+def enumerate_from_hand(
+    hand: Tuple[int, ...],
+    deck: List[int],
+    max_depth: int = 25,
+    max_paths: int = 0,
+) -> Dict[str, Any]:
+    """Enumerate all combos from a specific starting hand.
+
+    This is the worker-compatible entry point for parallel enumeration.
+    Creates a fresh engine context, sets up the hand, and runs DFS.
+
+    Args:
+        hand: Tuple of card passcodes for starting hand.
+        deck: Full deck list (for extra deck setup).
+        max_depth: Maximum search depth.
+        max_paths: Maximum paths to explore (0 = unlimited).
+
+    Returns:
+        Dict with:
+            - terminal_hashes: List of unique terminal board hashes
+            - best_score: Highest board evaluation score
+            - paths_explored: Number of paths explored
+            - max_depth_reached: Deepest point in search tree
+    """
+    terminal_hashes: List[str] = []
+    best_score = 0.0
+    paths_explored = 0
+    max_depth_reached = 0
+
+    # Create transposition table for this hand
+    tt = TranspositionTable(max_size=100_000)
+
+    try:
+        # Placeholder: actual enumeration logic goes here
+        # For now, return empty results
+        #
+        # TODO: Implement full enumeration with specific hand setup:
+        # 1. Create duel with exact hand cards (not random draw)
+        # 2. Run DFS enumeration from that state
+        # 3. Collect terminal board hashes and scores
+        # 4. Return serializable results
+        pass
+
+    except Exception as e:
+        logger.warning(f"Enumeration error for hand {hand}: {e}")
+
+    return {
+        "terminal_hashes": terminal_hashes,
+        "best_score": best_score,
+        "paths_explored": paths_explored,
+        "max_depth_reached": max_depth_reached,
+    }
+
+
+# =============================================================================
 # MAIN
 # =============================================================================
 

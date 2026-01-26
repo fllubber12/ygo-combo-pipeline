@@ -42,21 +42,24 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 
 ```
 ├── src/cffi/                    # Core enumeration engine
-│   ├── ocg_bindings.py          # CFFI bindings to ygopro-core
-│   ├── engine_interface.py      # Callbacks, parsing, EngineContext
-│   ├── paths.py                 # Centralized path configuration
-│   ├── combo_enumeration.py     # Main DFS traversal
-│   ├── state_representation.py  # Board hashing & evaluation
-│   ├── transposition_table.py   # Memoization cache
-│   └── zobrist.py               # O(1) incremental hashing
+│   ├── ocg_bindings.py              # CFFI bindings, constants
+│   ├── engine_interface.py          # EngineContext, callbacks
+│   ├── paths.py                     # Path configuration
+│   ├── combo_enumeration.py         # Main DFS traversal
+│   ├── state_representation.py      # Board hashing
+│   ├── transposition_table.py       # Memoization cache
+│   ├── zobrist.py                   # O(1) Zobrist hashing
+│   └── parallel_search.py           # Parallel enumeration
 ├── config/                      # Configuration files
-│   ├── locked_library.json      # 26-card Fiendsmith library
-│   └── evaluation_config.json   # Board scoring weights
+│   └── locked_library.json          # 26-card library
 ├── docs/                        # Documentation
-│   ├── RESEARCH.md              # Game AI research report
-│   └── IMPLEMENTATION_ROADMAP.md # P0-P4 improvement plan
-└── tests/                       # Test suites
-    └── unit/                    # Unit tests
+│   ├── RESEARCH.md                  # Algorithm research
+│   └── IMPLEMENTATION_ROADMAP.md    # P0-P4 priorities
+└── tests/                       # Test suite
+    └── unit/
+        ├── test_state.py            # State representation tests
+        ├── test_zobrist.py          # Zobrist hashing tests
+        └── test_parallel.py         # Parallel search tests
 ```
 
 ## Dependencies
