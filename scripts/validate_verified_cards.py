@@ -3,6 +3,7 @@
 Validate verified_cards.json against cards.cdb.
 
 Checks:
+  - INTEGRITY: Lock checksum matches (detects any modification)
   - All card IDs exist in CDB
   - Levels/Ranks/Link Ratings match
   - ATK/DEF values match
@@ -12,8 +13,10 @@ Exit codes:
   0 - All validations passed
   1 - Validation errors found
   2 - Missing required files
+  3 - Integrity checksum mismatch (CRITICAL)
 """
 
+import hashlib
 import json
 import sqlite3
 import sys
@@ -23,6 +26,45 @@ from typing import List, Dict, Any, Optional
 PROJECT_ROOT = Path(__file__).parent.parent
 VERIFIED_PATH = PROJECT_ROOT / "config" / "verified_cards.json"
 CDB_PATH = PROJECT_ROOT / "cards.cdb"
+
+
+def canonical_json(obj) -> str:
+    """Convert object to canonical JSON string for hashing."""
+    return json.dumps(obj, sort_keys=True, separators=(',', ':'))
+
+
+def compute_cards_checksum(cards: dict) -> str:
+    """Compute SHA256 checksum of cards dictionary."""
+    canonical = canonical_json(cards)
+    return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
+
+
+def verify_integrity(data: Dict) -> tuple[bool, str]:
+    """Verify the integrity checksum of the card data.
+
+    Returns:
+        (is_valid, message)
+    """
+    metadata = data.get("metadata", {})
+    stored_checksum = metadata.get("lock_checksum")
+
+    if not stored_checksum:
+        return True, "No lock checksum found (file not locked)"
+
+    cards = data.get("cards", {})
+    computed_checksum = compute_cards_checksum(cards)
+
+    if computed_checksum != stored_checksum:
+        return False, (
+            f"INTEGRITY VIOLATION DETECTED!\n"
+            f"  Stored checksum:   {stored_checksum[:32]}...\n"
+            f"  Computed checksum: {computed_checksum[:32]}...\n"
+            f"\n"
+            f"  Card data has been modified without proper re-verification.\n"
+            f"  Run 'python scripts/generate_lock_checksum.py' after audit to re-lock."
+        )
+
+    return True, f"Integrity verified (checksum: {stored_checksum[:16]}...)"
 
 
 def extract_level(cdb_level: int, cdb_type: int) -> int:
@@ -106,6 +148,19 @@ def main() -> int:
         return 2
 
     verified_data = json.loads(VERIFIED_PATH.read_text())
+
+    # CRITICAL: Check integrity checksum FIRST
+    integrity_ok, integrity_msg = verify_integrity(verified_data)
+    if not integrity_ok:
+        print("\n" + "=" * 60)
+        print("CRITICAL: INTEGRITY CHECK FAILED")
+        print("=" * 60)
+        print(f"\n{integrity_msg}")
+        print("\nCommit REJECTED. Card data has been tampered with.")
+        return 3
+    else:
+        print(f"Integrity check: {integrity_msg}")
+
     cards = verified_data.get("cards", {})
     cdb = sqlite3.connect(CDB_PATH)
 

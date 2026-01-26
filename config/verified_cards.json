@@ -1,9 +1,14 @@
 {
   "metadata": {
-    "source": "cards.cdb (authoritative)",
+    "source": "cards.cdb (authoritative) + manual audit",
     "audit_date": "2026-01-26",
-    "verified_by": "bulk_verify_library.py script",
-    "notes": "All card data from cards.cdb - the authoritative source"
+    "verified_by": "Triple-pass audit against YGOProDeck API",
+    "lock_status": "LOCKED",
+    "lock_date": "2026-01-26T23:09:40.129769+00:00",
+    "lock_checksum": "e2b35842fded76909a821323951628139a92f3049d4eb9c0c212c64153201381",
+    "card_count": 48,
+    "audit_passes": 3,
+    "notes": "DO NOT MODIFY without explicit user approval and re-verification"
   },
   "cards": {
     "2463794": {

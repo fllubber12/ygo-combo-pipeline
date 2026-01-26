@@ -95,6 +95,47 @@ validator.validate(60764609, 'level', engine_level, source="SELECT_SUM")
 - **SELECT_SUM parsing**: Engine shows `level=1` for Engraver (should be 6)
 - Validated via `compare_cdb_to_verified()` function
 
+### LOCKED CARD DATA (CRITICAL)
+
+**Status: LOCKED as of 2026-01-26**
+
+The `config/verified_cards.json` file has been **triple-verified** against official sources and is now **cryptographically locked**.
+
+#### Lock Mechanism
+
+1. **Integrity Checksum**: SHA256 hash of all card data stored in metadata
+2. **Pre-commit Hook**: Validates checksum on every commit attempt
+3. **Automatic Rejection**: Any modification without re-verification is BLOCKED
+
+#### Modifying Locked Data
+
+Claude must **NEVER** modify `verified_cards.json` without:
+
+1. **Explicit user request** stating the specific card and field to change
+2. **Verification from official source** (YGOProDeck API, Konami DB, Yugipedia)
+3. **User confirmation** of the verified data
+4. **Re-running the lock script**: `python scripts/generate_lock_checksum.py`
+
+#### Pre-commit Validation
+
+Every commit touching card data files triggers:
+```
+1. Integrity checksum verification (CRITICAL)
+2. CDB consistency check (name, level, ATK/DEF)
+3. Extra deck flag validation
+```
+
+If ANY check fails, the commit is **REJECTED**.
+
+#### Emergency Override
+
+If the pre-commit hook must be bypassed (NOT RECOMMENDED):
+```bash
+git commit --no-verify -m "EMERGENCY: [reason]"
+```
+
+This should ONLY be used for critical fixes and requires immediate re-verification.
+
 ---
 
 ## Bash Guidelines
@@ -501,11 +542,14 @@ This ensures fixes can be applied mechanically without ambiguity.
 | `src/cffi/ml_encoding.py` | ML-compatible state encoding (ygo-agent format) |
 | `src/cffi/card_validator.py` | Verified card data validation (anti-hallucination) |
 | `config/locked_library.json` | **LOCKED** - Crystal Beast Fiendsmith library (19 extra deck). DO NOT MODIFY without user approval. |
-| `config/verified_cards.json` | Human-verified card data (levels, ATK, DEF, types) |
+| `config/verified_cards.json` | **LOCKED** - Triple-verified card data (48 cards). Checksum-protected. DO NOT MODIFY without audit. |
 | `config/card_roles.json` | Manual card role overrides |
 | `config/evaluation_config.json` | Board evaluation weights |
 | `scripts/setup_deck.py` | Card lookup and deck validation |
 | `scripts/validate_engine.py` | Engine validation tests |
+| `scripts/validate_verified_cards.py` | Pre-commit validation with integrity checksum |
+| `scripts/validate_library_integrity.py` | Pre-commit library validation |
+| `scripts/generate_lock_checksum.py` | Generate/update integrity checksum after audit |
 | `docs/RESEARCH.md` | Game AI research report |
 | `docs/IMPLEMENTATION_ROADMAP.md` | P0-P4 prioritized improvements |
 | `docs/CB_FIENDSMITH_SETUP_GUIDE.md` | Crystal Beast Fiendsmith setup guide |
