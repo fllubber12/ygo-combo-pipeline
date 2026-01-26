@@ -269,7 +269,27 @@ When running the next audit, verify:
 
 ## Audit Process
 
-After every implementation cycle:
+### Claude Code ↔ Claude Chat Audit Loop
+
+**CRITICAL:** All code changes require verification through this loop:
+
+1. **Claude Code** commits and pushes changes
+2. **Claude Code** generates AUDIT INFO block:
+   ```bash
+   echo "=== AUDIT INFO ==="
+   echo "Repo: $(git remote get-url origin)"
+   echo "SHA: $(git rev-parse HEAD)"
+   echo "Message: $(git log -1 --pretty=%s)"
+   echo "Changed files:"
+   git show --name-only --format="" HEAD
+   echo "=== END AUDIT INFO ==="
+   ```
+3. **Claude Code** provides verification URL(s) to user
+4. **Claude Chat** fetches code using SHA-pinned URLs and audits
+5. **Claude Chat** confirms OR identifies issues
+6. **Only proceed to next task after audit passes**
+
+### Standard Implementation Cycle
 
 1. **Run tests**: `python -m pytest tests/ -v`
 2. **Commit**: `git add . && git commit -m "description"`
@@ -414,7 +434,7 @@ This ensures fixes can be applied mechanically without ambiguity.
 | `src/cffi/card_roles.py` | Card role classification for move ordering |
 | `src/cffi/iterative_deepening.py` | Iterative deepening search wrapper |
 | `src/cffi/ml_encoding.py` | ML-compatible state encoding (ygo-agent format) |
-| `config/locked_library.json` | 26-card Fiendsmith library |
+| `config/locked_library.json` | **LOCKED** - Crystal Beast Fiendsmith library (19 extra deck). DO NOT MODIFY without user approval. |
 | `config/card_roles.json` | Manual card role overrides |
 | `config/evaluation_config.json` | Board evaluation weights |
 | `scripts/setup_deck.py` | Card lookup and deck validation |
