@@ -1,0 +1,77 @@
+{
+  "cards": {
+    "60764609": {
+      "role": "STARTER",
+      "tags": ["fiendsmith", "hand_activatable", "sends_to_gy"],
+      "priority_boost": 0,
+      "notes": "Fiendsmith Engraver - Primary 1-card starter"
+    },
+    "49867899": {
+      "role": "STARTER",
+      "tags": ["fiendsmith", "hand_activatable"],
+      "priority_boost": 0,
+      "notes": "Fiendsmith Sequence - Secondary starter"
+    },
+    "2463794": {
+      "role": "EXTENDER",
+      "tags": ["fiendsmith", "link", "link1"],
+      "priority_boost": 0,
+      "notes": "Fiendsmith's Requiem - Link-1 extender"
+    },
+    "35552986": {
+      "role": "EXTENDER",
+      "tags": ["token"],
+      "priority_boost": 0,
+      "notes": "Fiendsmith Token"
+    },
+    "79559912": {
+      "role": "PAYOFF",
+      "tags": ["boss", "xyz", "rank6", "negate"],
+      "priority_boost": -1,
+      "notes": "D/D/D Wave High King Caesar - Negates SS effects"
+    },
+    "29301450": {
+      "role": "PAYOFF",
+      "tags": ["boss", "link", "link2", "banish"],
+      "priority_boost": -1,
+      "notes": "S:P Little Knight - Banishes on response"
+    },
+    "4731783": {
+      "role": "PAYOFF",
+      "tags": ["boss", "link", "interaction"],
+      "priority_boost": 0,
+      "notes": "A Bao A Qu - Destruction/banish"
+    },
+    "32991300": {
+      "role": "PAYOFF",
+      "tags": ["fiendsmith", "link"],
+      "priority_boost": 0,
+      "notes": "Fiendsmith's Agnumday"
+    },
+    "82135803": {
+      "role": "PAYOFF",
+      "tags": ["fiendsmith", "link"],
+      "priority_boost": 0,
+      "notes": "Fiendsmith's Desirae"
+    },
+    "11464648": {
+      "role": "PAYOFF",
+      "tags": ["fiendsmith", "link"],
+      "priority_boost": 0,
+      "notes": "Fiendsmith's Rextremende"
+    },
+    "45409943": {
+      "role": "PAYOFF",
+      "tags": ["boss", "link"],
+      "priority_boost": 0,
+      "notes": "Luce the Dusk's Dark"
+    },
+    "10000040": {
+      "role": "GARNET",
+      "tags": ["filler", "brick"],
+      "priority_boost": 0,
+      "notes": "Holactie - Dead card (filler)"
+    }
+  },
+  "default_role": "UNKNOWN"
+}

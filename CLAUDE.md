@@ -88,6 +88,22 @@ python -m pytest tests/ --cov=src/cffi --cov-report=html
 
 ## Audit History
 
+### P2 Implementation: Card Role Classification (January 2026) - COMPLETED
+
+Implemented card role classification for move ordering and pruning:
+
+| Component | Status |
+|-----------|--------|
+| `src/cffi/card_roles.py` | Created - CardRole enum, CardRoleClassifier |
+| `config/card_roles.json` | Created - Fiendsmith library classifications |
+| `tests/unit/test_card_roles.py` | Created - 20 tests |
+
+**Key Features:**
+- CardRole enum: STARTER, EXTENDER, PAYOFF, UTILITY, GARNET
+- Priority-based action sorting (starters first)
+- Extender pruning heuristic (skip if no starter activated)
+- Config-driven classification with heuristic fallback
+
 ### V8 Audit (January 2026) - COMPLETED
 
 Post-P1 audit to verify all files are committed and consistent.
@@ -213,64 +229,70 @@ After every implementation cycle:
 5. **Paste URLs** to auditor for verification
 6. **Iterate** if issues found
 
-### URL Format
-
-Use blob URLs with commit SHA for instant verification:
-```
-https://github.com/fllubber12/ygo-combo-pipeline/blob/{SHA}/path/to/file.py
-```
-
-Do NOT use raw.githubusercontent.com URLs - they have 5-15 minute CDN cache delays.
-
 ### Post-Commit Audit Protocol
 
 After every `git push`, output the following for audit verification:
 
 **1. Commit Info:**
 ```
-Commit: [SHA]
+Commit: [FULL_SHA]
 Message: [commit message]
 Files changed: [list]
 ```
 
-**2. Verification URLs (replace [SHA] with actual commit hash):**
+**2. Verification URLs**
 
-Core Files:
+Use commit-pinned RAW URLs (these bypass CDN cache):
 ```
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/ocg_bindings.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/engine_interface.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/paths.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/combo_enumeration.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/state_representation.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/transposition_table.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/zobrist.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/parallel_search.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/ocg_bindings.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/engine_interface.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/paths.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/combo_enumeration.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/state_representation.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/transposition_table.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/zobrist.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/parallel_search.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/card_roles.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_state.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_zobrist.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_parallel.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_card_roles.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/README.md
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/CLAUDE.md
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/docs/RESEARCH.md
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/docs/IMPLEMENTATION_ROADMAP.md
 ```
 
-Test Files:
-```
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/unit/test_state.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/unit/test_zobrist.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/unit/test_parallel.py
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/README.md
-```
-
-Documentation:
-```
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/README.md
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/CLAUDE.md
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/docs/RESEARCH.md
-https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/docs/IMPLEMENTATION_ROADMAP.md
-```
+**CRITICAL:** Use `raw.githubusercontent.com/{owner}/{repo}/{FULL_SHA}/path` format.
+- Commit-pinned raw URLs bypass CDN cache
+- Do NOT use branch names (main) - they have 5-15 min cache delays
+- Do NOT use blob URLs - they return HTML, not raw content
 
 **3. Test Summary:**
 ```
 Tests: [X] passed, [Y] skipped, [Z] failed
 ```
 
+**4. Generate URLs Script:**
+After `git push`, run:
+```bash
+SHA=$(git rev-parse HEAD)
+echo "Commit: $SHA"
+echo ""
+echo "Verification URLs:"
+for f in src/cffi/ocg_bindings.py src/cffi/engine_interface.py src/cffi/paths.py \
+         src/cffi/combo_enumeration.py src/cffi/state_representation.py \
+         src/cffi/transposition_table.py src/cffi/zobrist.py src/cffi/parallel_search.py \
+         src/cffi/card_roles.py tests/unit/test_state.py tests/unit/test_zobrist.py \
+         tests/unit/test_parallel.py tests/unit/test_card_roles.py \
+         README.md CLAUDE.md docs/RESEARCH.md docs/IMPLEMENTATION_ROADMAP.md; do
+  echo "https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/$SHA/$f"
+done
+```
+
 ### Files to Audit
 
-**Source (8 files):**
+**Source (9 files):**
 ```
 src/cffi/ocg_bindings.py
 src/cffi/engine_interface.py
@@ -280,13 +302,15 @@ src/cffi/state_representation.py
 src/cffi/transposition_table.py
 src/cffi/zobrist.py
 src/cffi/parallel_search.py
+src/cffi/card_roles.py
 ```
 
-**Tests (4 files):**
+**Tests (5 files):**
 ```
 tests/unit/test_state.py
 tests/unit/test_zobrist.py
 tests/unit/test_parallel.py
+tests/unit/test_card_roles.py
 tests/README.md
 ```
 
@@ -328,7 +352,9 @@ This ensures fixes can be applied mechanically without ambiguity.
 | `src/cffi/transposition_table.py` | Memoization cache with depth-preferred eviction |
 | `src/cffi/zobrist.py` | O(1) incremental Zobrist hashing |
 | `src/cffi/parallel_search.py` | Parallel enumeration across starting hands |
+| `src/cffi/card_roles.py` | Card role classification for move ordering |
 | `config/locked_library.json` | 26-card Fiendsmith library |
+| `config/card_roles.json` | Manual card role overrides |
 | `config/evaluation_config.json` | Board evaluation weights |
 | `docs/RESEARCH.md` | Game AI research report |
 | `docs/IMPLEMENTATION_ROADMAP.md` | P0-P4 prioritized improvements |

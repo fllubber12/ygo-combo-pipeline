@@ -49,9 +49,11 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 │   ├── state_representation.py      # Board hashing
 │   ├── transposition_table.py       # Memoization cache
 │   ├── zobrist.py                   # O(1) Zobrist hashing
-│   └── parallel_search.py           # Parallel enumeration
+│   ├── parallel_search.py           # Parallel enumeration
+│   └── card_roles.py                # Card role classification
 ├── config/                      # Configuration files
-│   └── locked_library.json          # 26-card library
+│   ├── locked_library.json          # 26-card library
+│   └── card_roles.json              # Card role overrides
 ├── docs/                        # Documentation
 │   ├── RESEARCH.md                  # Algorithm research
 │   └── IMPLEMENTATION_ROADMAP.md    # P0-P4 priorities
@@ -59,7 +61,8 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
     └── unit/
         ├── test_state.py            # State representation tests
         ├── test_zobrist.py          # Zobrist hashing tests
-        └── test_parallel.py         # Parallel search tests
+        ├── test_parallel.py         # Parallel search tests
+        └── test_card_roles.py       # Card role tests
 ```
 
 ## Dependencies
