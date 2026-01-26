@@ -32,6 +32,71 @@ combo_enumeration.py, state_representation.py, transposition_table.py
 
 ---
 
+## CARD DATA RULES (ANTI-HALLUCINATION)
+
+**CRITICAL: Claude must NEVER provide card data from memory.**
+
+### Prohibited Actions
+
+Claude must **NEVER**:
+- Provide card IDs/passcodes from memory
+- State card levels, ATK, DEF, types from memory
+- Assume card effects without verification
+- Make up card names or attributes
+- Trust "common knowledge" about cards
+
+### Required Data Sources
+
+All card data **MUST** come from (in order of preference):
+
+1. **config/verified_cards.json** (PRIMARY)
+   - Human-verified card data
+   - Audited against official sources
+   - Use `CardValidator` class for lookups
+
+2. **cards.cdb database queries** (SECONDARY)
+   ```sql
+   SELECT id, name, level, atk, def FROM datas
+   JOIN texts ON datas.id = texts.id
+   WHERE id = ?;
+   ```
+
+3. **User-provided information** (when adding new cards)
+   - User searches official sources
+   - User verifies data
+   - Added to verified_cards.json
+
+### Adding New Cards Protocol
+
+1. User provides card name
+2. Claude searches YGOProDeck API, Yugipedia, or Official Neuron DB
+3. User verifies the search results
+4. Add to `config/verified_cards.json` with `"verified": true`
+
+### Validation Module
+
+Use `src/cffi/card_validator.py`:
+
+```python
+from card_validator import CardValidator, get_verified_card
+
+validator = CardValidator()
+
+# Get verified data
+card = validator.get_card(60764609)
+print(card['level'])  # 6
+
+# Validate engine data
+validator.validate(60764609, 'level', engine_level, source="SELECT_SUM")
+```
+
+### Known Issues
+
+- **SELECT_SUM parsing**: Engine shows `level=1` for Engraver (should be 6)
+- Validated via `compare_cdb_to_verified()` function
+
+---
+
 ## Bash Guidelines
 
 ### IMPORTANT: Avoid commands that cause output buffering issues
@@ -434,7 +499,9 @@ This ensures fixes can be applied mechanically without ambiguity.
 | `src/cffi/card_roles.py` | Card role classification for move ordering |
 | `src/cffi/iterative_deepening.py` | Iterative deepening search wrapper |
 | `src/cffi/ml_encoding.py` | ML-compatible state encoding (ygo-agent format) |
+| `src/cffi/card_validator.py` | Verified card data validation (anti-hallucination) |
 | `config/locked_library.json` | **LOCKED** - Crystal Beast Fiendsmith library (19 extra deck). DO NOT MODIFY without user approval. |
+| `config/verified_cards.json` | Human-verified card data (levels, ATK, DEF, types) |
 | `config/card_roles.json` | Manual card role overrides |
 | `config/evaluation_config.json` | Board evaluation weights |
 | `scripts/setup_deck.py` | Card lookup and deck validation |
