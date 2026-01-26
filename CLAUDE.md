@@ -88,6 +88,22 @@ python -m pytest tests/ --cov=src/cffi --cov-report=html
 
 ## Audit History
 
+### P3 Implementation: Iterative Deepening (January 2026) - COMPLETED
+
+Implemented iterative deepening wrapper for shortest-first combo discovery:
+
+| Component | Status |
+|-----------|--------|
+| `src/cffi/iterative_deepening.py` | Created - SearchConfig, IterativeDeepeningSearch |
+| `tests/unit/test_iterative_deepening.py` | Created - 22 tests |
+
+**Key Features:**
+- Depth-limited search iterations (1, 2, 3, ... max_depth)
+- Configurable stopping conditions (target score/tier, time/path budget)
+- Transposition table preserved across iterations
+- Anytime behavior (can stop early with valid results)
+- Finds shortest combos first
+
 ### P2 Implementation: Card Role Classification (January 2026) - COMPLETED
 
 Implemented card role classification for move ordering and pruning:
@@ -253,10 +269,12 @@ https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/c
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/zobrist.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/parallel_search.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/card_roles.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/iterative_deepening.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_state.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_zobrist.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_parallel.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_card_roles.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_iterative_deepening.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/README.md
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/CLAUDE.md
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/docs/RESEARCH.md
@@ -283,8 +301,10 @@ echo "Verification URLs:"
 for f in src/cffi/ocg_bindings.py src/cffi/engine_interface.py src/cffi/paths.py \
          src/cffi/combo_enumeration.py src/cffi/state_representation.py \
          src/cffi/transposition_table.py src/cffi/zobrist.py src/cffi/parallel_search.py \
-         src/cffi/card_roles.py tests/unit/test_state.py tests/unit/test_zobrist.py \
+         src/cffi/card_roles.py src/cffi/iterative_deepening.py \
+         tests/unit/test_state.py tests/unit/test_zobrist.py \
          tests/unit/test_parallel.py tests/unit/test_card_roles.py \
+         tests/unit/test_iterative_deepening.py \
          README.md CLAUDE.md docs/RESEARCH.md docs/IMPLEMENTATION_ROADMAP.md; do
   echo "https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/$SHA/$f"
 done
@@ -292,7 +312,7 @@ done
 
 ### Files to Audit
 
-**Source (9 files):**
+**Source (10 files):**
 ```
 src/cffi/ocg_bindings.py
 src/cffi/engine_interface.py
@@ -303,14 +323,16 @@ src/cffi/transposition_table.py
 src/cffi/zobrist.py
 src/cffi/parallel_search.py
 src/cffi/card_roles.py
+src/cffi/iterative_deepening.py
 ```
 
-**Tests (5 files):**
+**Tests (6 files):**
 ```
 tests/unit/test_state.py
 tests/unit/test_zobrist.py
 tests/unit/test_parallel.py
 tests/unit/test_card_roles.py
+tests/unit/test_iterative_deepening.py
 tests/README.md
 ```
 
@@ -353,6 +375,7 @@ This ensures fixes can be applied mechanically without ambiguity.
 | `src/cffi/zobrist.py` | O(1) incremental Zobrist hashing |
 | `src/cffi/parallel_search.py` | Parallel enumeration across starting hands |
 | `src/cffi/card_roles.py` | Card role classification for move ordering |
+| `src/cffi/iterative_deepening.py` | Iterative deepening search wrapper |
 | `config/locked_library.json` | 26-card Fiendsmith library |
 | `config/card_roles.json` | Manual card role overrides |
 | `config/evaluation_config.json` | Board evaluation weights |
