@@ -88,6 +88,23 @@ python -m pytest tests/ --cov=src/cffi --cov-report=html
 
 ## Audit History
 
+### P0 Implementation: Zobrist Hashing (January 2026) - COMPLETED
+
+Implemented O(1) incremental hashing for transposition table performance:
+
+| Component | Status |
+|-----------|--------|
+| `src/cffi/zobrist.py` | Created - ZobristHasher, StateChange, CardState |
+| `src/cffi/transposition_table.py` | Updated - int/str hash support, enhanced stats |
+| `src/cffi/state_representation.py` | Updated - zobrist_hash() methods on BoardSignature, IntermediateState |
+| `tests/unit/test_zobrist.py` | Created - 14 tests |
+
+**Key Features:**
+- Lazy key generation (handles large state space efficiently)
+- Deterministic with seed (reproducible across sessions)
+- Backwards compatible (string MD5 hashes still work)
+- StateChange helpers for common operations (card_moved, card_added, etc.)
+
 ### V6 Audit (January 2026) - COMPLETED
 
 | Priority | Issue | Status |
@@ -151,6 +168,7 @@ When running the next audit, verify:
 | `src/cffi/combo_enumeration.py` | Core DFS enumeration engine |
 | `src/cffi/state_representation.py` | BoardSignature, evaluation |
 | `src/cffi/transposition_table.py` | Memoization cache |
+| `src/cffi/zobrist.py` | O(1) incremental state hashing |
 | `config/locked_library.json` | 26-card Fiendsmith library |
 | `config/evaluation_config.json` | Board evaluation weights |
 | `docs/RESEARCH.md` | Algorithm research, related work analysis |

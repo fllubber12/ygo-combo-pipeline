@@ -48,7 +48,11 @@ class BoardSignature:
     equips: FrozenSet[Tuple[int, int]]  # (equipped_passcode, target_passcode)
 
     def hash(self) -> str:
-        """Deterministic hash for board comparison."""
+        """Deterministic hash for board comparison.
+
+        Note: For new code, prefer zobrist_hash() which returns int
+        and supports O(1) incremental updates.
+        """
         # Exclude extra_deck from hash (usually irrelevant for evaluation)
         data = (
             tuple(sorted(self.monsters)),
@@ -59,6 +63,15 @@ class BoardSignature:
             tuple(sorted(self.equips)),
         )
         return hashlib.md5(str(data).encode()).hexdigest()[:16]
+
+    def zobrist_hash(self) -> int:
+        """Compute Zobrist hash for this board signature.
+
+        Returns 64-bit integer hash. Use this instead of hash() for
+        transposition table lookups - supports O(1) incremental updates.
+        """
+        from zobrist import zobrist_hash
+        return zobrist_hash(self)
 
     def to_dict(self) -> dict:
         """Serializable representation."""
@@ -237,10 +250,22 @@ class IntermediateState:
     legal_actions: FrozenSet[str]  # Just spec strings for efficient hashing
 
     def hash(self) -> str:
-        """Deterministic hash including OPT state."""
+        """Deterministic hash including OPT state.
+
+        Note: For new code, prefer zobrist_hash() which returns int
+        and supports O(1) incremental updates.
+        """
         action_part = tuple(sorted(self.legal_actions))
         combined = (self.board.hash(), action_part)
         return hashlib.md5(str(combined).encode()).hexdigest()[:24]
+
+    def zobrist_hash(self) -> int:
+        """Compute Zobrist hash including legal actions (OPT state).
+
+        Returns 64-bit integer hash.
+        """
+        from zobrist import zobrist_hash_intermediate
+        return zobrist_hash_intermediate(self)
 
     def to_dict(self) -> dict:
         """Serializable representation."""
