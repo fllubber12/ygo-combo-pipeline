@@ -1492,55 +1492,41 @@ class EnumerationEngine:
 
         Used for Xyz summon material selection and similar mechanics.
 
-        Response format (per ygopro-core field_processor.cpp):
-        - For SELECT_SUM: response is count (u8) followed by indices (u8 each)
-        - Each index refers to a card in the can_select list
+        Response format (per ygopro-core playerop.cpp parse_response_cards):
+        - int32_t type: -1 to cancel (if allowed), 0 for 32-bit indices
+        - uint32_t count: number of selected cards (if type != -1)
+        - uint32_t indices[count]: 0-indexed positions in the selectable cards
+
+        For optional sum selections (like some Fiendsmith effects), canceling is often valid.
+        We branch on both cancel and select to explore all paths.
         """
         depth = len(action_history)
+        self.log(f"SELECT_SUM at depth {depth}", depth)
 
-        # Parse SELECT_SUM message
-        player = msg_data.get("player", 0)
-        must_count = msg_data.get("must_count", 0)
-        can_count = msg_data.get("can_count", 0)
-        target_sum = msg_data.get("target_sum", 0)
-        must_select = msg_data.get("must_select", [])
-        can_select = msg_data.get("can_select", [])
+        # Branch 1: Cancel the selection (valid for optional effects)
+        cancel_response = struct.pack("<i", -1)
+        cancel_action = Action(
+            action_type="SELECT_SUM_CANCEL",
+            message_type=MSG_SELECT_SUM,
+            response_value=-1,
+            response_bytes=cancel_response,
+            description="Cancel sum selection",
+        )
+        self.log(f"Branch: Cancel sum selection", depth)
+        self._recurse(action_history + [cancel_action])
 
-        self.log(f"SELECT_SUM: target={target_sum}, must={must_count}, can={can_count}, cards={len(can_select)}", depth)
-
-        # For now, select first available card
-        # Response format: count (u8) + indices (u8 each)
-        if can_select:
-            card = can_select[0]
-            code = card.get("code", 0)
-            name = get_card_name(code)
-
-            # Response: 1 card selected, index 0
-            response = struct.pack("<BB", 1, 0)  # count=1, index=0
-
-            action = Action(
-                action_type="SELECT_SUM",
-                message_type=MSG_SELECT_SUM,
-                response_value=[0],
-                response_bytes=response,
-                description=f"Select {name} for sum (target={target_sum})",
-                card_code=code,
-                card_name=name,
-            )
-            self.log(f"Branch: Select sum materials ({name})", depth)
-            self._recurse(action_history + [action])
-        else:
-            # No cards to select - empty selection
-            response = struct.pack("<B", 0)  # count=0
-            action = Action(
-                action_type="SELECT_SUM",
-                message_type=MSG_SELECT_SUM,
-                response_value=[],
-                response_bytes=response,
-                description=f"Empty sum selection (target={target_sum})",
-            )
-            self.log(f"Branch: Empty sum selection", depth)
-            self._recurse(action_history + [action])
+        # Branch 2: Try to select first available card (index 0)
+        # This may fail validation if the sum doesn't match, but we try it
+        select_response = struct.pack("<iII", 0, 1, 0)
+        select_action = Action(
+            action_type="SELECT_SUM",
+            message_type=MSG_SELECT_SUM,
+            response_value=[0],
+            response_bytes=select_response,
+            description="Select card 0 for sum",
+        )
+        self.log(f"Branch: Select sum materials (idx 0)", depth)
+        self._recurse(action_history + [select_action])
 
     def _handle_legacy_message_12(self, duel, action_history, msg_data):
         """Handle legacy message type 12.
@@ -1613,6 +1599,7 @@ class EnumerationEngine:
                 messages.append((MSG_SELECT_OPTION, msg_data))
             elif msg_type == MSG_SELECT_SUM:
                 msg_data = parse_select_sum(msg_body)
+                msg_data["_raw"] = msg_body.hex()  # Debug: include raw bytes
                 messages.append((MSG_SELECT_SUM, msg_data))
             elif msg_type == 12:
                 # Legacy message type - pass raw data for handler
