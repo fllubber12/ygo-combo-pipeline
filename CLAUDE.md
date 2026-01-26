@@ -105,6 +105,19 @@ Implemented O(1) incremental hashing for transposition table performance:
 - Backwards compatible (string MD5 hashes still work)
 - StateChange helpers for common operations (card_moved, card_added, etc.)
 
+### V7 Audit (January 2026) - COMPLETED
+
+Post-P0 Zobrist implementation audit.
+
+| Priority | Issue | Status |
+|----------|-------|--------|
+| Critical | transposition_table.py verified (creation_depth, depth-preferred eviction) | Done |
+| Critical | state_representation.py verified (zobrist_hash() methods present) | Done |
+| Critical | test_state.py verified (uses creation_depth) | Done |
+| Medium | ocg_bindings.py verified (uses paths.py) | Done |
+| Medium | README.md structure updated (includes zobrist.py) | Done |
+| Medium | CLAUDE.md Key Files updated, Audit Process added | Done |
+
 ### V6 Audit (January 2026) - COMPLETED
 
 | Priority | Issue | Status |
@@ -158,6 +171,69 @@ When running the next audit, verify:
 
 ---
 
+## Audit Process
+
+After each implementation cycle, a full codebase audit is performed. The audit produces a **Fix Instructions Document** that:
+
+1. Lists all issues found with severity (Critical/Medium/Low)
+2. Provides exact code changes needed for each fix
+3. Includes verification steps
+4. Specifies commit message format
+
+### Audit Workflow
+
+1. **Trigger**: After any P0-P4 implementation is committed
+2. **Scope**: All 16 core files fetched and reviewed
+3. **Output**: `V{N}_FIX_INSTRUCTIONS.md` document
+4. **Execution**: Claude Code applies fixes from document
+5. **Verification**: Re-fetch files to confirm changes
+
+### Files to Audit
+
+**Source (7 files):**
+```
+src/cffi/ocg_bindings.py
+src/cffi/engine_interface.py
+src/cffi/paths.py
+src/cffi/combo_enumeration.py
+src/cffi/state_representation.py
+src/cffi/transposition_table.py
+src/cffi/zobrist.py
+```
+
+**Tests (3 files):**
+```
+tests/unit/test_state.py
+tests/unit/test_zobrist.py
+tests/README.md
+```
+
+**Docs (4 files):**
+```
+README.md
+CLAUDE.md
+docs/RESEARCH.md
+docs/IMPLEMENTATION_ROADMAP.md
+```
+
+**Config (2 files):**
+```
+config/locked_library.json
+config/evaluation_config.json
+```
+
+### Fix Document Format
+
+Each fix instruction includes:
+- **Issue**: What's wrong
+- **Location**: File and line numbers
+- **Action**: Exact change (replace/add/remove)
+- **Code**: Complete code block to use
+
+This ensures fixes can be applied mechanically without ambiguity.
+
+---
+
 ## Key Files
 
 | File | Purpose |
@@ -166,12 +242,12 @@ When running the next audit, verify:
 | `src/cffi/engine_interface.py` | EngineContext, callbacks, parsing |
 | `src/cffi/paths.py` | Centralized path configuration |
 | `src/cffi/combo_enumeration.py` | Core DFS enumeration engine |
-| `src/cffi/state_representation.py` | BoardSignature, evaluation |
-| `src/cffi/transposition_table.py` | Memoization cache |
-| `src/cffi/zobrist.py` | O(1) incremental state hashing |
+| `src/cffi/state_representation.py` | BoardSignature, IntermediateState, evaluation |
+| `src/cffi/transposition_table.py` | Memoization cache with depth-preferred eviction |
+| `src/cffi/zobrist.py` | O(1) incremental Zobrist hashing |
 | `config/locked_library.json` | 26-card Fiendsmith library |
 | `config/evaluation_config.json` | Board evaluation weights |
-| `docs/RESEARCH.md` | Algorithm research, related work analysis |
+| `docs/RESEARCH.md` | Game AI research report |
 | `docs/IMPLEMENTATION_ROADMAP.md` | P0-P4 prioritized improvements |
 
 ---

@@ -42,23 +42,21 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 
 ```
 ├── src/cffi/                    # Core enumeration engine
-│   ├── ocg_bindings.py          # CFFI bindings + message constants
-│   ├── engine_interface.py      # EngineContext, callbacks, parsing
+│   ├── ocg_bindings.py          # CFFI bindings to ygopro-core
+│   ├── engine_interface.py      # Callbacks, parsing, EngineContext
 │   ├── paths.py                 # Centralized path configuration
 │   ├── combo_enumeration.py     # Main DFS traversal
-│   ├── state_representation.py  # Board hashing + evaluation
-│   └── transposition_table.py   # Memoization
+│   ├── state_representation.py  # Board hashing & evaluation
+│   ├── transposition_table.py   # Memoization cache
+│   └── zobrist.py               # O(1) incremental hashing
 ├── config/                      # Configuration files
-│   ├── locked_library.json      # 26-card library
-│   └── evaluation_config.json   # Boss monsters, scoring weights
-├── tests/                       # Test suites
-│   ├── unit/                    # Unit tests
-│   │   └── test_state.py
-│   └── integration/             # Integration tests
-│       └── test_fiendsmith_duel.py
-└── docs/                        # Documentation
-    ├── RESEARCH.md              # Algorithm research report
-    └── IMPLEMENTATION_ROADMAP.md # Prioritized improvements
+│   ├── locked_library.json      # 26-card Fiendsmith library
+│   └── evaluation_config.json   # Board scoring weights
+├── docs/                        # Documentation
+│   ├── RESEARCH.md              # Game AI research report
+│   └── IMPLEMENTATION_ROADMAP.md # P0-P4 improvement plan
+└── tests/                       # Test suites
+    └── unit/                    # Unit tests
 ```
 
 ## Dependencies
