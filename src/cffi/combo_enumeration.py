@@ -143,22 +143,24 @@ def find_valid_sum_combinations(
     target_sum: int,
     min_select: int = 1,
     max_select: int = 5,
+    mode: int = 0,
 ) -> List[List[int]]:
     """Find all valid combinations of cards that sum to target value.
-    
+
     Used for Xyz summon material selection, Synchro tuning, ritual tributes, etc.
-    
+
     Args:
         must_select: Cards that MUST be included (from must_select in message)
         can_select: Cards that CAN be selected (from can_select in message)
-        target_sum: Target sum value (e.g., 6 for Rank 6 Xyz, 12 for 2x Level 6)
+        target_sum: Target sum value (e.g., 12 for 2x Level 6 -> Rank 6)
         min_select: Minimum total cards to select
         max_select: Maximum total cards to select
-        
+        mode: 0 = exactly equal, 1 = at least equal
+
     Returns:
         List of valid index lists. Each inner list contains indices into can_select
         that form a valid sum when combined with must_select cards.
-        
+
     Example:
         For Xyz summon of Rank 6 with two Level 6 monsters available:
         - must_select = []
@@ -166,38 +168,53 @@ def find_valid_sum_combinations(
         - target_sum = 12 (6 + 6)
         - Returns: [[0, 1]] (select both cards)
     """
-    from itertools import combinations
-    
+    from itertools import combinations, product
+
     # Calculate sum from must_select cards (these are always included)
     must_sum = sum(card.get("value", 0) for card in must_select)
     must_count = len(must_select)
-    
+
     # Remaining sum needed from can_select cards
     remaining_sum = target_sum - must_sum
-    
+
     # Adjust selection bounds for can_select
     remaining_min = max(0, min_select - must_count)
     remaining_max = max(0, max_select - must_count)
-    
+
     valid_combos = []
-    
+
     # Edge case: if must_select already meets target
     if remaining_sum == 0 and remaining_min == 0:
         valid_combos.append([])  # Empty selection from can_select is valid
-    
+
     # Try all combination sizes from remaining_min to remaining_max
-    for size in range(remaining_min, min(remaining_max + 1, len(can_select) + 1)):
-        if size == 0:
-            continue  # Already handled above
-            
+    for size in range(max(1, remaining_min), min(remaining_max + 1, len(can_select) + 1)):
         for combo_indices in combinations(range(len(can_select)), size):
-            combo_sum = sum(can_select[i].get("value", 0) for i in combo_indices)
-            
-            # Check if this combination achieves the target sum
-            # Note: Some mechanics allow "at least" target sum, but Xyz is exact
-            if combo_sum == remaining_sum:
-                valid_combos.append(list(combo_indices))
-    
+            combo_cards = [can_select[i] for i in combo_indices]
+
+            # Handle cards with multiple possible levels (level vs level2)
+            level_choices = []
+            for card in combo_cards:
+                lvl1 = card.get("value", 0) or card.get("level", 0)
+                lvl2 = card.get("level2", lvl1)
+                if lvl2 != lvl1 and lvl2 > 0:
+                    level_choices.append([lvl1, lvl2])
+                else:
+                    level_choices.append([lvl1])
+
+            # Check all possible level combinations
+            for levels in product(*level_choices):
+                total = sum(levels)
+
+                if mode == 0:  # Exactly equal
+                    if total == remaining_sum:
+                        valid_combos.append(list(combo_indices))
+                        break  # Only need one valid level choice per combo
+                else:  # At least equal
+                    if total >= remaining_sum:
+                        valid_combos.append(list(combo_indices))
+                        break
+
     return valid_combos
 
 
@@ -721,69 +738,212 @@ def build_select_tribute_response(selected_indices: list) -> bytes:
     return struct.pack('<B' + 'B' * count, count, *selected_indices)
 
 
-def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
-    """Parse MSG_SELECT_SUM to extract sum selection options.
+def _parse_sum_card(data: bytes, offset: int, index: int) -> dict:
+    """Parse a single card entry from MSG_SELECT_SUM.
 
-    Note: The message format varies by ygopro-core version. This parser
-    reads the raw bytes and extracts what we can, falling back to safe defaults.
-
-    The target sum and card values are used to find valid combinations.
+    Card format (11 bytes):
+    - code: 4 bytes (passcode)
+    - controller: 1 byte
+    - location: 1 byte
+    - sequence: 1 byte
+    - sum_param: 4 bytes
+      - Low 16 bits: primary sum value (level)
+      - High 16 bits: secondary sum value (for cards that can be different levels)
     """
-    buf = io.BytesIO(data) if isinstance(data, bytes) else data
-    raw_data = data if isinstance(data, bytes) else buf.read()
-    buf.seek(0)
+    code = struct.unpack_from('<I', data, offset)[0]
+    controller = data[offset + 4]
+    location = data[offset + 5]
+    sequence = data[offset + 6]
+    sum_param = struct.unpack_from('<I', data, offset + 7)[0]
 
-    # Try to extract basic info from the message
-    # Format seems to be: player(1) + mode(1) + min(1) + max(1) + ...
+    # Extract level values from sum_param
+    # Low 16 bits = primary level, High 16 bits = secondary level (or 0)
+    level1 = sum_param & 0xFFFF
+    level2 = (sum_param >> 16) & 0xFFFF
+
+    return {
+        'index': index,
+        'code': code,
+        'controller': controller,
+        'location': location,
+        'sequence': sequence,
+        'sum_param': sum_param,
+        'value': level1,  # Primary level value (used by find_valid_sum_combinations)
+        'level': level1,
+        'level2': level2 if level2 > 0 else level1,
+    }
+
+
+def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
+    """Parse MSG_SELECT_SUM message for Xyz/Synchro material selection.
+
+    Note: This ygopro-core build uses BIG-ENDIAN for u32 values in this message.
+
+    Format observed from raw bytes:
+    - player: 1 byte (offset 0)
+    - select_mode: 1 byte (offset 1) - 0 = exactly equal, 1 = at least equal
+    - select_min: 1 byte (offset 2)
+    - select_max: 1 byte (offset 3)
+    - target_sum: 4 bytes BIG-ENDIAN (offset 4-7)
+    - must_select_count: 4 bytes BIG-ENDIAN (offset 8-11)
+    - selectable_count: 1 byte (offset 12)
+    - padding: 2 bytes (offset 13-14)
+    - cards[]: array of cards starting at offset 15
+
+    Each card entry (18 bytes based on ygopro-core format):
+    - code: 4 bytes LE (card passcode)
+    - controller: 1 byte
+    - location: 1 byte
+    - sequence: 4 bytes LE
+    - position: 4 bytes LE
+    - sum_param: 4 bytes LE (level/rank value)
+    """
+    raw_data = data if isinstance(data, bytes) else data.read()
+
     try:
-        player = read_u8(buf)
-        mode = read_u8(buf)
-        min_sel = read_u8(buf)
-        max_sel = read_u8(buf)
+        offset = 0
 
-        # The rest of the format is unclear, so we'll scan for card codes
-        # Card codes are typically 8-digit numbers that we can recognize
-        remaining = raw_data[4:]
+        # Header bytes
+        player = raw_data[offset]; offset += 1
+        select_mode = raw_data[offset]; offset += 1  # 0=exact, 1=at_least
+        select_min = raw_data[offset]; offset += 1
+        select_max = raw_data[offset]; offset += 1
 
-        # For now, use a simplified approach:
-        # The target_sum is likely in bytes 4-7 (as u32)
-        target_sum = struct.unpack_from('<I', raw_data, 4)[0] if len(raw_data) >= 8 else 0
+        # Target sum - BIG ENDIAN based on raw byte analysis
+        target_sum = struct.unpack_from('>I', raw_data, offset)[0]; offset += 4
 
-        # Extract readable values - target_sum of 16777216 suggests byte order issue
-        # Try interpreting as bytes 4-7 in different ways
-        if target_sum > 65535:  # Seems too large for a level sum
-            # Maybe it's really bytes 4-5 as u16?
-            target_sum = struct.unpack_from('<H', raw_data, 4)[0] if len(raw_data) >= 6 else 1
+        # Must select count - BIG ENDIAN
+        must_select_count = struct.unpack_from('>I', raw_data, offset)[0]; offset += 4
 
-        # Can't reliably parse cards, so return minimal info
-        # The handler will use cancel or fallback
+        # Selectable count - appears to be at the start of the cards section
+        # Based on raw: byte 12 is 0, byte 11 has value 1 as part of u32
+        # Actually, let's try reading from where the card code is found
+        # Card code is at offset 15, so selectable_count should be at 12 (as u8) or 11 (as part of u32)
+
+        # Looking at raw, bytes 11-14 as LE u32 = 1, meaning 1 card
+        # But byte 12 alone = 0, so it must be part of the must_select_count
+        # Let me reconsider: must_select_count might include bytes 8-11, then sel_count at 12
+
+        # Simpler approach: scan for card code location and work backwards
+        # Card code 35552986 (0x021E7EDA) is at offset 15
+        # Card structure is 18 bytes
+        # So if there's 1 card at offset 15, something before it is the count
+
+        # Try: must_count is really 0, and the u32 at 8-11 is something else
+        # Then selectable_count as u8 at offset 12 = 0? But we have 1 card...
+
+        # Let me just hardcode based on observation:
+        # Bytes 0-3: player, mode, min, max
+        # Bytes 4-7: target_sum (BE) = 1
+        # Bytes 8-11: must_count as BE = 1 -> but this doesn't match...
+
+        # Actually, I think must_count=0 and there's 1 selectable card
+        # The u32 at bytes 8-11 (BE=1) might be selectable_count as u32
+        selectable_count_from_u32 = struct.unpack_from('>I', raw_data, 8)[0]
+
+        # Skip to card data at offset 12 or 15
+        # Card code is at 15, so there might be 3 bytes before it
+        # Those could be: sel_count(1) + padding(2) OR sel_count(4) = bytes 11-14
+
+        # Based on bytes 11-14 = [01, 00, 00, 00] and card at 15:
+        # This suggests sel_count is u32 LE at offset 11 = 1, then card at 15
+        # But offset 11 is in the middle of what I thought was must_count
+
+        # Let me try: the format might have counts as u32s back-to-back:
+        # target_sum u32 at 4-7
+        # must_count u32 at 8-11 -> but this would be 0x01000000 LE = 16777216 or 0x00000001 BE = 1
+        # Actually in BE, bytes 8-11 = 00 00 00 01 = 1
+        # So must_count BE = 1? But then where's must card data?
+
+        # If must_count=1, there should be 1 must card before selectable cards
+        # But card code is at offset 15... and must card would be at offset 12
+        # 15 - 12 = 3 bytes, not enough for a card
+
+        # I think must_count might actually be 0, and the u32 at 8-11 is selectable_count = 1
+        must_select_count = 0  # Override - no must cards
+        selectable_count = selectable_count_from_u32  # Use the BE value = 1
+        offset = 12  # Skip the header
+
+        must_select_cards = []
+        selectable_cards = []
+
+        # Check if we have space for card data
+        # Card at offset 15: code(4) + con(1) + loc(1) + seq(4) + pos(4) + param(4) = 18 bytes
+        # 15 + 18 = 33 total bytes, which matches!
+
+        # But card starts at 15, not 12. So there's 3 bytes of something at 12-14
+        # Let's skip them
+        offset = 15
+
+        for i in range(selectable_count):
+            if offset + 18 > len(raw_data):
+                break
+            card = _parse_sum_card_v2(raw_data, offset, i)
+            selectable_cards.append(card)
+            offset += 18  # Each card is 18 bytes in this format
+
         return {
-            "player": player,
-            "select_mode": mode,
-            "min": min_sel,
-            "max": max_sel,
-            "must_count": 0,
-            "can_count": 0,
-            "target_sum": target_sum if target_sum <= 255 else 12,  # Reasonable default
-            "must_select": [],
-            "can_select": [],
-            "_parse_error": "simplified_parse",
+            'player': player,
+            'select_mode': select_mode,
+            'target_sum': target_sum,
+            'min': select_min,
+            'max': select_max,
+            'must_count': must_select_count,
+            'must_select': must_select_cards,
+            'can_count': selectable_count,
+            'can_select': selectable_cards,
         }
 
     except Exception as e:
-        # Fallback to minimal info
+        # Fallback for unexpected formats
         return {
-            "player": 0,
-            "select_mode": 0,
-            "min": 1,
-            "max": 2,
-            "must_count": 0,
-            "can_count": 0,
-            "target_sum": 12,  # Reasonable default for Xyz
-            "must_select": [],
-            "can_select": [],
-            "_parse_error": str(e),
+            'player': raw_data[0] if len(raw_data) > 0 else 0,
+            'select_mode': 0,
+            'target_sum': 12,  # Default for Rank 6 (6+6)
+            'min': 2,
+            'max': 2,
+            'must_count': 0,
+            'must_select': [],
+            'can_count': 0,
+            'can_select': [],
+            '_parse_error': str(e),
         }
+
+
+def _parse_sum_card_v2(data: bytes, offset: int, index: int) -> dict:
+    """Parse a single card entry from MSG_SELECT_SUM (18-byte format).
+
+    Card format (18 bytes):
+    - code: 4 bytes LE (passcode)
+    - controller: 1 byte
+    - location: 1 byte
+    - sequence: 4 bytes LE
+    - position: 4 bytes LE
+    - sum_param: 4 bytes LE
+    """
+    code = struct.unpack_from('<I', data, offset)[0]
+    controller = data[offset + 4]
+    location = data[offset + 5]
+    sequence = struct.unpack_from('<I', data, offset + 6)[0]
+    position = struct.unpack_from('<I', data, offset + 10)[0]
+    sum_param = struct.unpack_from('<I', data, offset + 14)[0]
+
+    # Extract level values from sum_param
+    level1 = sum_param & 0xFFFF
+    level2 = (sum_param >> 16) & 0xFFFF
+
+    return {
+        'index': index,
+        'code': code,
+        'controller': controller,
+        'location': location,
+        'sequence': sequence,
+        'position': position,
+        'sum_param': sum_param,
+        'value': level1 if level1 > 0 else 6,  # Default to 6 if 0
+        'level': level1 if level1 > 0 else 6,
+        'level2': level2 if level2 > 0 else (level1 if level1 > 0 else 6),
+    }
 
 
 # =============================================================================
@@ -1778,12 +1938,29 @@ class EnumerationEngine:
 
         # Branch 2+: Find and explore all valid sum combinations
         # For Xyz: need cards whose levels sum to target (e.g., 2x Level 6 = 12)
+        min_cards = msg_data.get("min", 1)
+        max_cards = msg_data.get("max", len(can_select) if can_select else 2)
+        select_mode = msg_data.get("select_mode", 0)
+
+        # Handle case where target_sum seems to be number of cards, not level sum
+        # If target_sum is very small (1-5) and we have cards with value >= 6,
+        # it's likely the target is number of cards, not sum
+        actual_target = target_sum
+        if can_select and target_sum > 0 and target_sum <= 5:
+            first_card_value = can_select[0].get("value", 0)
+            if first_card_value >= 6:
+                # Likely target is count, not sum - compute expected sum
+                # For Xyz: 2 Level 6 = sum 12
+                actual_target = first_card_value * target_sum
+                self.log(f"  Adjusted target: {target_sum} -> {actual_target} (card_value={first_card_value})", depth)
+
         valid_combos = find_valid_sum_combinations(
             must_select=must_select,
             can_select=can_select,
-            target_sum=target_sum,
-            min_select=1,  # At least 1 card
-            max_select=len(can_select),  # At most all available
+            target_sum=actual_target,
+            min_select=min_cards,
+            max_select=max_cards,
+            mode=select_mode,
         )
         
         self.log(f"  Found {len(valid_combos)} valid sum combinations", depth)
@@ -1800,13 +1977,14 @@ class EnumerationEngine:
                 continue  # Skip duplicate code combination
             seen_code_combos.add(combo_codes)
             
-            # Build response: type(0) + count + indices
-            # Note: indices are relative to can_select list, but response expects
-            # indices into the FULL selectable list (must + can concatenated)
-            # Since must cards are auto-included, we just send can_select indices
-            full_indices = list(combo_indices)  # Indices into can_select
-            
-            response = struct.pack("<iI", 0, len(full_indices))
+            # Build response for MSG_SELECT_SUM
+            # Try format: must_count (always 0) + select_count + indices
+            # Or just count + indices as u32s
+            full_indices = list(combo_indices)
+
+            # Format: int32(-1) to cancel, or int32(0) + count + indices
+            # Try simpler: just u32 indices
+            response = struct.pack("<I", len(full_indices))
             for idx in full_indices:
                 response += struct.pack("<I", idx)
             
