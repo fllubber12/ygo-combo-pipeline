@@ -52,12 +52,14 @@ from engine_interface import (
     init_card_database, load_library, preload_utility_scripts,
     py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
     ffi, get_card_name, set_lib,
-    LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
-    POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
 )
-# All MSG_* constants come from ocg_bindings - the canonical source
+# All constants come from ocg_bindings - the canonical source
 from ocg_bindings import (
+    # Location constants
+    LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
+    # Position constants
+    POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
     # Query flags
     QUERY_CODE, QUERY_POSITION, QUERY_ATTACK, QUERY_DEFENSE, QUERY_END,
     # Selection messages (require player response)

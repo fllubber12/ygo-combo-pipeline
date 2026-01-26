@@ -20,9 +20,9 @@ sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
 from state_representation import (
     BoardSignature, IntermediateState, ActionSpec,
     evaluate_board_quality,
-    LOCATION_HAND, LOCATION_MZONE, LOCATION_GRAVE,
 )
 from transposition_table import TranspositionTable, TranspositionEntry
+from ocg_bindings import LOCATION_HAND, LOCATION_MZONE, LOCATION_GRAVE
 
 # Card passcode constants for test clarity
 CAESAR = 79559912           # D/D/D Wave High King Caesar
