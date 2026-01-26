@@ -112,6 +112,28 @@ from transposition_table import TranspositionTable, TranspositionEntry
 
 
 # =============================================================================
+# MESSAGE TYPE NAMES (for debugging)
+# =============================================================================
+
+MSG_TYPE_NAMES = {
+    11: "MSG_IDLE",
+    12: "MSG_SELECT_EFFECTYN",
+    13: "MSG_SELECT_YESNO",
+    14: "MSG_SELECT_OPTION",
+    15: "MSG_SELECT_CARD",
+    16: "MSG_SELECT_CHAIN",
+    17: "MSG_SELECT_TRIBUTE",
+    18: "MSG_SELECT_PLACE",
+    19: "MSG_SELECT_POSITION",
+    22: "MSG_SELECT_COUNTER",
+    23: "MSG_SELECT_SUM",
+    24: "MSG_SELECT_DISFIELD",
+    25: "MSG_SORT_CARD",
+    26: "MSG_SELECT_UNSELECT_CARD",
+}
+
+
+# =============================================================================
 # SUM ENUMERATION HELPERS
 # =============================================================================
 
@@ -611,6 +633,92 @@ def parse_select_option(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
         "count": count,
         "options": options,
     }
+
+
+def parse_select_tribute(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
+    """Parse MSG_SELECT_TRIBUTE message.
+
+    Format:
+    - player: 1 byte
+    - cancelable: 1 byte
+    - min: 1 byte
+    - max: 1 byte
+    - count: 1 byte
+    - cards[count]: each card is 11 bytes
+        - code: 4 bytes
+        - controller: 1 byte
+        - location: 1 byte
+        - sequence: 1 byte
+        - release_param: 4 bytes (tribute value, usually 1)
+    """
+    buf = io.BytesIO(data) if isinstance(data, bytes) else data
+
+    player = read_u8(buf)
+    cancelable = read_u8(buf)
+    min_tributes = read_u8(buf)
+    max_tributes = read_u8(buf)
+    count = read_u8(buf)
+
+    cards = []
+    for i in range(count):
+        code = read_u32(buf)
+        controller = read_u8(buf)
+        location = read_u8(buf)
+        sequence = read_u8(buf)
+        release_param = read_u32(buf)
+        cards.append({
+            'index': i,
+            'code': code,
+            'controller': controller,
+            'location': location,
+            'sequence': sequence,
+            'release_param': release_param,
+        })
+
+    return {
+        'player': player,
+        'cancelable': bool(cancelable),
+        'min': min_tributes,
+        'max': max_tributes,
+        'count': count,
+        'cards': cards,
+    }
+
+
+def find_valid_tribute_combinations(cards: list, min_req: int, max_req: int) -> list:
+    """Find all valid combinations of cards to tribute.
+
+    Most tribute summons need count (1 for Level 5-6, 2 for Level 7+).
+    Some cards have release_param > 1 (count as 2 tributes).
+
+    Returns list of card index lists.
+    """
+    from itertools import combinations
+
+    valid_combos = []
+
+    # Try all combination sizes from 1 to total cards
+    for size in range(1, len(cards) + 1):
+        for combo in combinations(range(len(cards)), size):
+            # Calculate total tribute value
+            total_value = sum(
+                max(1, cards[i].get('release_param', 1) & 0xFF)
+                for i in combo
+            )
+
+            if min_req <= total_value <= max_req:
+                valid_combos.append(list(combo))
+
+    return valid_combos
+
+
+def build_select_tribute_response(selected_indices: list) -> bytes:
+    """Build response for MSG_SELECT_TRIBUTE.
+
+    Format: 1-byte count + 1-byte indices
+    """
+    count = len(selected_indices)
+    return struct.pack('<B' + 'B' * count, count, *selected_indices)
 
 
 def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
@@ -1250,6 +1358,10 @@ class EnumerationEngine:
                     self._handle_select_sum(duel, action_history, msg_data)
                     return
 
+                elif msg_type == MSG_SELECT_TRIBUTE:
+                    self._handle_select_tribute(duel, action_history, msg_data)
+                    return
+
                 elif msg_type == 12:
                     # Legacy message type - treat as yes/no or option selection
                     # Some ygopro-core versions use 12 for effect confirmation
@@ -1261,8 +1373,9 @@ class EnumerationEngine:
                     return  # Stop this path
 
                 else:
-                    # Unknown message type - log and continue
-                    self.log(f"Unknown message type: {msg_type}", len(action_history))
+                    # Unknown message type - log with name if known
+                    msg_name = MSG_TYPE_NAMES.get(msg_type, "UNKNOWN")
+                    self.log(f"Unhandled message type {msg_type} ({msg_name})", len(action_history))
 
             if status == 0:  # DUEL_END
                 self._record_terminal(action_history, "DUEL_END")
@@ -1713,6 +1826,80 @@ class EnumerationEngine:
             self._recurse(action_history + [fallback_action])
 
 
+    def _handle_select_tribute(self, duel, action_history, msg_data):
+        """Handle MSG_SELECT_TRIBUTE - enumerate all valid tribute combinations."""
+        depth = len(action_history)
+
+        cards = msg_data.get('cards', [])
+        min_req = msg_data.get('min', 1)
+        max_req = msg_data.get('max', 2)
+        cancelable = msg_data.get('cancelable', False)
+
+        self.log(f"SELECT_TRIBUTE: {len(cards)} cards, need {min_req}-{max_req} tributes", depth)
+
+        # Debug: show available cards
+        if self.verbose:
+            for card in cards:
+                name = get_card_name(card.get("code", 0))
+                self.log(f"  [{card['index']}]: {name} (release_param={card.get('release_param', 1)})", depth)
+
+        responses = []
+
+        # Find all valid tribute combinations
+        valid_combos = find_valid_tribute_combinations(cards, min_req, max_req)
+
+        # Deduplicate by card codes to avoid redundant branches
+        seen_code_combos = set()
+
+        for combo in valid_combos:
+            combo_codes = tuple(sorted(cards[i].get("code", 0) for i in combo))
+
+            if combo_codes in seen_code_combos:
+                continue
+            seen_code_combos.add(combo_codes)
+
+            response = build_select_tribute_response(combo)
+            card_names = [get_card_name(cards[i].get("code", 0)) for i in combo]
+            desc = f"Tribute {len(combo)} card(s): {', '.join(card_names)}"
+
+            action = Action(
+                action_type="SELECT_TRIBUTE",
+                message_type=MSG_SELECT_TRIBUTE,
+                response_value=combo,
+                response_bytes=response,
+                description=desc,
+            )
+
+            self.log(f"Branch: {desc}", depth)
+            self._recurse(action_history + [action])
+
+        # If cancelable, add cancel option
+        if cancelable:
+            cancel_response = struct.pack('<B', 0)
+            cancel_action = Action(
+                action_type="SELECT_TRIBUTE_CANCEL",
+                message_type=MSG_SELECT_TRIBUTE,
+                response_value=0,
+                response_bytes=cancel_response,
+                description="Cancel tribute",
+            )
+            self.log(f"Branch: Cancel tribute", depth)
+            self._recurse(action_history + [cancel_action])
+
+        # Fallback if no valid combos found
+        if not valid_combos and not cancelable and cards:
+            fallback_indices = list(range(min(min_req, len(cards))))
+            fallback_response = build_select_tribute_response(fallback_indices)
+            fallback_action = Action(
+                action_type="SELECT_TRIBUTE_FALLBACK",
+                message_type=MSG_SELECT_TRIBUTE,
+                response_value=fallback_indices,
+                response_bytes=fallback_response,
+                description=f"Fallback: tribute first {len(fallback_indices)} cards",
+            )
+            self.log(f"Branch: Fallback tribute", depth)
+            self._recurse(action_history + [fallback_action])
+
     def _handle_legacy_message_12(self, duel, action_history, msg_data):
         """Handle legacy message type 12.
 
@@ -1786,6 +1973,9 @@ class EnumerationEngine:
                 msg_data = parse_select_sum(msg_body)
                 msg_data["_raw"] = msg_body.hex()  # Debug: include raw bytes
                 messages.append((MSG_SELECT_SUM, msg_data))
+            elif msg_type == MSG_SELECT_TRIBUTE:
+                msg_data = parse_select_tribute(msg_body)
+                messages.append((MSG_SELECT_TRIBUTE, msg_data))
             elif msg_type == 12:
                 # Legacy message type - pass raw data for handler
                 msg_data = {"raw": msg_body}
