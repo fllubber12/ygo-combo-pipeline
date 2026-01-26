@@ -1,0 +1,437 @@
+{
+  "deck_name": "Crystal Beast Fiendsmith",
+  "main_deck_engine": [
+    {
+      "name": "Buio the Dawn's Light",
+      "passcode": 19000848,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Crystal Beast Rainbow Dragon",
+      "passcode": 36795102,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Crystal Beast Ruby Carbuncle",
+      "passcode": 32710364,
+      "count": 2,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Crystal Beast Sapphire Pegasus",
+      "passcode": 7093411,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Crystal Keeper",
+      "passcode": 14469229,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fabled Lurrie",
+      "passcode": 97651498,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendish Rhino Warrior",
+      "passcode": 81035362,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith Engraver",
+      "passcode": 60764609,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Lacrima the Crimson Tears",
+      "passcode": 28803166,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Rainbow Dragon",
+      "passcode": 79856792,
+      "count": 1,
+      "role": "GARNET",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Speedroid Taketomborg",
+      "passcode": 53932291,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Speedroid Terrortop",
+      "passcode": 81275020,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Awakening of the Crystal Ultimates",
+      "passcode": 12877076,
+      "count": 1,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Crystal Bond",
+      "passcode": 9334391,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Sanct",
+      "passcode": 35552985,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Tract",
+      "passcode": 98567237,
+      "count": 1,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Foolish Burial Goods",
+      "passcode": 35726888,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Golden Rule",
+      "passcode": 3574681,
+      "count": 3,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Mutiny in the Sky",
+      "passcode": 71593652,
+      "count": 3,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Rainbow Bridge",
+      "passcode": 63945693,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Rainbow Bridge of the Heart",
+      "passcode": 10938846,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Triple Tactics Thrust",
+      "passcode": 35269904,
+      "count": 3,
+      "role": "STARTER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Vaylantz World - Konig Wissen",
+      "passcode": 75952542,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Vaylantz World - Shinra Bansho",
+      "passcode": 49568943,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith Kyrie",
+      "passcode": 26434972,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith in Paradise",
+      "passcode": 99989863,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Rainbow Bridge of Salvation",
+      "passcode": 5611760,
+      "count": 1,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    }
+  ],
+  "main_deck_non_engine": [
+    {
+      "name": "Ash Blossom & Joyous Spring",
+      "passcode": 14558127,
+      "count": 3,
+      "found": true
+    },
+    {
+      "name": "Droll & Lock Bird",
+      "passcode": 94145021,
+      "count": 2,
+      "found": true
+    },
+    {
+      "name": "Mulcharmy Fuwalos",
+      "passcode": 42141493,
+      "count": 3,
+      "found": true
+    },
+    {
+      "name": "Called by the Grave",
+      "passcode": 24224830,
+      "count": 1,
+      "found": true
+    },
+    {
+      "name": "Forbidden Droplet",
+      "passcode": 24299458,
+      "count": 3,
+      "found": true
+    }
+  ],
+  "extra_deck_pool": [
+    {
+      "name": "A Bao A Qu, the Lightless Shadow",
+      "passcode": 4731783,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Aerial Eater",
+      "passcode": 28143384,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Cherubini, Ebon Angel of the Burning Abyss",
+      "passcode": 58699500,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "D/D/D Wave High King Caesar",
+      "passcode": 79559912,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Evilswarm Exciton Knight",
+      "passcode": 46772449,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Agnumday",
+      "passcode": 32991300,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Desirae",
+      "passcode": 82135803,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Lacrima",
+      "passcode": 46640168,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Requiem",
+      "passcode": 2463794,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Rextremende",
+      "passcode": 11464648,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Fiendsmith's Sequence",
+      "passcode": 49867899,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Melomelody the Brass Djinn",
+      "passcode": 88942504,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Necroquip Princess",
+      "passcode": 93860227,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "S:P Little Knight",
+      "passcode": 29301450,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Snake-Eye Ash",
+      "passcode": 9674034,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Snake-Eyes Flamberge Dragon",
+      "passcode": 48452496,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Luce the Dusk's Dark",
+      "passcode": 45409943,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Rainbow Overdragon",
+      "passcode": 37440988,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Ultimate Crystal Rainbow Dragon Overdrive",
+      "passcode": 84544192,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Herald of the Arc Light",
+      "passcode": 79606837,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Beatrice, Lady of the Eternal",
+      "passcode": 27552504,
+      "role": "EXTENDER",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Knightmare Phoenix",
+      "passcode": 2857636,
+      "role": "UTILITY",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Knightmare Unicorn",
+      "passcode": 38342335,
+      "role": "UTILITY",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Accesscode Talker",
+      "passcode": 86066372,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    },
+    {
+      "name": "Apollousa, Bow of the Goddess",
+      "passcode": 4280258,
+      "role": "PAYOFF",
+      "found": true,
+      "error": null
+    }
+  ],
+  "validation_summary": {
+    "main_deck_engine_cards": 50,
+    "main_deck_non_engine_cards": 12,
+    "total_main_deck": 62,
+    "extra_deck_pool_size": 25,
+    "errors": 0
+  }
+}

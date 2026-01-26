@@ -1,0 +1,317 @@
+{
+  "description": "Card role classifications for Crystal Beast Fiendsmith deck",
+  "roles": {
+    "19000848": {
+      "name": "Buio the Dawn's Light",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "36795102": {
+      "name": "Crystal Beast Rainbow Dragon",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "32710364": {
+      "name": "Crystal Beast Ruby Carbuncle",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "7093411": {
+      "name": "Crystal Beast Sapphire Pegasus",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "14469229": {
+      "name": "Crystal Keeper",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "97651498": {
+      "name": "Fabled Lurrie",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "81035362": {
+      "name": "Fiendish Rhino Warrior",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "60764609": {
+      "name": "Fiendsmith Engraver",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "28803166": {
+      "name": "Lacrima the Crimson Tears",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "79856792": {
+      "name": "Rainbow Dragon",
+      "role": "GARNET",
+      "priority": 0,
+      "tags": []
+    },
+    "53932291": {
+      "name": "Speedroid Taketomborg",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "81275020": {
+      "name": "Speedroid Terrortop",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "12877076": {
+      "name": "Awakening of the Crystal Ultimates",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "9334391": {
+      "name": "Crystal Bond",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "35552985": {
+      "name": "Fiendsmith's Sanct",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "98567237": {
+      "name": "Fiendsmith's Tract",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "35726888": {
+      "name": "Foolish Burial Goods",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "3574681": {
+      "name": "Golden Rule",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "71593652": {
+      "name": "Mutiny in the Sky",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "63945693": {
+      "name": "Rainbow Bridge",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "10938846": {
+      "name": "Rainbow Bridge of the Heart",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "35269904": {
+      "name": "Triple Tactics Thrust",
+      "role": "STARTER",
+      "priority": 0,
+      "tags": []
+    },
+    "75952542": {
+      "name": "Vaylantz World - Konig Wissen",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "49568943": {
+      "name": "Vaylantz World - Shinra Bansho",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "26434972": {
+      "name": "Fiendsmith Kyrie",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "99989863": {
+      "name": "Fiendsmith in Paradise",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "5611760": {
+      "name": "Rainbow Bridge of Salvation",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "4731783": {
+      "name": "A Bao A Qu, the Lightless Shadow",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "28143384": {
+      "name": "Aerial Eater",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "58699500": {
+      "name": "Cherubini, Ebon Angel of the Burning Abyss",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "79559912": {
+      "name": "D/D/D Wave High King Caesar",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "46772449": {
+      "name": "Evilswarm Exciton Knight",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "32991300": {
+      "name": "Fiendsmith's Agnumday",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "82135803": {
+      "name": "Fiendsmith's Desirae",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "46640168": {
+      "name": "Fiendsmith's Lacrima",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "2463794": {
+      "name": "Fiendsmith's Requiem",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "11464648": {
+      "name": "Fiendsmith's Rextremende",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "49867899": {
+      "name": "Fiendsmith's Sequence",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "88942504": {
+      "name": "Melomelody the Brass Djinn",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "93860227": {
+      "name": "Necroquip Princess",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "29301450": {
+      "name": "S:P Little Knight",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "9674034": {
+      "name": "Snake-Eye Ash",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "48452496": {
+      "name": "Snake-Eyes Flamberge Dragon",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "45409943": {
+      "name": "Luce the Dusk's Dark",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "37440988": {
+      "name": "Rainbow Overdragon",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "84544192": {
+      "name": "Ultimate Crystal Rainbow Dragon Overdrive",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "79606837": {
+      "name": "Herald of the Arc Light",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "27552504": {
+      "name": "Beatrice, Lady of the Eternal",
+      "role": "EXTENDER",
+      "priority": 0,
+      "tags": []
+    },
+    "2857636": {
+      "name": "Knightmare Phoenix",
+      "role": "UTILITY",
+      "priority": 0,
+      "tags": []
+    },
+    "38342335": {
+      "name": "Knightmare Unicorn",
+      "role": "UTILITY",
+      "priority": 0,
+      "tags": []
+    },
+    "86066372": {
+      "name": "Accesscode Talker",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    },
+    "4280258": {
+      "name": "Apollousa, Bow of the Goddess",
+      "role": "PAYOFF",
+      "priority": 0,
+      "tags": []
+    }
+  }
+}

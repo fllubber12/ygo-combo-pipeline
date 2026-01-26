@@ -208,8 +208,16 @@ def get_deck_lists(library):
 # DUEL CREATION
 # =============================================================================
 
-def create_duel(lib, main_deck_cards, extra_deck_cards):
-    """Create a fresh duel with the starting state."""
+def create_duel(lib, main_deck_cards, extra_deck_cards, starting_hand=None):
+    """Create a fresh duel with the starting state.
+
+    Args:
+        lib: CFFI library handle
+        main_deck_cards: List of main deck passcodes
+        extra_deck_cards: List of extra deck passcodes
+        starting_hand: Optional list of 5 passcodes for starting hand.
+                       If None, uses default [ENGRAVER, HOLACTIE, HOLACTIE, HOLACTIE, HOLACTIE]
+    """
 
     options = ffi.new("OCG_DuelOptions*")
 
@@ -246,8 +254,17 @@ def create_duel(lib, main_deck_cards, extra_deck_cards):
     duel = duel_ptr[0]
     preload_utility_scripts(lib, duel)
 
-    # === HAND: 1 Engraver + 4 Holactie ===
-    hand_cards = [ENGRAVER, HOLACTIE, HOLACTIE, HOLACTIE, HOLACTIE]
+    # === HAND: Use provided hand or default ===
+    if starting_hand is not None:
+        hand_cards = list(starting_hand)
+        # Pad with HOLACTIE if less than 5 cards
+        while len(hand_cards) < 5:
+            hand_cards.append(HOLACTIE)
+        # Truncate if more than 5 cards
+        hand_cards = hand_cards[:5]
+    else:
+        # Default: 1 Engraver + 4 Holactie (original behavior)
+        hand_cards = [ENGRAVER, HOLACTIE, HOLACTIE, HOLACTIE, HOLACTIE]
     for i, code in enumerate(hand_cards):
         card_info = ffi.new("OCG_NewCardInfo*")
         card_info.team = 0
@@ -783,6 +800,16 @@ class EnumerationEngine:
         self.duplicate_boards_skipped = 0  # Counter for stats
         self.intermediate_states_pruned = 0  # Counter for intermediate pruning
 
+        # Custom starting hand (None = use default)
+        self._starting_hand = None
+
+    def _recurse(self, action_history: List[Action]):
+        """Call the appropriate recursive method based on whether custom hand is set."""
+        if self._starting_hand is not None:
+            self._enumerate_recursive_with_hand(action_history)
+        else:
+            self._enumerate_recursive(action_history)
+
     def log(self, msg, depth=0):
         if self.verbose:
             indent = "  " * depth
@@ -814,6 +841,102 @@ class EnumerationEngine:
         print("=" * 80)
 
         return self.terminals
+
+    def enumerate_from_hand(self, starting_hand: List[int]) -> List[TerminalState]:
+        """
+        Enumerate combos from a specific starting hand.
+
+        Args:
+            starting_hand: List of up to 5 card passcodes for starting hand.
+                          Will be padded with HOLACTIE if less than 5 cards.
+
+        Returns:
+            List of terminal states (completed combo boards).
+
+        Example:
+            # Test Engraver + Terrortop opener
+            hand = [60764609, 81275020, 14558127, 14558127, 14558127]
+            results = engine.enumerate_from_hand(hand)
+        """
+        if not starting_hand:
+            raise ValueError("Hand cannot be empty")
+
+        if len(starting_hand) > 5:
+            logger.warning(f"Hand has {len(starting_hand)} cards, truncating to 5")
+            starting_hand = starting_hand[:5]
+
+        # Store the starting hand for create_duel calls
+        self._starting_hand = list(starting_hand)
+
+        # Reset state for fresh enumeration
+        self.terminals = []
+        self.paths_explored = 0
+        self.max_depth_seen = 0
+        self.seen_board_sigs = set()
+        self.terminal_boards = {}
+        self.duplicate_boards_skipped = 0
+        self.intermediate_states_pruned = 0
+        self.transposition_table = TranspositionTable(max_size=1_000_000)
+
+        print("=" * 80)
+        print("ENUMERATE FROM HAND")
+        print(f"Hand: {starting_hand}")
+        print(f"Max depth: {MAX_DEPTH}")
+        print(f"Max paths: {MAX_PATHS}")
+        print("=" * 80)
+
+        self._enumerate_recursive_with_hand([])
+
+        print("\n" + "=" * 80)
+        print("ENUMERATION COMPLETE")
+        print(f"Paths explored: {self.paths_explored}")
+        print(f"Terminal states: {len(self.terminals)} unique boards")
+        print(f"Max depth seen: {self.max_depth_seen}")
+        print("=" * 80)
+
+        return self.terminals
+
+    def _enumerate_recursive_with_hand(self, action_history: List[Action]):
+        """Recursively explore all paths using stored starting hand."""
+        global _shutdown_requested
+
+        # Check for graceful shutdown
+        if _shutdown_requested:
+            return
+
+        # Safety limits
+        if len(action_history) >= MAX_DEPTH:
+            self._record_terminal(action_history, "MAX_DEPTH")
+            return
+
+        if self.paths_explored >= MAX_PATHS:
+            return
+
+        self.paths_explored += 1
+        self.max_depth_seen = max(self.max_depth_seen, len(action_history))
+
+        if self.paths_explored % 100 == 0:
+            print(f"  Progress: {self.paths_explored} paths, {len(self.terminals)} terminals")
+
+        # Create fresh duel with the specific starting hand
+        duel = create_duel(self.lib, self.main_deck, self.extra_deck,
+                           starting_hand=self._starting_hand)
+
+        try:
+            # Start duel
+            self.lib.OCG_StartDuel(duel)
+
+            # Replay all previous actions
+            for action in action_history:
+                if not self._replay_action(duel, action):
+                    self.log(f"Replay failed at action: {action.description}", len(action_history))
+                    return
+
+            # Now explore from current state
+            self._explore_from_state(duel, action_history)
+
+        finally:
+            self.lib.OCG_DestroyDuel(duel)
 
     def _enumerate_recursive(self, action_history: List[Action]):
         """Recursively explore all paths from current action history."""
@@ -1029,7 +1152,7 @@ class EnumerationEngine:
             )
 
             self.log(f"Branch: Activate {name} ({loc_name} eff{effect_idx}) (idx {i})", depth)
-            self._enumerate_recursive(action_history + [action])
+            self._recurse(action_history + [action])
 
         # Enumerate special summons
         for i, card in enumerate(idle_data.get("spsummon", [])):
@@ -1049,7 +1172,7 @@ class EnumerationEngine:
             )
 
             self.log(f"Branch: SpSummon {name} (idx {i})", depth)
-            self._enumerate_recursive(action_history + [action])
+            self._recurse(action_history + [action])
 
         # Enumerate normal summons
         for i, card in enumerate(idle_data.get("summonable", [])):
@@ -1069,7 +1192,7 @@ class EnumerationEngine:
             )
 
             self.log(f"Branch: Summon {name} (idx {i})", depth)
-            self._enumerate_recursive(action_history + [action])
+            self._recurse(action_history + [action])
 
         # PASS option (terminal)
         if idle_data.get("to_ep"):
@@ -1124,7 +1247,7 @@ class EnumerationEngine:
                 )
 
                 self.log(f"Branch: Select {name} (idx {i}, {len(seen_codes)} unique)", depth)
-                self._enumerate_recursive(action_history + [action])
+                self._recurse(action_history + [action])
         else:
             # Multi-select: enumerate combinations of unique card codes
             from itertools import combinations
@@ -1155,7 +1278,7 @@ class EnumerationEngine:
                     )
 
                     self.log(f"Branch: Select {names}", depth)
-                    self._enumerate_recursive(action_history + [action])
+                    self._recurse(action_history + [action])
 
     def _handle_select_place(self, duel, action_history, msg_data):
         """Handle MSG_SELECT_PLACE - select zone for card."""
@@ -1194,7 +1317,7 @@ class EnumerationEngine:
             response_bytes=response,
             description=f"Select zone ({location:02x}, {sequence})",
         )
-        self._enumerate_recursive(action_history + [action])
+        self._recurse(action_history + [action])
 
     def _handle_select_position(self, duel, action_history, msg_data):
         """Handle MSG_SELECT_POSITION - always select ATK.
@@ -1210,7 +1333,7 @@ class EnumerationEngine:
             response_bytes=response,
             description="Position: ATK (auto)",
         )
-        self._enumerate_recursive(action_history + [action])
+        self._recurse(action_history + [action])
 
     def _handle_yes_no(self, duel, action_history, msg_data, msg_type):
         """Handle yes/no prompts - branch on both options."""
@@ -1226,7 +1349,7 @@ class EnumerationEngine:
                 description=f"Choose: {choice_name}",
             )
             self.log(f"Branch: {choice_name}", depth)
-            self._enumerate_recursive(action_history + [action])
+            self._recurse(action_history + [action])
 
     def _handle_select_option(self, duel, action_history, msg_data):
         """Handle MSG_SELECT_OPTION - select from multiple options."""
@@ -1247,7 +1370,7 @@ class EnumerationEngine:
                 description=f"Option {opt} (desc={desc})",
             )
             self.log(f"Branch: Option {opt}", depth)
-            self._enumerate_recursive(action_history + [action])
+            self._recurse(action_history + [action])
 
     def _handle_select_unselect_card(self, duel, action_history, msg_data):
         """Handle MSG_SELECT_UNSELECT_CARD - select/unselect cards.
@@ -1274,7 +1397,7 @@ class EnumerationEngine:
                 description="Finish selection",
             )
             self.log(f"Branch: Finish selection", depth)
-            self._enumerate_recursive(action_history + [action])
+            self._recurse(action_history + [action])
 
         # Enumerate selectable cards - deduplicate by card code
         seen_codes = set()
@@ -1297,7 +1420,7 @@ class EnumerationEngine:
                 card_name=name,
             )
             self.log(f"Branch: Select {name} ({len(seen_codes)} unique)", depth)
-            self._enumerate_recursive(action_history + [action])
+            self._recurse(action_history + [action])
 
     def _get_messages(self, duel):
         """Get all pending messages from engine."""
