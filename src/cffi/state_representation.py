@@ -502,6 +502,66 @@ def evaluate_board_quality(sig: BoardSignature) -> dict:
 
 
 # =============================================================================
+# SIMPLE ENDBOARD EVALUATION
+# =============================================================================
+
+def evaluate_endboard(board_state: dict) -> int:
+    """
+    Simple additive scoring for terminal board evaluation.
+
+    Works directly with board_state dict (legacy format).
+    Higher score = better endboard.
+
+    Scoring:
+    - D/D/D Wave High King Caesar: 100 pts
+    - Fiendsmith Desirae (equipped): 100 pts
+    - Fiendsmith Desirae (no equip): 40 pts
+    - Fiendsmith Sequence: 50 pts
+    - Other Fiendsmith Link: 30 pts
+    - Other monster: 10 pts
+    - Fiendsmith in GY: 10 pts each
+    - Card in hand: 5 pts each
+    """
+    if not board_state:
+        return 0
+
+    score = 0
+    p0 = board_state.get("player0", {})
+
+    # Field monsters
+    for card in p0.get("monsters", []):
+        name = card.get("name", "")
+        if name == "D/D/D Wave High King Caesar":
+            score += 100
+        elif "Desirae" in name:
+            # Check for equip (ATK > base or equip cards present)
+            atk = card.get("atk", 0)
+            if atk > 2500:  # Has ATK boost from equip
+                score += 100
+            else:
+                score += 40
+        elif "Sequence" in name:
+            score += 50
+        elif "Fiendsmith" in name:
+            score += 30
+        else:
+            score += 10
+
+    # GY Fiendsmith count
+    for card in p0.get("graveyard", []):
+        if "Fiendsmith" in card.get("name", ""):
+            score += 10
+
+    # Hand resources
+    hand = p0.get("hand", [])
+    # Don't count dead cards (Holactie)
+    live_hand = [c for c in hand if "Holactie" not in c.get("name", "")]
+    score += len(live_hand) * 5
+
+    return score
+
+
+# =============================================================================
 # UTILITY FUNCTIONS
 # =============================================================================
 
