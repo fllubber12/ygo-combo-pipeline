@@ -1,0 +1,285 @@
+{
+  "metadata": {
+    "name": "Engraver Gold Standard Combo",
+    "created": "2026-01-26",
+    "starter": "Fiendsmith Engraver (solo)",
+    "description": "Single Engraver line reaching A Bao A Qu + Caesar endboard",
+    "verified_by_user": true
+  },
+  "starting_hand": {
+    "required": [60764609],
+    "required_names": ["Fiendsmith Engraver"],
+    "notes": "Only Engraver is engine. Other 4 cards can be anything (non-engine filler)"
+  },
+  "endboard": {
+    "field": [
+      {"id": 4731783, "name": "A Bao A Qu, the Lightless Shadow", "position": "Link-4"},
+      {"id": 79559912, "name": "D/D/D Wave High King Caesar", "position": "Rank 6 Xyz"}
+    ],
+    "graveyard_resources": [
+      {"id": 46640168, "name": "Fiendsmith's Lacrima", "notes": "Can SS Agnumday on opponent's turn"},
+      {"id": 32991300, "name": "Fiendsmith's Agnumday", "notes": "Can revive and equip to Rextremende"}
+    ],
+    "hand": [
+      {"id": 26434972, "name": "Fiendsmith Kyrie", "notes": "Recovered from banish zone"}
+    ],
+    "description": "A Bao A Qu + Caesar on field. Lacrima in GY can summon Agnumday which equips to Rextremende with protection on opponent's turn."
+  },
+  "cards_used": {
+    "main_deck": [
+      {"id": 60764609, "name": "Fiendsmith Engraver", "copies": 2},
+      {"id": 98567237, "name": "Fiendsmith's Tract", "copies": 1},
+      {"id": 97651498, "name": "Fabled Lurrie", "copies": 1},
+      {"id": 28803166, "name": "Lacrima the Crimson Tears", "copies": 1},
+      {"id": 26434972, "name": "Fiendsmith Kyrie", "copies": 1},
+      {"id": 19000848, "name": "Buio the Dawn's Light", "copies": 1},
+      {"id": 71593652, "name": "Mutiny in the Sky", "copies": 1}
+    ],
+    "extra_deck": [
+      {"id": 2463794, "name": "Fiendsmith's Requiem", "copies": 1},
+      {"id": 49867899, "name": "Fiendsmith's Sequence", "copies": 1},
+      {"id": 46640168, "name": "Fiendsmith's Lacrima", "copies": 1},
+      {"id": 28143384, "name": "Aerial Eater", "copies": 1},
+      {"id": 32991300, "name": "Fiendsmith's Agnumday", "copies": 1},
+      {"id": 11464648, "name": "Fiendsmith's Rextremende", "copies": 1},
+      {"id": 4731783, "name": "A Bao A Qu, the Lightless Shadow", "copies": 1},
+      {"id": 93860227, "name": "Necroquip Princess", "copies": 1},
+      {"id": 79559912, "name": "D/D/D Wave High King Caesar", "copies": 1}
+    ]
+  },
+  "combo_steps": [
+    {
+      "step": 1,
+      "action": "Activate Fiendsmith Engraver hand effect",
+      "card_id": 60764609,
+      "effect": "Discard this card; add 1 Fiendsmith Spell/Trap from Deck to hand",
+      "result": "Engraver to GY, search Tract to hand"
+    },
+    {
+      "step": 2,
+      "action": "Activate Fiendsmith's Tract",
+      "card_id": 98567237,
+      "effect": "Add 1 Fiendsmith monster from Deck to hand, then discard 1 card",
+      "result": "Add Fabled Lurrie, discard Lurrie as cost"
+    },
+    {
+      "step": 3,
+      "action": "Fabled Lurrie trigger",
+      "card_id": 97651498,
+      "effect": "When discarded, Special Summon this card",
+      "result": "Lurrie SS to field"
+    },
+    {
+      "step": 4,
+      "action": "Link Summon Fiendsmith's Requiem",
+      "card_id": 2463794,
+      "materials": [97651498],
+      "material_names": ["Fabled Lurrie"],
+      "effect": "Link-1 using 1 LIGHT Fiend",
+      "result": "Requiem on field, Lurrie to GY"
+    },
+    {
+      "step": 5,
+      "action": "Activate Fiendsmith's Requiem field effect",
+      "card_id": 2463794,
+      "effect": "Tribute this card; SS 1 Fiendsmith monster from hand or Deck",
+      "result": "Requiem tributes self, SS Lacrima the Crimson Tears from Deck"
+    },
+    {
+      "step": 6,
+      "action": "Lacrima the Crimson Tears on-summon trigger",
+      "card_id": 28803166,
+      "effect": "When Normal/Special Summoned: Send 1 Fiendsmith card from Deck to GY",
+      "result": "Send Fiendsmith Kyrie from Deck to GY"
+    },
+    {
+      "step": 7,
+      "action": "Activate Fiendsmith's Requiem GY effect",
+      "card_id": 2463794,
+      "effect": "Target 1 LIGHT non-Link Fiend you control; equip this card from GY to it (+600 ATK)",
+      "result": "Requiem equips to Lacrima the Crimson Tears"
+    },
+    {
+      "step": 8,
+      "action": "Activate Fiendsmith Kyrie GY effect (banish)",
+      "card_id": 26434972,
+      "effect": "Banish this card from GY; Fusion Summon using monsters you control and equipped Spell Cards as materials",
+      "materials": [28803166, 2463794],
+      "material_names": ["Lacrima the Crimson Tears", "Fiendsmith's Requiem (equipped)"],
+      "fusion_target": 46640168,
+      "fusion_name": "Fiendsmith's Lacrima",
+      "result": "Kyrie banished, Fusion Summon Fiendsmith's Lacrima"
+    },
+    {
+      "step": 9,
+      "action": "Fiendsmith's Lacrima on-Fusion-Summon trigger",
+      "card_id": 46640168,
+      "effect": "Target 1 LIGHT Fiend banished or in GY; add to hand or SS it",
+      "target": 60764609,
+      "target_name": "Fiendsmith Engraver",
+      "result": "SS Fiendsmith Engraver from GY"
+    },
+    {
+      "step": 10,
+      "action": "Link Summon Fiendsmith's Sequence",
+      "card_id": 49867899,
+      "materials": [46640168, 60764609],
+      "material_names": ["Fiendsmith's Lacrima", "Fiendsmith Engraver"],
+      "effect": "Link-2 using 2 monsters including a LIGHT Fiend",
+      "result": "Sequence on field, Lacrima Fusion + Engraver to GY"
+    },
+    {
+      "step": 11,
+      "action": "Activate Fiendsmith's Sequence effect",
+      "card_id": 49867899,
+      "effect": "Fusion Summon 1 Fiend Fusion by shuffling materials from GY into Deck",
+      "materials_shuffled": [2463794, 97651498],
+      "material_names_shuffled": ["Fiendsmith's Requiem", "Fabled Lurrie"],
+      "fusion_target": 28143384,
+      "fusion_name": "Aerial Eater",
+      "result": "Fusion Summon Aerial Eater (2 LIGHT Fiends shuffled)"
+    },
+    {
+      "step": 12,
+      "action": "Aerial Eater on-Fusion-Summon trigger",
+      "card_id": 28143384,
+      "effect": "Send 1 Fiend monster from Deck to GY",
+      "target": 19000848,
+      "target_name": "Buio the Dawn's Light",
+      "result": "Send Buio from Deck to GY"
+    },
+    {
+      "step": 13,
+      "action": "Buio the Dawn's Light GY trigger",
+      "card_id": 19000848,
+      "effect": "If sent to GY: Add 1 Mutiny in the Sky from Deck to hand",
+      "result": "Add Mutiny in the Sky to hand"
+    },
+    {
+      "step": 14,
+      "action": "Link Summon Fiendsmith's Agnumday",
+      "card_id": 32991300,
+      "materials": [28143384, 49867899],
+      "material_names": ["Aerial Eater", "Fiendsmith's Sequence"],
+      "effect": "Link-3 using 2+ monsters including a LIGHT Fiend",
+      "result": "Agnumday on field, Aerial Eater + Sequence to GY"
+    },
+    {
+      "step": 15,
+      "action": "Activate Mutiny in the Sky",
+      "card_id": 71593652,
+      "effect": "Fusion Summon 1 Fiend/Fairy Fusion by shuffling Fiend/Fairy monsters from GY into Deck",
+      "materials_shuffled": [46640168, 49867899],
+      "material_names_shuffled": ["Fiendsmith's Lacrima", "Fiendsmith's Sequence"],
+      "fusion_target": 11464648,
+      "fusion_name": "Fiendsmith's Rextremende",
+      "result": "Fusion Summon Rextremende"
+    },
+    {
+      "step": 16,
+      "action": "Fiendsmith's Rextremende on-Fusion-Summon trigger",
+      "card_id": 11464648,
+      "effect": "Discard 1 card; send 1 LIGHT Fiend from Deck or Extra Deck to GY",
+      "discard_cost": "any card from hand",
+      "target": 60764609,
+      "target_name": "Fiendsmith Engraver (2nd copy)",
+      "result": "Discard 1, send 2nd Engraver from Deck to GY"
+    },
+    {
+      "step": 17,
+      "action": "Link Summon A Bao A Qu, the Lightless Shadow",
+      "card_id": 4731783,
+      "materials": [11464648, 32991300],
+      "material_names": ["Fiendsmith's Rextremende", "Fiendsmith's Agnumday"],
+      "effect": "Link-4",
+      "result": "A Bao A Qu on field, Rextremende + Agnumday to GY"
+    },
+    {
+      "step": 18,
+      "action": "Fiendsmith's Rextremende GY trigger",
+      "card_id": 11464648,
+      "effect": "If sent to GY: Target 1 other Fiendsmith card in GY or banished; add it to hand",
+      "target": 26434972,
+      "target_name": "Fiendsmith Kyrie",
+      "target_location": "banished",
+      "result": "Add Kyrie from banished zone to hand"
+    },
+    {
+      "step": 19,
+      "action": "Activate A Bao A Qu effect",
+      "card_id": 4731783,
+      "effect": "Discard 1 card; SS 1 Fiend from your GY in DEF",
+      "discard_cost": "Fiendsmith Kyrie (or other card)",
+      "target": 32991300,
+      "target_name": "Fiendsmith's Agnumday",
+      "result": "Discard Kyrie, SS Agnumday from GY in DEF"
+    },
+    {
+      "step": 20,
+      "action": "Activate Fiendsmith's Agnumday Quick Effect",
+      "card_id": 32991300,
+      "effect": "Target 1 LIGHT non-Link Fiend in GY; SS it, then equip this card to it (+600 ATK per Link Rating, piercing)",
+      "target": 60764609,
+      "target_name": "Fiendsmith Engraver",
+      "result": "SS Engraver from GY, Agnumday equips to it (+1800 ATK)"
+    },
+    {
+      "step": 21,
+      "action": "Contact Fusion Necroquip Princess",
+      "card_id": 93860227,
+      "materials": [60764609, 32991300],
+      "material_names": ["Fiendsmith Engraver (equipped with Agnumday)", "Fiend monster (from hand/field)"],
+      "effect": "Send 1 monster equipped with Monster Card + 1 Fiend from hand/field to GY",
+      "result": "Necroquip Princess on field, Engraver + Agnumday to GY"
+    },
+    {
+      "step": 22,
+      "action": "Activate Fiendsmith Engraver GY effect",
+      "card_id": 60764609,
+      "effect": "Shuffle 1 other LIGHT Fiend from GY into Deck/Extra; SS this card",
+      "shuffle_target": 60764609,
+      "shuffle_name": "Fiendsmith Engraver (other copy)",
+      "result": "Shuffle other Engraver to Deck, SS this Engraver from GY"
+    },
+    {
+      "step": 23,
+      "action": "Xyz Summon D/D/D Wave High King Caesar",
+      "card_id": 79559912,
+      "materials": [93860227, 60764609],
+      "material_names": ["Necroquip Princess (L6)", "Fiendsmith Engraver (L6)"],
+      "effect": "Rank 6 Xyz using 2 Level 6 Fiend monsters",
+      "result": "Caesar on field with 2 Xyz materials"
+    }
+  ],
+  "final_game_state": {
+    "field": {
+      "monsters": [
+        {"id": 4731783, "name": "A Bao A Qu, the Lightless Shadow", "position": "ATK", "zone": "Extra Monster Zone or Main Monster Zone"},
+        {"id": 79559912, "name": "D/D/D Wave High King Caesar", "position": "ATK", "zone": "Main Monster Zone", "materials": 2}
+      ],
+      "spells_traps": []
+    },
+    "graveyard": [
+      {"id": 28143384, "name": "Aerial Eater"},
+      {"id": 28803166, "name": "Lacrima the Crimson Tears"},
+      {"id": 19000848, "name": "Buio the Dawn's Light"},
+      {"id": 11464648, "name": "Fiendsmith's Rextremende"}
+    ],
+    "banished": [
+      {"id": 26434972, "name": "Fiendsmith Kyrie", "notes": "If not recovered, otherwise in GY if discarded for A Bao A Qu"}
+    ],
+    "extra_deck_remaining": [
+      {"id": 46640168, "name": "Fiendsmith's Lacrima", "notes": "Shuffled back by Mutiny"},
+      {"id": 49867899, "name": "Fiendsmith's Sequence", "notes": "Shuffled back by Mutiny"},
+      {"id": 2463794, "name": "Fiendsmith's Requiem", "notes": "Shuffled back by Sequence"}
+    ],
+    "hand": ["Any remaining non-engine cards"]
+  },
+  "notes": [
+    "This combo uses only 1 Engraver in starting hand",
+    "Requires 2x Engraver in deck",
+    "Kyrie banishes itself for fusion, can be recovered by Rextremende",
+    "Multiple resources return to Extra Deck via shuffle effects",
+    "Lacrima Fusion in GY (or shuffled back) enables follow-up plays"
+  ]
+}
