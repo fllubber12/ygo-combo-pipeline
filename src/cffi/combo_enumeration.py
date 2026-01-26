@@ -498,6 +498,61 @@ def parse_select_option(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     }
 
 
+def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
+    """Parse MSG_SELECT_SUM to extract sum selection options.
+
+    Format (per ygopro-core field_processor.cpp):
+    - player (1 byte)
+    - must_select_count (1 byte) - min cards that must be selected
+    - can_select_count (1 byte) - max additional cards
+    - target_sum (4 bytes) - target sum value (e.g., 6 for Rank 6)
+    - must_select cards (variable)
+    - can_select cards (variable)
+
+    Each card entry:
+    - code (4 bytes)
+    - controller (1 byte)
+    - location (1 byte)
+    - sequence (1 byte)
+    - param (4 bytes) - typically the level/value for summing
+    """
+    buf = io.BytesIO(data) if isinstance(data, bytes) else data
+
+    player = read_u8(buf)
+    must_count = read_u8(buf)
+    can_count = read_u8(buf)
+    target_sum = read_u32(buf)
+
+    def read_sum_cards(count):
+        cards = []
+        for _ in range(count):
+            code = read_u32(buf)
+            con = read_u8(buf)
+            loc = read_u8(buf)
+            seq = read_u8(buf)
+            param = read_u32(buf)  # Level or value for sum
+            cards.append({
+                "code": code,
+                "con": con,
+                "loc": loc,
+                "seq": seq,
+                "value": param,
+            })
+        return cards
+
+    must_select = read_sum_cards(must_count)
+    can_select = read_sum_cards(can_count)
+
+    return {
+        "player": player,
+        "must_count": must_count,
+        "can_count": can_count,
+        "target_sum": target_sum,
+        "must_select": must_select,
+        "can_select": can_select,
+    }
+
+
 # =============================================================================
 # RESPONSE BUILDERS
 # =============================================================================
@@ -1076,6 +1131,16 @@ class EnumerationEngine:
                     self._handle_select_unselect_card(duel, action_history, msg_data)
                     return
 
+                elif msg_type == MSG_SELECT_SUM:
+                    self._handle_select_sum(duel, action_history, msg_data)
+                    return
+
+                elif msg_type == 12:
+                    # Legacy message type - treat as yes/no or option selection
+                    # Some ygopro-core versions use 12 for effect confirmation
+                    self._handle_legacy_message_12(duel, action_history, msg_data)
+                    return
+
                 elif msg_type == MSG_RETRY:
                     self.log(f"RETRY: Invalid response at depth {len(action_history)}", len(action_history))
                     return  # Stop this path
@@ -1422,6 +1487,84 @@ class EnumerationEngine:
             self.log(f"Branch: Select {name} ({len(seen_codes)} unique)", depth)
             self._recurse(action_history + [action])
 
+    def _handle_select_sum(self, duel, action_history, msg_data):
+        """Handle MSG_SELECT_SUM - select cards whose levels sum to target.
+
+        Used for Xyz summon material selection and similar mechanics.
+
+        Response format (per ygopro-core field_processor.cpp):
+        - For SELECT_SUM: response is count (u8) followed by indices (u8 each)
+        - Each index refers to a card in the can_select list
+        """
+        depth = len(action_history)
+
+        # Parse SELECT_SUM message
+        player = msg_data.get("player", 0)
+        must_count = msg_data.get("must_count", 0)
+        can_count = msg_data.get("can_count", 0)
+        target_sum = msg_data.get("target_sum", 0)
+        must_select = msg_data.get("must_select", [])
+        can_select = msg_data.get("can_select", [])
+
+        self.log(f"SELECT_SUM: target={target_sum}, must={must_count}, can={can_count}, cards={len(can_select)}", depth)
+
+        # For now, select first available card
+        # Response format: count (u8) + indices (u8 each)
+        if can_select:
+            card = can_select[0]
+            code = card.get("code", 0)
+            name = get_card_name(code)
+
+            # Response: 1 card selected, index 0
+            response = struct.pack("<BB", 1, 0)  # count=1, index=0
+
+            action = Action(
+                action_type="SELECT_SUM",
+                message_type=MSG_SELECT_SUM,
+                response_value=[0],
+                response_bytes=response,
+                description=f"Select {name} for sum (target={target_sum})",
+                card_code=code,
+                card_name=name,
+            )
+            self.log(f"Branch: Select sum materials ({name})", depth)
+            self._recurse(action_history + [action])
+        else:
+            # No cards to select - empty selection
+            response = struct.pack("<B", 0)  # count=0
+            action = Action(
+                action_type="SELECT_SUM",
+                message_type=MSG_SELECT_SUM,
+                response_value=[],
+                response_bytes=response,
+                description=f"Empty sum selection (target={target_sum})",
+            )
+            self.log(f"Branch: Empty sum selection", depth)
+            self._recurse(action_history + [action])
+
+    def _handle_legacy_message_12(self, duel, action_history, msg_data):
+        """Handle legacy message type 12.
+
+        In some ygopro-core versions, message 12 is used for effect activation prompts.
+        We treat it similar to yes/no but with simpler parsing.
+        """
+        depth = len(action_history)
+        self.log(f"Legacy MSG 12 at depth {depth}", depth)
+
+        # Try both yes (1) and no (0) options like yes/no handler
+        for choice in [1, 0]:
+            response = struct.pack("<I", choice)
+            choice_name = "Yes" if choice else "No"
+            action = Action(
+                action_type="LEGACY_12",
+                message_type=12,
+                response_value=choice,
+                response_bytes=response,
+                description=f"Legacy choice: {choice_name}",
+            )
+            self.log(f"Branch: {choice_name}", depth)
+            self._recurse(action_history + [action])
+
     def _get_messages(self, duel):
         """Get all pending messages from engine."""
         messages = []
@@ -1468,6 +1611,13 @@ class EnumerationEngine:
             elif msg_type == MSG_SELECT_OPTION:
                 msg_data = parse_select_option(msg_body)
                 messages.append((MSG_SELECT_OPTION, msg_data))
+            elif msg_type == MSG_SELECT_SUM:
+                msg_data = parse_select_sum(msg_body)
+                messages.append((MSG_SELECT_SUM, msg_data))
+            elif msg_type == 12:
+                # Legacy message type - pass raw data for handler
+                msg_data = {"raw": msg_body}
+                messages.append((12, msg_data))
             else:
                 # Unhandled message type
                 messages.append((msg_type, None))
