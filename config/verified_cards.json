@@ -20,11 +20,12 @@
     "3574681": {
       "name": "Golden Rule",
       "card_type": "Spell",
-      "spell_type": "Continuous",
+      "spell_type": "Equip",
       "is_main_deck": true,
       "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
+      "verification_source": "cards.cdb + Konami DB audit 2026-01-26",
+      "verified_date": "2026-01-26",
+      "notes": "Corrected from Continuous to Equip per Konami DB"
     },
     "4731783": {
       "name": "A Bao A Qu, the Lightless Shadow",
@@ -82,11 +83,12 @@
     "10938846": {
       "name": "Rainbow Bridge of the Heart",
       "card_type": "Spell",
-      "spell_type": "Equip",
+      "spell_type": "Continuous",
       "is_main_deck": true,
       "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
+      "verification_source": "cards.cdb + Konami DB audit 2026-01-26",
+      "verified_date": "2026-01-26",
+      "notes": "Corrected from Equip to Continuous per Konami DB"
     },
     "11464648": {
       "name": "Fiendsmith's Rextremende",
@@ -104,23 +106,26 @@
     "12877076": {
       "name": "Awakening of the Crystal Ultimates",
       "card_type": "Spell",
-      "spell_type": "Field",
+      "spell_type": "Quick-Play",
       "is_main_deck": true,
       "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
+      "verification_source": "cards.cdb + Konami DB audit 2026-01-26",
+      "verified_date": "2026-01-26",
+      "notes": "Corrected from Field to Quick-Play per Konami DB"
     },
     "14469229": {
       "name": "Crystal Keeper",
       "attribute": "FIRE",
-      "type": "Warrior/Effect",
+      "type": "Warrior/Pendulum/Effect",
       "level": 4,
+      "pendulum_scale": 2,
       "atk": 1500,
       "def": 1800,
       "is_main_deck": true,
       "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
+      "verification_source": "cards.cdb + Konami DB audit 2026-01-26",
+      "verified_date": "2026-01-26",
+      "notes": "Corrected type from Warrior/Effect to Warrior/Pendulum/Effect, added pendulum_scale"
     },
     "19000848": {
       "name": "Buio the Dawn's Light",
@@ -215,11 +220,11 @@
     "35552985": {
       "name": "Fiendsmith's Sanct",
       "card_type": "Spell",
-      "spell_type": "Field",
+      "spell_type": "Quick-Play",
       "is_main_deck": true,
-      "notes": "Creates Level 1 Fiendsmith Token",
+      "notes": "Creates Level 1 Fiendsmith Token. Corrected from Field to Quick-Play per Konami DB",
       "verified": true,
-      "verification_source": "cards.cdb",
+      "verification_source": "cards.cdb + Konami DB audit 2026-01-26",
       "verified_date": "2026-01-26"
     },
     "35552986": {
@@ -318,11 +323,12 @@
     "49568943": {
       "name": "Vaylantz World - Shinra Bansho",
       "card_type": "Spell",
-      "spell_type": "Normal",
+      "spell_type": "Field",
       "is_main_deck": true,
       "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
+      "verification_source": "cards.cdb + Konami DB audit 2026-01-26",
+      "verified_date": "2026-01-26",
+      "notes": "Corrected from Normal to Field per Konami DB"
     },
     "49867899": {
       "name": "Fiendsmith's Sequence",
@@ -403,11 +409,12 @@
     "75952542": {
       "name": "Vaylantz World - Konig Wissen",
       "card_type": "Spell",
-      "spell_type": "Normal",
+      "spell_type": "Field",
       "is_main_deck": true,
       "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
+      "verification_source": "cards.cdb + Konami DB audit 2026-01-26",
+      "verified_date": "2026-01-26",
+      "notes": "Corrected from Normal to Field per Konami DB"
     },
     "79559912": {
       "name": "D/D/D Wave High King Caesar",
