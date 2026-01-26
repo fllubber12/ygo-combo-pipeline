@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
 
 from state_representation import (
     BoardSignature, IntermediateState, ActionSpec,
-    evaluate_board_quality, BOSS_MONSTERS,
+    evaluate_board_quality,
     LOCATION_HAND, LOCATION_MZONE, LOCATION_GRAVE,
 )
 from transposition_table import TranspositionTable, TranspositionEntry
@@ -421,7 +421,7 @@ class TestTranspositionTable(unittest.TestCase):
             state_hash="abc123",
             best_terminal_hash="terminal_xyz",
             best_terminal_value=85.0,
-            depth_to_terminal=3,
+            creation_depth=3,
             visit_count=1,
         )
         tt.store("abc123", entry)
@@ -530,7 +530,7 @@ class TestIntegration(unittest.TestCase):
             state_hash=state_hash,
             best_terminal_hash="",
             best_terminal_value=0.0,
-            depth_to_terminal=0,
+            creation_depth=0,
             visit_count=1,
         )
         tt.store(state_hash, entry)

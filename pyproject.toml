@@ -29,9 +29,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
-    "pytest-cov",
-    "mypy",
-    "ruff",
+    "pytest-cov",  # TODO: Configure coverage reporting
+    "mypy",        # TODO: Add type checking to CI
+    "ruff",        # TODO: Add linting to CI
 ]
 
 [project.urls]

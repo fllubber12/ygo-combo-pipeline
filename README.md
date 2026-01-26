@@ -39,15 +39,22 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 ## Structure
 
 ```
-├── src/cffi/              # Core enumeration engine
-│   ├── combo_enumeration.py    # Main DFS traversal
-│   ├── state_representation.py # Board hashing
-│   ├── transposition_table.py  # Memoization
-│   └── test_state.py          # Unit tests
-├── config/                # Configuration files
-│   └── locked_library.json    # 26-card library
-├── docs/                  # Documentation
-└── tests/                 # Integration tests
+├── src/cffi/                    # Core enumeration engine
+│   ├── ocg_bindings.py          # CFFI bindings + message constants
+│   ├── engine_interface.py      # EngineContext, callbacks, parsing
+│   ├── paths.py                 # Centralized path configuration
+│   ├── combo_enumeration.py     # Main DFS traversal
+│   ├── state_representation.py  # Board hashing + evaluation
+│   └── transposition_table.py   # Memoization
+├── config/                      # Configuration files
+│   ├── locked_library.json      # 26-card library
+│   └── evaluation_config.json   # Boss monsters, scoring weights
+├── tests/                       # Test suites
+│   ├── unit/                    # Unit tests
+│   │   └── test_state.py
+│   └── integration/             # Integration tests
+│       └── test_fiendsmith_duel.py
+└── docs/                        # Documentation
 ```
 
 ## Dependencies

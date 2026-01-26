@@ -12,6 +12,7 @@ be imported from this module instead.
 """
 
 import io
+import logging
 import sqlite3
 import struct
 from pathlib import Path
@@ -358,7 +359,6 @@ def py_card_reader(payload, code, data):
                     arr = get_setcode_array(setcodes)
                     data.setcodes = arr
     except Exception as e:
-        import logging
         logging.warning(f"Card reader error for code {code}: {e}")
 
 
@@ -406,7 +406,6 @@ def py_script_reader(payload, duel, name):
                 )
                 return 1 if result == 1 else 0
             except Exception as e:
-                import logging
                 logging.warning(f"Script load error for {script_name}: {e}")
                 return 0
 
@@ -417,8 +416,6 @@ def py_script_reader(payload, duel, name):
 @ffi.callback("void(void*, const char*, int)")
 def py_log_handler(payload, string, log_type):
     """Callback for log messages from the engine."""
-    import logging
-
     msg = ffi.string(string).decode("utf-8") if string != ffi.NULL else ""
     log_types = {0: "ERROR", 1: "SCRIPT", 2: "DEBUG", 3: "UNDEFINED"}
     type_name = log_types.get(log_type, "UNKNOWN")
@@ -661,7 +658,6 @@ def preload_utility_scripts(lib, duel) -> bool:
                 if result == 1:
                     loaded += 1
             except Exception as e:
-                import logging
                 logging.warning(f"Error loading {script_name}: {e}")
 
     return loaded > 0

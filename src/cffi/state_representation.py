@@ -20,17 +20,12 @@ import hashlib
 import io
 import struct
 
-# Import location constants from canonical source (ocg_bindings.py)
+# Import location and query constants from canonical source (ocg_bindings.py)
 from ocg_bindings import (
     LOCATION_DECK, LOCATION_HAND, LOCATION_MZONE, LOCATION_SZONE,
     LOCATION_GRAVE, LOCATION_REMOVED, LOCATION_EXTRA,
+    QUERY_CODE, QUERY_POSITION, QUERY_EQUIP_CARD, QUERY_END,
 )
-
-# Query flags (keep local as these are specific to state capture)
-QUERY_CODE = 0x1
-QUERY_POSITION = 0x2
-QUERY_EQUIP_CARD = 0x10
-QUERY_END = 0x80000000
 
 
 @dataclass(frozen=True)
@@ -351,7 +346,10 @@ _EVALUATION_CONFIG = None
 
 
 def _load_evaluation_config() -> dict:
-    """Load evaluation configuration from config file."""
+    """Load evaluation configuration from config file.
+
+    Falls back to defaults if config file is missing, but logs a warning.
+    """
     global _EVALUATION_CONFIG
     if _EVALUATION_CONFIG is not None:
         return _EVALUATION_CONFIG
@@ -361,7 +359,12 @@ def _load_evaluation_config() -> dict:
         with open(config_path) as f:
             _EVALUATION_CONFIG = json.load(f)
     else:
-        # Fallback defaults
+        # Fallback defaults - log warning since this may indicate deployment issue
+        import logging
+        logging.warning(
+            f"evaluation_config.json not found at {config_path}. "
+            f"Using hardcoded defaults. This may indicate a deployment issue."
+        )
         _EVALUATION_CONFIG = {
             "tier_thresholds": {"S": 100, "A": 70, "B": 40, "C": 20},
             "score_weights": {

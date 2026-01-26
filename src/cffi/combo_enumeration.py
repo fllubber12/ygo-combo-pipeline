@@ -10,6 +10,13 @@ Key design:
 - Branch at IDLE (all actions + PASS) and SELECT_CARD (all choices)
 - Auto-decline chains (opponent has no responses)
 - PASS creates terminal states
+
+TODO (Phase 6 Refactoring):
+    Consider splitting this module for parallelization:
+    - enumeration_engine.py: Core EnumerationEngine class
+    - message_handlers.py: _handle_idle, _handle_select_card, etc.
+    - response_builders.py: build_activate_response, build_pass_response, etc.
+    - message_parsers.py: parse_idle, parse_select_card, etc.
 """
 
 import json
@@ -51,6 +58,8 @@ from engine_interface import (
 # All MSG_* constants come from ocg_bindings - the canonical source
 from ocg_bindings import (
     LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
+    # Query flags
+    QUERY_CODE, QUERY_POSITION, QUERY_ATTACK, QUERY_DEFENSE, QUERY_END,
     # Selection messages (require player response)
     MSG_SELECT_BATTLECMD, MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
     MSG_SELECT_PLACE, MSG_SELECT_POSITION, MSG_SELECT_TRIBUTE,
@@ -112,13 +121,6 @@ ENGRAVER = 60764609
 # Standardized filler/dead card: Holactie cannot be summoned normally and has no
 # relevant effects during combo testing. Use this for deck padding and hand filler.
 HOLACTIE = 10000040  # Holactie the Creator of Light
-
-# Query flags (for OCG_DuelQueryLocation)
-QUERY_CODE = 0x1
-QUERY_POSITION = 0x2
-QUERY_ATTACK = 0x100
-QUERY_DEFENSE = 0x200
-QUERY_END = 0x80000000
 
 # Limits
 MAX_DEPTH = 50          # Maximum actions per path
