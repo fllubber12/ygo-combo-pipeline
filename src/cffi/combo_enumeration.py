@@ -876,11 +876,11 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
         offset = 15
 
         for i in range(selectable_count):
-            if offset + 18 > len(raw_data):
+            if offset + 14 > len(raw_data):
                 break
             card = _parse_sum_card_v2(raw_data, offset, i)
             selectable_cards.append(card)
-            offset += 18  # Each card is 18 bytes in this format
+            offset += 14  # Each card is 14 bytes: code(4) + con(1) + loc(1) + seq(4) + sum_param(4)
 
         return {
             'player': player,
@@ -911,26 +911,30 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
 
 
 def _parse_sum_card_v2(data: bytes, offset: int, index: int) -> dict:
-    """Parse a single card entry from MSG_SELECT_SUM (18-byte format).
+    """Parse a single card entry from MSG_SELECT_SUM (14-byte format).
 
-    Card format (18 bytes):
+    Card format (14 bytes):
     - code: 4 bytes LE (passcode)
     - controller: 1 byte
     - location: 1 byte
     - sequence: 4 bytes LE
-    - position: 4 bytes LE
-    - sum_param: 4 bytes LE
+    - sum_param: 4 bytes LE (level/rank value for sum calculation)
     """
     code = struct.unpack_from('<I', data, offset)[0]
     controller = data[offset + 4]
     location = data[offset + 5]
     sequence = struct.unpack_from('<I', data, offset + 6)[0]
-    position = struct.unpack_from('<I', data, offset + 10)[0]
-    sum_param = struct.unpack_from('<I', data, offset + 14)[0]
+    sum_param = struct.unpack_from('<I', data, offset + 10)[0]
 
     # Extract level values from sum_param
+    # Low 16 bits = primary level, High 16 bits = secondary level (for variable-level cards)
     level1 = sum_param & 0xFFFF
     level2 = (sum_param >> 16) & 0xFFFF
+
+    # If sum_param is 0 or very small, it might be encoded differently
+    # Some ygopro-core versions use the raw level value (1-12)
+    # Default to 6 for Fiendsmith monsters if we can't determine
+    effective_level = level1 if level1 > 0 and level1 <= 12 else 6
 
     return {
         'index': index,
@@ -938,11 +942,10 @@ def _parse_sum_card_v2(data: bytes, offset: int, index: int) -> dict:
         'controller': controller,
         'location': location,
         'sequence': sequence,
-        'position': position,
         'sum_param': sum_param,
-        'value': level1 if level1 > 0 else 6,  # Default to 6 if 0
-        'level': level1 if level1 > 0 else 6,
-        'level2': level2 if level2 > 0 else (level1 if level1 > 0 else 6),
+        'value': effective_level,
+        'level': effective_level,
+        'level2': level2 if level2 > 0 and level2 <= 12 else effective_level,
     }
 
 
@@ -1943,15 +1946,20 @@ class EnumerationEngine:
         select_mode = msg_data.get("select_mode", 0)
 
         # Handle case where target_sum seems to be number of cards, not level sum
-        # If target_sum is very small (1-5) and we have cards with value >= 6,
-        # it's likely the target is number of cards, not sum
+        # The ygopro-core format varies - target may be:
+        # 1. Actual level sum (e.g., 12 for 2x Level 6)
+        # 2. Number of cards to select (e.g., 2 for 2 materials)
+        # 3. Something else encoded
         actual_target = target_sum
-        if can_select and target_sum > 0 and target_sum <= 5:
+        if can_select and target_sum > 0:
             first_card_value = can_select[0].get("value", 0)
-            if first_card_value >= 6:
-                # Likely target is count, not sum - compute expected sum
-                # For Xyz: 2 Level 6 = sum 12
-                actual_target = first_card_value * target_sum
+
+            # If target matches number of cards and cards have consistent values,
+            # treat target as card count and compute sum
+            if target_sum <= len(can_select) and first_card_value > 0:
+                expected_sum = first_card_value * target_sum
+                # Use the computed sum if it makes sense
+                actual_target = expected_sum
                 self.log(f"  Adjusted target: {target_sum} -> {actual_target} (card_value={first_card_value})", depth)
 
         valid_combos = find_valid_sum_combinations(
