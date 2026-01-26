@@ -88,6 +88,22 @@ python -m pytest tests/ --cov=src/cffi --cov-report=html
 
 ## Audit History
 
+### Deck Setup Tools (January 2026) - COMPLETED
+
+Added Crystal Beast Fiendsmith deck setup scripts:
+
+| Component | Status |
+|-----------|--------|
+| `scripts/setup_deck.py` | Created - Card lookup and validation from cards.cdb |
+| `scripts/validate_engine.py` | Created - Engine validation tests |
+| `docs/CB_FIENDSMITH_SETUP_GUIDE.md` | Created - Deck setup guide |
+
+**Key Features:**
+- Multi-strategy card lookup (exact, fuzzy, alternate names)
+- Validation report with passcode verification
+- Library and roles JSON generation
+- Engine import testing
+
 ### P4 Implementation: ML Encoding (January 2026) - COMPLETED
 
 Implemented ygo-agent compatible state encoding for ML integration:
@@ -401,8 +417,11 @@ This ensures fixes can be applied mechanically without ambiguity.
 | `config/locked_library.json` | 26-card Fiendsmith library |
 | `config/card_roles.json` | Manual card role overrides |
 | `config/evaluation_config.json` | Board evaluation weights |
+| `scripts/setup_deck.py` | Card lookup and deck validation |
+| `scripts/validate_engine.py` | Engine validation tests |
 | `docs/RESEARCH.md` | Game AI research report |
 | `docs/IMPLEMENTATION_ROADMAP.md` | P0-P4 prioritized improvements |
+| `docs/CB_FIENDSMITH_SETUP_GUIDE.md` | Crystal Beast Fiendsmith setup guide |
 
 ---
 

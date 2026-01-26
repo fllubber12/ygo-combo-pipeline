@@ -34,6 +34,7 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 
 - [Research Report](docs/RESEARCH.md) - Algorithm analysis, related work, design decisions
 - [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md) - Prioritized improvements (P0-P4)
+- [CB Fiendsmith Setup](docs/CB_FIENDSMITH_SETUP_GUIDE.md) - Crystal Beast Fiendsmith deck setup
 - [Roadmap](docs/COMBO_PIPELINE_ROADMAP.md) - Comprehensive project plan
 - [Architecture Research](docs/ARCHITECTURE_RESEARCH.md) - Technical design notes
 - [Project Inventory](docs/PROJECT_INVENTORY.md) - File structure reference
@@ -53,12 +54,16 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 │   ├── card_roles.py                # Card role classification
 │   ├── iterative_deepening.py       # Depth-limited search
 │   └── ml_encoding.py               # ML-compatible state encoding
+├── scripts/                     # Utility scripts
+│   ├── setup_deck.py                # Card lookup and deck validation
+│   └── validate_engine.py           # Engine validation tests
 ├── config/                      # Configuration files
 │   ├── locked_library.json          # 26-card library
 │   └── card_roles.json              # Card role overrides
 ├── docs/                        # Documentation
 │   ├── RESEARCH.md                  # Algorithm research
-│   └── IMPLEMENTATION_ROADMAP.md    # P0-P4 priorities
+│   ├── IMPLEMENTATION_ROADMAP.md    # P0-P4 priorities
+│   └── CB_FIENDSMITH_SETUP_GUIDE.md # Deck setup guide
 └── tests/                       # Test suite
     └── unit/
         ├── test_state.py            # State representation tests
