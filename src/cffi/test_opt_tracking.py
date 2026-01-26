@@ -15,19 +15,17 @@ Test approach:
 
 import struct
 import io
-from test_fiendsmith_duel import (
+from engine_interface import (
     init_card_database, load_library, preload_utility_scripts,
     py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
-    ffi, get_card_name,
+    ffi, get_card_name, set_lib,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
 )
-from ocg_bindings import LOCATION_GRAVE, LOCATION_SZONE
-
-# Message types
-MSG_IDLE = 11
-MSG_SELECT_CARD = 15
-MSG_SELECT_CHAIN = 16
+from ocg_bindings import (
+    LOCATION_GRAVE, LOCATION_SZONE,
+    MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
+)
 
 # Card codes
 ENGRAVER = 60764609
@@ -271,8 +269,7 @@ def main():
         return 1
 
     lib = load_library()
-    import test_fiendsmith_duel
-    test_fiendsmith_duel._lib = lib
+    set_lib(lib)
 
     # Create duel
     print("Creating test duel...")

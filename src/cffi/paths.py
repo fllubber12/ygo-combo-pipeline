@@ -38,17 +38,24 @@ CDB_PATH = PROJECT_ROOT / "cards.cdb"
 BUILD_DIR = Path(__file__).parent / "build"
 
 
-def get_library_path() -> Path:
-    """Get platform-appropriate path to libygo shared library."""
+def get_lib_extension() -> str:
+    """Get platform-appropriate shared library extension.
+
+    Returns:
+        Library extension including the dot (.dylib, .dll, or .so).
+    """
     import platform
     system = platform.system()
     if system == "Darwin":
-        ext = ".dylib"
+        return ".dylib"
     elif system == "Windows":
-        ext = ".dll"
-    else:
-        ext = ".so"
-    return BUILD_DIR / f"libygo{ext}"
+        return ".dll"
+    return ".so"  # Linux and others
+
+
+def get_library_path() -> Path:
+    """Get platform-appropriate path to libygo shared library."""
+    return BUILD_DIR / f"libygo{get_lib_extension()}"
 
 
 # =============================================================================
@@ -56,15 +63,21 @@ def get_library_path() -> Path:
 # =============================================================================
 
 def get_scripts_path() -> Path:
-    """Get ygopro-core scripts directory from environment or default.
+    """Get ygopro-core scripts directory from environment.
 
-    Set YGOPRO_SCRIPTS_PATH environment variable to override.
+    Requires YGOPRO_SCRIPTS_PATH environment variable to be set.
+
+    Raises:
+        EnvironmentError: If YGOPRO_SCRIPTS_PATH is not set.
     """
     env_path = os.environ.get("YGOPRO_SCRIPTS_PATH")
     if env_path:
         return Path(env_path)
-    # Default fallback
-    return Path("/tmp/ygopro-scripts")
+    raise EnvironmentError(
+        "YGOPRO_SCRIPTS_PATH environment variable must be set.\n"
+        "Example: export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-core/script\n"
+        "This should point to the directory containing utility.lua and card scripts."
+    )
 
 
 def verify_scripts_path() -> bool:

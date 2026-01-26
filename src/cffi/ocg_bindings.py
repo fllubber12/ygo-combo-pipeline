@@ -15,7 +15,6 @@ Usage:
 
 from cffi import FFI
 from pathlib import Path
-import platform
 
 ffi = FFI()
 
@@ -142,24 +141,18 @@ ffi.cdef("""
 """)
 
 
-def _get_lib_extension() -> str:
-    """Get platform-appropriate shared library extension."""
-    system = platform.system()
-    if system == "Darwin":
-        return ".dylib"
-    elif system == "Windows":
-        return ".dll"
-    return ".so"  # Linux and others
-
-
 def load_library():
-    """Load the libygo shared library."""
-    ext = _get_lib_extension()
-    lib_path = Path(__file__).parent / "build" / f"libygo{ext}"
+    """Load the libygo shared library.
+
+    Uses paths.get_library_path() for platform detection.
+    """
+    from paths import get_library_path, get_lib_extension
+    lib_path = get_library_path()
     if not lib_path.exists():
+        ext = get_lib_extension()
         raise FileNotFoundError(
             f"libygo{ext} not found at {lib_path}. "
-            f"Expected extension for {platform.system()}: {ext}"
+            f"Please build the library first."
         )
     return ffi.dlopen(str(lib_path))
 
@@ -205,25 +198,131 @@ POS_FACEDOWN = POS_FACEDOWN_ATTACK | POS_FACEDOWN_DEFENSE
 # Duel flags (MR5 = Master Rule 5)
 DUEL_FLAGS_MR5 = (5 << 16)
 
-# Message types (from common.h)
+# =============================================================================
+# Message Types (from ygopro-core/common.h)
+# =============================================================================
+# Reference: https://github.com/edo9300/ygopro-core/blob/master/common.h
+
+# Core messages
 MSG_RETRY = 1
 MSG_HINT = 2
+MSG_WAITING = 3
 MSG_START = 4
 MSG_WIN = 5
+MSG_UPDATE_DATA = 6
+MSG_UPDATE_CARD = 7
+
+# Selection messages (require player response)
 MSG_SELECT_BATTLECMD = 10
-MSG_IDLE = 11
+MSG_IDLE = 11  # MSG_SELECT_IDLECMD
 MSG_SELECT_CARD = 15
 MSG_SELECT_CHAIN = 16
 MSG_SELECT_PLACE = 18
 MSG_SELECT_POSITION = 19
+MSG_SELECT_TRIBUTE = 20
 MSG_SELECT_EFFECTYN = 21
 MSG_SELECT_YESNO = 22
 MSG_SELECT_OPTION = 23
+MSG_SELECT_COUNTER = 24
 MSG_SELECT_UNSELECT_CARD = 25
+MSG_SELECT_SUM = 26
+MSG_SORT_CARD = 27
+MSG_SELECT_DISFIELD = 28
+
+# Deck/hand operations
+MSG_CONFIRM_DECKTOP = 30
+MSG_CONFIRM_CARDS = 31
 MSG_SHUFFLE_DECK = 32
+MSG_SHUFFLE_HAND = 33
+MSG_REFRESH_DECK = 34
+MSG_SWAP_GRAVE_DECK = 35
+MSG_SHUFFLE_SET_CARD = 36
+MSG_REVERSE_DECK = 37
+MSG_DECK_TOP = 38
+MSG_SHUFFLE_EXTRA = 39
+
+# Turn/phase messages
 MSG_NEW_TURN = 40
 MSG_NEW_PHASE = 41
+MSG_CONFIRM_EXTRATOP = 42
+
+# Card movement
+MSG_MOVE = 50
+MSG_POS_CHANGE = 53
+MSG_SET = 54
+MSG_SWAP = 55
+MSG_FIELD_DISABLED = 56
+
+# Summoning messages
+MSG_SUMMONING = 60
+MSG_SUMMONED = 61
+MSG_SPSUMMONING = 62
+MSG_SPSUMMONED = 63
+MSG_FLIPSUMMONING = 64
+MSG_FLIPSUMMONED = 65
+
+# Chain messages
+MSG_CHAINING = 70
+MSG_CHAINED = 71
+MSG_CHAIN_SOLVING = 72
+MSG_CHAIN_SOLVED = 73
+MSG_CHAIN_END = 74
+MSG_CHAIN_NEGATED = 75
+MSG_CHAIN_DISABLED = 76
+
+# Selection feedback
+MSG_CARD_SELECTED = 80
+MSG_RANDOM_SELECTED = 81
+MSG_BECOME_TARGET = 83
+
+# LP and damage
 MSG_DRAW = 90
+MSG_DAMAGE = 91
+MSG_RECOVER = 92
+MSG_EQUIP = 93
+MSG_LPUPDATE = 94
+MSG_UNEQUIP = 95
+MSG_CARD_TARGET = 96
+MSG_CANCEL_TARGET = 97
+MSG_PAY_LPCOST = 100
+MSG_ADD_COUNTER = 101
+MSG_REMOVE_COUNTER = 102
+
+# Battle
+MSG_ATTACK = 110
+MSG_BATTLE = 111
+MSG_ATTACK_DISABLED = 112
+MSG_DAMAGE_STEP_START = 113
+MSG_DAMAGE_STEP_END = 114
+
+# Effect messages
+MSG_MISSED_EFFECT = 120
+MSG_BE_CHAIN_TARGET = 121
+MSG_CREATE_RELATION = 122
+MSG_RELEASE_RELATION = 123
+
+# Random events
+MSG_TOSS_COIN = 130
+MSG_TOSS_DICE = 131
+MSG_ROCK_PAPER_SCISSORS = 132
+MSG_HAND_RES = 133
+
+# Announcements
+MSG_ANNOUNCE_RACE = 140
+MSG_ANNOUNCE_ATTRIB = 141
+MSG_ANNOUNCE_CARD = 142
+MSG_ANNOUNCE_NUMBER = 143
+
+# Hints and UI
+MSG_CARD_HINT = 160
+MSG_TAG_SWAP = 161
+MSG_RELOAD_FIELD = 162
+MSG_AI_NAME = 163
+MSG_SHOW_HINT = 164
+MSG_PLAYER_HINT = 165
+MSG_MATCH_KILL = 170
+MSG_CUSTOM_MSG = 180
+MSG_REMOVE_CARDS = 190
 
 # Card type flags
 TYPE_MONSTER = 0x1

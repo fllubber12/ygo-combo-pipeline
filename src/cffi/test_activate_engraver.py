@@ -18,12 +18,18 @@ from ocg_bindings import (
     ffi, load_library,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_GRAVE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
+    TYPE_LINK,
+    # Message types
+    MSG_RETRY, MSG_HINT, MSG_START, MSG_IDLE, MSG_SELECT_CARD,
+    MSG_SELECT_CHAIN, MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO,
+    MSG_SHUFFLE_DECK, MSG_NEW_TURN, MSG_NEW_PHASE, MSG_MOVE,
+    MSG_DRAW, MSG_CONFIRM_CARDS,
 )
+from paths import CDB_PATH, get_scripts_path
 
 
-# Paths
-CDB_PATH = Path(__file__).parents[2] / "cards.cdb"
-SCRIPT_PATH = Path("/tmp/ygopro-scripts")
+# Script path
+SCRIPT_PATH = get_scripts_path()
 
 # Fiendsmith card IDs
 ENGRAVER = 60764609
@@ -34,25 +40,6 @@ DESIRAE = 82135803
 LACRIMA = 46640168
 # Standardized filler card - has no relevant effects during combo testing
 FILLER = 10000040  # Holactie the Creator of Light (cannot be summoned normally)
-
-# Message types (values from ygopro-core common.h)
-MSG_RETRY = 1
-MSG_HINT = 2
-MSG_START = 4
-MSG_IDLE = 11
-MSG_SELECT_CARD = 15
-MSG_SELECT_CHAIN = 16
-MSG_SELECT_EFFECTYN = 21  # Fixed: was 12
-MSG_SELECT_YESNO = 22
-MSG_SHUFFLE_DECK = 32
-MSG_NEW_TURN = 40
-MSG_NEW_PHASE = 41
-MSG_MOVE = 50
-MSG_DRAW = 90
-MSG_CONFIRM_CARDS = 95
-
-# Type flags
-TYPE_LINK = 0x4000000
 
 # Global state
 _card_db = None

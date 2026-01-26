@@ -340,78 +340,125 @@ class IntermediateState:
 
 
 # =============================================================================
-# BOARD EVALUATION HELPERS
+# BOARD EVALUATION CONFIGURATION
 # =============================================================================
 
-# Boss monster passcodes (for evaluation)
-BOSS_MONSTERS = {
-    79559912,   # D/D/D Wave High King Caesar
-    4731783,    # A Bao A Qu, the Lightless Shadow
-    32991300,   # Fiendsmith's Agnumday
-    82135803,   # Fiendsmith's Desirae
-    11464648,   # Fiendsmith's Rextremende
-    29301450,   # S:P Little Knight
-    45409943,   # Luce the Dusk's Dark
-}
+import json
+from pathlib import Path
 
-# Interaction pieces (for evaluation)
-INTERACTION_PIECES = {
-    79559912,   # Caesar - negates special summon effects
-    29301450,   # S:P Little Knight - banishes on response
-    4731783,    # A Bao A Qu - destroys or banishes
-}
+# Load evaluation config from file
+_EVALUATION_CONFIG = None
+
+
+def _load_evaluation_config() -> dict:
+    """Load evaluation configuration from config file."""
+    global _EVALUATION_CONFIG
+    if _EVALUATION_CONFIG is not None:
+        return _EVALUATION_CONFIG
+
+    config_path = Path(__file__).parents[2] / "config" / "evaluation_config.json"
+    if config_path.exists():
+        with open(config_path) as f:
+            _EVALUATION_CONFIG = json.load(f)
+    else:
+        # Fallback defaults
+        _EVALUATION_CONFIG = {
+            "tier_thresholds": {"S": 100, "A": 70, "B": 40, "C": 20},
+            "score_weights": {
+                "boss_monster": 50, "interaction_piece": 30, "equipped_link": 20,
+                "monster_on_field": 5, "fiendsmith_in_gy": 10,
+            },
+            "boss_monsters": [79559912, 4731783, 32991300, 82135803, 11464648, 29301450, 45409943],
+            "interaction_pieces": [79559912, 29301450, 4731783],
+            "fiendsmith_gy_targets": [2463794, 49867899, 60764609],
+        }
+    return _EVALUATION_CONFIG
+
+
+def get_boss_monsters() -> set:
+    """Get the set of boss monster passcodes."""
+    config = _load_evaluation_config()
+    return set(config.get("boss_monsters", []))
+
+
+def get_interaction_pieces() -> set:
+    """Get the set of interaction piece passcodes."""
+    config = _load_evaluation_config()
+    return set(config.get("interaction_pieces", []))
+
+
+def get_fiendsmith_gy_targets() -> set:
+    """Get the set of Fiendsmith GY target passcodes."""
+    config = _load_evaluation_config()
+    return set(config.get("fiendsmith_gy_targets", []))
+
+
+# Legacy exports for backward compatibility
+BOSS_MONSTERS = get_boss_monsters()
+INTERACTION_PIECES = get_interaction_pieces()
 
 
 def evaluate_board_quality(sig: BoardSignature) -> dict:
     """
     Evaluate board quality for combo scoring.
 
+    Configuration loaded from config/evaluation_config.json.
+
     Returns dict with:
     - tier: S/A/B/C/brick
     - score: numeric score
     - details: explanation
     """
+    config = _load_evaluation_config()
+    weights = config.get("score_weights", {})
+    thresholds = config.get("tier_thresholds", {"S": 100, "A": 70, "B": 40, "C": 20})
+
     score = 0
     details = []
 
+    boss_monsters = get_boss_monsters()
+    interaction_pieces = get_interaction_pieces()
+    fiendsmith_gy = get_fiendsmith_gy_targets()
+
     # Check for boss monsters
-    bosses_on_field = sig.monsters & BOSS_MONSTERS
+    bosses_on_field = sig.monsters & boss_monsters
     if bosses_on_field:
-        score += 50 * len(bosses_on_field)
+        boss_weight = weights.get("boss_monster", 50)
+        score += boss_weight * len(bosses_on_field)
         details.append(f"Boss monsters: {len(bosses_on_field)}")
 
     # Check for interaction pieces
-    interaction = sig.monsters & INTERACTION_PIECES
+    interaction = sig.monsters & interaction_pieces
     if interaction:
-        score += 30 * len(interaction)
+        interaction_weight = weights.get("interaction_piece", 30)
+        score += interaction_weight * len(interaction)
         details.append(f"Interaction pieces: {len(interaction)}")
 
     # Check for equipped Link monsters (Fiendsmith combo indicator)
     if sig.equips:
-        score += 20 * len(sig.equips)
+        equip_weight = weights.get("equipped_link", 20)
+        score += equip_weight * len(sig.equips)
         details.append(f"Equipped Links: {len(sig.equips)}")
 
     # Monster count
-    score += 5 * len(sig.monsters)
+    monster_weight = weights.get("monster_on_field", 5)
+    score += monster_weight * len(sig.monsters)
 
     # Graveyard setup (Fiendsmith likes GY)
-    fiendsmith_in_gy = len([c for c in sig.graveyard if c in {
-        2463794,    # Requiem
-        49867899,   # Sequence
-        60764609,   # Engraver
-    }])
+    fiendsmith_in_gy = len([c for c in sig.graveyard if c in fiendsmith_gy])
     if fiendsmith_in_gy:
-        score += 10 * fiendsmith_in_gy
+        gy_weight = weights.get("fiendsmith_in_gy", 10)
+        score += gy_weight * fiendsmith_in_gy
         details.append(f"Fiendsmith pieces in GY: {fiendsmith_in_gy}")
 
     # Determine tier
-    if score >= 100:
+    if score >= thresholds.get("S", 100):
         tier = "S"
-    elif score >= 70:
+    elif score >= thresholds.get("A", 70):
         tier = "A"
-    elif score >= 40:
+    elif score >= thresholds.get("B", 40):
         tier = "B"
-    elif score >= 20:
+    elif score >= thresholds.get("C", 20):
         tier = "C"
     else:
         tier = "brick"

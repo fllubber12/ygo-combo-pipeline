@@ -13,11 +13,19 @@ class TranspositionEntry:
 
     Note: Intentionally mutable (not frozen). The visit_count field is
     incremented on cache hits to track access frequency for eviction decisions.
+
+    Attributes:
+        state_hash: Hash of the intermediate state.
+        best_terminal_hash: Hash of best terminal board reachable from here (if known).
+        best_terminal_value: Evaluation score of best terminal (if known).
+        creation_depth: The search depth at which this entry was created.
+            Higher depth = closer to terminal = more valuable for eviction.
+        visit_count: How many times we've seen this state (mutated on lookup).
     """
     state_hash: str
     best_terminal_hash: str     # Best board reachable from here
     best_terminal_value: float  # Evaluation score (once we have it)
-    depth_to_terminal: int      # How many actions to reach best terminal
+    creation_depth: int         # Depth at which this state was first seen
     visit_count: int            # How many times we've seen this state (mutated on lookup)
 
 
@@ -54,17 +62,18 @@ class TranspositionTable:
     def _evict(self):
         """Remove least valuable entries when full.
 
-        Strategy: Prioritize keeping entries with higher depth_to_terminal
-        (those closer to good boards are more valuable to cache).
-        Entries with low visit counts are also deprioritized.
+        Strategy: Prioritize keeping entries with higher creation_depth
+        (states discovered deeper in the search tree are closer to terminals
+        and more valuable to cache for avoiding redundant exploration).
+        Entries with high visit counts are also more valuable.
         """
         if not self.table:
             return
 
-        # Sort by (depth_to_terminal, visit_count) ascending - remove shallow/low-visit entries first
+        # Sort by (creation_depth, visit_count) ascending - remove shallow/low-visit entries first
         sorted_entries = sorted(
             self.table.items(),
-            key=lambda x: (x[1].depth_to_terminal, x[1].visit_count)
+            key=lambda x: (x[1].creation_depth, x[1].visit_count)
         )
 
         # Remove bottom 10%

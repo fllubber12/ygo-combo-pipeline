@@ -40,19 +40,58 @@ def _signal_handler(signum, frame):
         print("\nForce quit - results may be incomplete.")
         raise KeyboardInterrupt
 
-# Import from existing infrastructure
-from test_fiendsmith_duel import (
+# Import from engine interface (production code, not test file)
+from engine_interface import (
     init_card_database, load_library, preload_utility_scripts,
     py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
-    ffi, get_card_name,
+    ffi, get_card_name, set_lib,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
 )
+# All MSG_* constants come from ocg_bindings - the canonical source
 from ocg_bindings import (
     LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
-    # Import canonical MSG_* constants from ocg_bindings
+    # Selection messages (require player response)
+    MSG_SELECT_BATTLECMD, MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
+    MSG_SELECT_PLACE, MSG_SELECT_POSITION, MSG_SELECT_TRIBUTE,
     MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO, MSG_SELECT_OPTION,
-    MSG_SELECT_UNSELECT_CARD as MSG_SELECT_UNSELECT_CARD_BINDING,
+    MSG_SELECT_COUNTER, MSG_SELECT_UNSELECT_CARD, MSG_SELECT_SUM,
+    MSG_SORT_CARD, MSG_SELECT_DISFIELD,
+    # Core messages
+    MSG_RETRY, MSG_HINT, MSG_WAITING, MSG_START, MSG_WIN,
+    MSG_UPDATE_DATA, MSG_UPDATE_CARD,
+    # Deck/hand operations
+    MSG_CONFIRM_DECKTOP, MSG_CONFIRM_CARDS, MSG_SHUFFLE_DECK, MSG_SHUFFLE_HAND,
+    MSG_REFRESH_DECK, MSG_SWAP_GRAVE_DECK, MSG_SHUFFLE_SET_CARD, MSG_REVERSE_DECK,
+    MSG_DECK_TOP, MSG_SHUFFLE_EXTRA,
+    # Turn/phase messages
+    MSG_NEW_TURN, MSG_NEW_PHASE, MSG_CONFIRM_EXTRATOP,
+    # Card movement
+    MSG_MOVE, MSG_POS_CHANGE, MSG_SET, MSG_SWAP, MSG_FIELD_DISABLED,
+    # Summoning messages
+    MSG_SUMMONING, MSG_SUMMONED, MSG_SPSUMMONING, MSG_SPSUMMONED,
+    MSG_FLIPSUMMONING, MSG_FLIPSUMMONED,
+    # Chain messages
+    MSG_CHAINING, MSG_CHAINED, MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED,
+    MSG_CHAIN_END, MSG_CHAIN_NEGATED, MSG_CHAIN_DISABLED,
+    # Selection feedback
+    MSG_CARD_SELECTED, MSG_RANDOM_SELECTED, MSG_BECOME_TARGET,
+    # LP and damage
+    MSG_DRAW, MSG_DAMAGE, MSG_RECOVER, MSG_EQUIP, MSG_LPUPDATE, MSG_UNEQUIP,
+    MSG_CARD_TARGET, MSG_CANCEL_TARGET, MSG_PAY_LPCOST,
+    MSG_ADD_COUNTER, MSG_REMOVE_COUNTER,
+    # Battle
+    MSG_ATTACK, MSG_BATTLE, MSG_ATTACK_DISABLED,
+    MSG_DAMAGE_STEP_START, MSG_DAMAGE_STEP_END,
+    # Effect messages
+    MSG_MISSED_EFFECT, MSG_BE_CHAIN_TARGET, MSG_CREATE_RELATION, MSG_RELEASE_RELATION,
+    # Random events
+    MSG_TOSS_COIN, MSG_TOSS_DICE, MSG_ROCK_PAPER_SCISSORS, MSG_HAND_RES,
+    # Announcements
+    MSG_ANNOUNCE_RACE, MSG_ANNOUNCE_ATTRIB, MSG_ANNOUNCE_CARD, MSG_ANNOUNCE_NUMBER,
+    # Hints and UI
+    MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME,
+    MSG_SHOW_HINT, MSG_PLAYER_HINT, MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
 )
 from state_representation import (
     BoardSignature, IntermediateState, ActionSpec,
@@ -74,110 +113,12 @@ ENGRAVER = 60764609
 # relevant effects during combo testing. Use this for deck padding and hand filler.
 HOLACTIE = 10000040  # Holactie the Creator of Light
 
-# Message types we handle (require branching decisions)
-# Core selection messages (values from ocg_bindings.py - the canonical source)
-MSG_IDLE = 11  # MSG_SELECT_IDLECMD
-MSG_SELECT_BATTLECMD = 10
-MSG_SELECT_CARD = 15
-MSG_SELECT_CHAIN = 16
-MSG_SELECT_PLACE = 18
-MSG_SELECT_POSITION = 19
-MSG_SELECT_TRIBUTE = 20
-# MSG_SELECT_EFFECTYN = 21 (imported from ocg_bindings)
-# MSG_SELECT_YESNO = 22 (imported from ocg_bindings)
-# MSG_SELECT_OPTION = 23 (imported from ocg_bindings)
-MSG_SELECT_COUNTER = 24
-MSG_SELECT_UNSELECT_CARD = MSG_SELECT_UNSELECT_CARD_BINDING  # = 25 from ocg_bindings
-MSG_SELECT_SUM = 26
-MSG_SORT_CARD = 27
-MSG_SELECT_DISFIELD = 28
-
 # Query flags (for OCG_DuelQueryLocation)
 QUERY_CODE = 0x1
 QUERY_POSITION = 0x2
 QUERY_ATTACK = 0x100
 QUERY_DEFENSE = 0x200
 QUERY_END = 0x80000000
-
-# Informational message types (no response needed)
-MSG_RETRY = 1
-MSG_HINT = 2
-MSG_WAITING = 3
-MSG_START = 4
-MSG_WIN = 5
-MSG_UPDATE_DATA = 6
-MSG_UPDATE_CARD = 7
-MSG_CONFIRM_DECKTOP = 30
-MSG_CONFIRM_CARDS = 31
-MSG_SHUFFLE_DECK = 32
-MSG_SHUFFLE_HAND = 33
-MSG_REFRESH_DECK = 34
-MSG_SWAP_GRAVE_DECK = 35
-MSG_SHUFFLE_SET_CARD = 36
-MSG_REVERSE_DECK = 37
-MSG_DECK_TOP = 38
-MSG_SHUFFLE_EXTRA = 39
-MSG_NEW_TURN = 40
-MSG_NEW_PHASE = 41
-MSG_CONFIRM_EXTRATOP = 42
-MSG_MOVE = 50
-MSG_POS_CHANGE = 53
-MSG_SET = 54
-MSG_SWAP = 55
-MSG_FIELD_DISABLED = 56
-MSG_SUMMONING = 60
-MSG_SUMMONED = 61
-MSG_SPSUMMONING = 62
-MSG_SPSUMMONED = 63
-MSG_FLIPSUMMONING = 64
-MSG_FLIPSUMMONED = 65
-MSG_CHAINING = 70
-MSG_CHAINED = 71
-MSG_CHAIN_SOLVING = 72
-MSG_CHAIN_SOLVED = 73
-MSG_CHAIN_END = 74
-MSG_CHAIN_NEGATED = 75
-MSG_CHAIN_DISABLED = 76
-MSG_CARD_SELECTED = 80
-MSG_RANDOM_SELECTED = 81
-MSG_BECOME_TARGET = 83
-MSG_DRAW = 90
-MSG_DAMAGE = 91
-MSG_RECOVER = 92
-MSG_EQUIP = 93
-MSG_LPUPDATE = 94
-MSG_UNEQUIP = 95
-MSG_CARD_TARGET = 96
-MSG_CANCEL_TARGET = 97
-MSG_PAY_LPCOST = 100
-MSG_ADD_COUNTER = 101
-MSG_REMOVE_COUNTER = 102
-MSG_ATTACK = 110
-MSG_BATTLE = 111
-MSG_ATTACK_DISABLED = 112
-MSG_DAMAGE_STEP_START = 113
-MSG_DAMAGE_STEP_END = 114
-MSG_MISSED_EFFECT = 120
-MSG_BE_CHAIN_TARGET = 121
-MSG_CREATE_RELATION = 122
-MSG_RELEASE_RELATION = 123
-MSG_TOSS_COIN = 130
-MSG_TOSS_DICE = 131
-MSG_ROCK_PAPER_SCISSORS = 132
-MSG_HAND_RES = 133
-MSG_ANNOUNCE_RACE = 140
-MSG_ANNOUNCE_ATTRIB = 141
-MSG_ANNOUNCE_CARD = 142
-MSG_ANNOUNCE_NUMBER = 143
-MSG_CARD_HINT = 160
-MSG_TAG_SWAP = 161
-MSG_RELOAD_FIELD = 162
-MSG_AI_NAME = 163
-MSG_SHOW_HINT = 164
-MSG_PLAYER_HINT = 165
-MSG_MATCH_KILL = 170
-MSG_CUSTOM_MSG = 180
-MSG_REMOVE_CARDS = 190
 
 # Limits
 MAX_DEPTH = 50          # Maximum actions per path
@@ -541,6 +482,51 @@ def parse_select_option(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
 # =============================================================================
 
 # IDLE response types (from field_processor.cpp OCG_DuelSetResponse for MSG_SELECT_IDLECMD)
+# =============================================================================
+# RESPONSE FORMAT DOCUMENTATION
+# =============================================================================
+# Response formats are based on ygopro-core ocgapi.cpp and playerop.cpp.
+# Reference: https://github.com/edo9300/ygopro-core
+#
+# MSG_IDLE (MSG_SELECT_IDLECMD = 11):
+#   Response: u32 with format: (index << 16) | action_type
+#   Where action_type is one of IDLE_RESPONSE_* constants below.
+#   For ACTIVATE: index is position in activatable[] list (0-indexed).
+#   For SPSUMMON: index is position in spsummon[] list.
+#   For TO_END: no index needed, just the action type.
+#
+# MSG_SELECT_CARD (15):
+#   Response: i32(cancelable?) + u32(count) + count*u32(indices)
+#   First i32: 0 = not canceling, -1 = cancel (if cancelable)
+#   Second u32: number of selected cards
+#   Remaining u32s: 0-indexed positions in the selectable[] list
+#
+# MSG_SELECT_CHAIN (16):
+#   Response: i32 - chain index (0-indexed from chainable list) or -1 to decline
+#
+# MSG_SELECT_PLACE (18):
+#   Response: u8(player) + u8(location) + u8(sequence)
+#   player: 0 or 1
+#   location: LOCATION_* constant (MZONE=0x04, SZONE=0x08)
+#   sequence: zone index (0-4 for main zones, 5-6 for EMZ)
+#
+# MSG_SELECT_POSITION (19):
+#   Response: u32 with position flags (POS_FACEUP_ATTACK=0x1, etc)
+#
+# MSG_SELECT_EFFECTYN (21):
+#   Response: u32 - 1 for yes, 0 for no
+#
+# MSG_SELECT_YESNO (22):
+#   Response: u32 - 1 for yes, 0 for no
+#
+# MSG_SELECT_OPTION (23):
+#   Response: u32 - 0-indexed option number
+#
+# MSG_SELECT_UNSELECT_CARD (25):
+#   Response: i32 - selected card index (0-indexed) or -1 to finish
+#
+# =============================================================================
+
 IDLE_RESPONSE_SUMMON = 0       # Normal summon
 IDLE_RESPONSE_SPSUMMON = 1     # Special summon
 IDLE_RESPONSE_REPOSITION = 2   # Change position
@@ -552,26 +538,48 @@ IDLE_RESPONSE_TO_END = 7       # End turn / pass
 
 
 def build_activate_response(index: int) -> Tuple[int, bytes]:
-    """Build response to activate effect from IDLE."""
+    """Build response to activate effect from IDLE.
+
+    Args:
+        index: 0-indexed position in activatable[] list.
+
+    Returns:
+        (value, bytes) - the response value and packed bytes.
+    """
     value = (index << 16) | IDLE_RESPONSE_ACTIVATE
     return value, struct.pack("<I", value)
 
 
 def build_pass_response() -> Tuple[int, bytes]:
-    """Build response to end main phase (PASS)."""
+    """Build response to end main phase (PASS).
+
+    Returns:
+        (IDLE_RESPONSE_TO_END, packed bytes).
+    """
     return IDLE_RESPONSE_TO_END, struct.pack("<I", IDLE_RESPONSE_TO_END)
 
 
 def build_select_card_response(indices: List[int]) -> Tuple[List[int], bytes]:
-    """Build response to select cards."""
-    data = struct.pack("<iI", 0, len(indices))
+    """Build response to select cards (MSG_SELECT_CARD).
+
+    Args:
+        indices: List of 0-indexed card positions from selectable[] list.
+
+    Returns:
+        (indices, packed bytes) - the selected indices and response bytes.
+    """
+    data = struct.pack("<iI", 0, len(indices))  # 0 = not canceling, count
     for idx in indices:
         data += struct.pack("<I", idx)
     return indices, data
 
 
 def build_decline_chain_response() -> Tuple[int, bytes]:
-    """Build response to decline chain opportunity."""
+    """Build response to decline chain opportunity (MSG_SELECT_CHAIN).
+
+    Returns:
+        (-1, packed bytes) - decline response.
+    """
     return -1, struct.pack("<i", -1)
 
 
@@ -986,7 +994,7 @@ class EnumerationEngine:
                 state_hash=state_hash,
                 best_terminal_hash="",
                 best_terminal_value=0.0,
-                depth_to_terminal=0,
+                creation_depth=depth,
                 visit_count=1,
             ))
 
@@ -1442,9 +1450,8 @@ def main():
     print("Loading library...")
     lib = load_library()
 
-    # Set the global _lib for callbacks
-    import test_fiendsmith_duel
-    test_fiendsmith_duel._lib = lib
+    # Set the library reference for callbacks in engine_interface
+    set_lib(lib)
 
     print("Loading locked library...")
     library = load_locked_library()
