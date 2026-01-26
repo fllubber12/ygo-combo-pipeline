@@ -373,33 +373,22 @@ _EVALUATION_CONFIG = None
 def _load_evaluation_config() -> dict:
     """Load evaluation configuration from config file.
 
-    Falls back to defaults if config file is missing, but logs a warning.
+    Raises FileNotFoundError if config is missing - no fallback defaults
+    to prevent stale/hallucinated card data from being used.
     """
     global _EVALUATION_CONFIG
     if _EVALUATION_CONFIG is not None:
         return _EVALUATION_CONFIG
 
     config_path = Path(__file__).parents[2] / "config" / "evaluation_config.json"
-    if config_path.exists():
-        with open(config_path) as f:
-            _EVALUATION_CONFIG = json.load(f)
-    else:
-        # Fallback defaults - log warning since this may indicate deployment issue
-        import logging
-        logging.warning(
+    if not config_path.exists():
+        raise FileNotFoundError(
             f"evaluation_config.json not found at {config_path}. "
-            f"Using hardcoded defaults. This may indicate a deployment issue."
+            f"This file is required - do not use hardcoded card IDs. "
+            f"All card data must be verified against cards.cdb."
         )
-        _EVALUATION_CONFIG = {
-            "tier_thresholds": {"S": 100, "A": 70, "B": 40, "C": 20},
-            "score_weights": {
-                "boss_monster": 50, "interaction_piece": 30, "equipped_link": 20,
-                "monster_on_field": 5, "fiendsmith_in_gy": 10,
-            },
-            "boss_monsters": [79559912, 4731783, 32991300, 82135803, 11464648, 29301450, 45409943],
-            "interaction_pieces": [79559912, 29301450, 4731783],
-            "fiendsmith_gy_targets": [2463794, 49867899, 60764609],
-        }
+    with open(config_path) as f:
+        _EVALUATION_CONFIG = json.load(f)
     return _EVALUATION_CONFIG
 
 

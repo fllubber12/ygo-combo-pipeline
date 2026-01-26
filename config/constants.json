@@ -1,0 +1,69 @@
+{
+  "_description": "Pipeline constants - all card IDs must exist in verified_cards.json",
+  "_warning": "DO NOT add IDs here without verification against cards.cdb",
+
+  "default_hand": {
+    "starter": 60764609,
+    "filler": 10000040,
+    "_starter_name": "Fiendsmith Engraver",
+    "_filler_name": "Holactie the Creator of Light"
+  },
+
+  "evaluation": {
+    "boss_monsters": [79559912, 4731783, 32991300, 82135803, 11464648, 29301450, 45409943],
+    "interaction_pieces": [79559912, 29301450, 4731783],
+    "fiendsmith_gy_targets": [2463794, 49867899, 60764609],
+    "_boss_names": [
+      "D/D/D Wave High King Caesar",
+      "A Bao A Qu, the Lightless Shadow",
+      "Fiendsmith's Agnumday",
+      "Fiendsmith's Desirae",
+      "Fiendsmith's Rextremende",
+      "S:P Little Knight",
+      "Luce the Dusk's Dark"
+    ],
+    "_interaction_names": [
+      "D/D/D Wave High King Caesar",
+      "S:P Little Knight",
+      "A Bao A Qu, the Lightless Shadow"
+    ],
+    "_gy_target_names": [
+      "Fiendsmith's Requiem",
+      "Fiendsmith's Sequence",
+      "Fiendsmith Engraver"
+    ]
+  },
+
+  "tier_thresholds": {
+    "S": 100,
+    "A": 70,
+    "B": 40,
+    "C": 20
+  },
+
+  "score_weights": {
+    "boss_monster": 50,
+    "interaction_piece": 30,
+    "equipped_link": 20,
+    "monster_on_field": 5,
+    "fiendsmith_in_gy": 10
+  },
+
+  "level_6_fiends": {
+    "_note": "Level 6 Fiend monsters for Caesar Xyz materials",
+    "cards": [60764609, 46640168, 93860227, 45445571, 28143384],
+    "_names": [
+      "Fiendsmith Engraver",
+      "Fiendsmith's Lacrima",
+      "Necroquip Princess",
+      "The Duke of Demise",
+      "Aerial Eater"
+    ]
+  },
+
+  "level_1_light_fiends": {
+    "_note": "Level 1 LIGHT Fiend monsters for Requiem Link-1",
+    "cards": [97651498, 35552986],
+    "_names": ["Fabled Lurrie", "Fiendsmith Token"]
+  }
+}

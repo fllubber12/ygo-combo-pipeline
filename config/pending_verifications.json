@@ -1,0 +1,5 @@
+{
+  "_description": "Cards awaiting human verification before addition to verified_cards.json",
+  "_workflow": "1. Claude proposes card via submit_for_verification.py, 2. Human reviews against cards.cdb, 3. Human approves via approve_pending.py",
+  "pending": []
+}

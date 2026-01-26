@@ -1,56 +1,138 @@
 {
   "metadata": {
-    "source": "Web searches: YGOProDeck, Yugipedia, Master Duel Meta, Official Neuron DB",
+    "source": "cards.cdb (authoritative)",
     "audit_date": "2026-01-26",
-    "verified_by": "Human review of web search results",
-    "notes": "All card data verified against official sources. Cards not in this file should be verified before use."
+    "verified_by": "bulk_verify_library.py script",
+    "notes": "All card data from cards.cdb - the authoritative source"
   },
   "cards": {
-    "60764609": {
-      "name": "Fiendsmith Engraver",
-      "level": 6,
-      "atk": 1800,
-      "def": 2400,
+    "2463794": {
+      "name": "Fiendsmith's Requiem",
       "attribute": "LIGHT",
-      "type": "Fiend/Effect",
-      "is_main_deck": true,
-      "verified": true
+      "type": "Fiend/Link/Effect",
+      "link_rating": 1,
+      "atk": 600,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
-    "97651498": {
-      "name": "Fabled Lurrie",
-      "level": 1,
-      "atk": 200,
-      "def": 400,
-      "attribute": "LIGHT",
-      "type": "Fiend/Effect",
+    "3574681": {
+      "name": "Golden Rule",
+      "card_type": "Spell",
+      "spell_type": "Continuous",
       "is_main_deck": true,
-      "verified": true
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
-    "28803166": {
-      "name": "Lacrima the Crimson Tears",
+    "4731783": {
+      "name": "A Bao A Qu, the Lightless Shadow",
+      "attribute": "DARK",
+      "type": "Fiend/Link/Effect",
+      "link_rating": 4,
+      "atk": 2800,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "5611760": {
+      "name": "Rainbow Bridge of Salvation",
+      "card_type": "Trap",
+      "trap_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "7093411": {
+      "name": "Crystal Beast Sapphire Pegasus",
+      "attribute": "WIND",
+      "type": "Beast/Effect",
       "level": 4,
-      "atk": 1200,
+      "atk": 1800,
       "def": 1200,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "9334391": {
+      "name": "Crystal Bond",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "9674034": {
+      "name": "Snake-Eye Ash",
+      "attribute": "FIRE",
+      "type": "Pyro/Effect",
+      "level": 1,
+      "atk": 800,
+      "def": 1000,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "10938846": {
+      "name": "Rainbow Bridge of the Heart",
+      "card_type": "Spell",
+      "spell_type": "Equip",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "11464648": {
+      "name": "Fiendsmith's Rextremende",
       "attribute": "LIGHT",
+      "type": "Fiend/Fusion/Effect",
+      "level": 9,
+      "atk": 3000,
+      "def": 3600,
+      "is_main_deck": false,
+      "notes": "Stats corrected to match CDB (was level 8, 2800/2400)",
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "12877076": {
+      "name": "Awakening of the Crystal Ultimates",
+      "card_type": "Spell",
+      "spell_type": "Field",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "14469229": {
+      "name": "Crystal Keeper",
+      "attribute": "FIRE",
+      "type": "Warrior/Effect",
+      "level": 4,
+      "atk": 1500,
+      "def": 1800,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "19000848": {
+      "name": "Buio the Dawn's Light",
+      "attribute": "DARK",
       "type": "Fiend/Effect",
+      "level": 3,
+      "atk": 1000,
+      "def": 1500,
       "is_main_deck": true,
-      "notes": "Always treated as Fiendsmith card",
-      "verified": true
-    },
-    "98567237": {
-      "name": "Fiendsmith's Tract",
-      "card_type": "Spell",
-      "spell_type": "Normal",
-      "is_main_deck": true,
-      "verified": true
-    },
-    "35552985": {
-      "name": "Fiendsmith's Sanct",
-      "card_type": "Spell",
-      "spell_type": "Normal",
-      "is_main_deck": true,
-      "notes": "Creates Level 1 Fiendsmith Token",
-      "verified": true
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
     "26434972": {
       "name": "Fiendsmith Kyrie",
@@ -58,14 +140,87 @@
       "trap_type": "Normal",
       "is_main_deck": true,
       "notes": "Can Fusion Summon using equipped monsters as material",
-      "verified": true
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
-    "99989863": {
-      "name": "Fiendsmith in Paradise",
-      "card_type": "Trap",
-      "trap_type": "Normal",
+    "28143384": {
+      "name": "Aerial Eater",
+      "attribute": "WIND",
+      "type": "Fiend/Fusion/Effect",
+      "level": 6,
+      "atk": 2100,
+      "def": 2600,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "28803166": {
+      "name": "Lacrima the Crimson Tears",
+      "attribute": "LIGHT",
+      "type": "Fiend/Effect",
+      "level": 4,
+      "atk": 1200,
+      "def": 1200,
       "is_main_deck": true,
-      "verified": true
+      "notes": "Always treated as Fiendsmith card",
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "29301450": {
+      "name": "S:P Little Knight",
+      "attribute": "DARK",
+      "type": "Warrior/Link/Effect",
+      "link_rating": 2,
+      "atk": 1600,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "32710364": {
+      "name": "Crystal Beast Ruby Carbuncle",
+      "attribute": "LIGHT",
+      "type": "Fairy/Effect",
+      "level": 3,
+      "atk": 300,
+      "def": 300,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "32991300": {
+      "name": "Fiendsmith's Agnumday",
+      "attribute": "LIGHT",
+      "type": "Fiend/Link/Effect",
+      "link_rating": 3,
+      "atk": 1800,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "35269904": {
+      "name": "Triple Tactics Thrust",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "35552985": {
+      "name": "Fiendsmith's Sanct",
+      "card_type": "Spell",
+      "spell_type": "Field",
+      "is_main_deck": true,
+      "notes": "Creates Level 1 Fiendsmith Token",
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
     "35552986": {
       "name": "Fiendsmith Token",
@@ -78,92 +233,310 @@
       "notes": "Created by Fiendsmith's Sanct",
       "verified": true
     },
-    "79559912": {
-      "name": "D/D/D Wave High King Caesar",
-      "rank": 6,
-      "atk": 2800,
-      "def": 1800,
-      "attribute": "WATER",
-      "type": "Fiend/Xyz/Effect",
-      "materials": "2 Level 6 Fiend monsters",
-      "is_main_deck": false,
-      "verified": true
+    "35726888": {
+      "name": "Foolish Burial Goods",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
-    "4731783": {
-      "name": "A Bao A Qu, the Lightless Shadow",
-      "link_rating": 4,
-      "atk": 2800,
+    "36795102": {
+      "name": "Crystal Beast Rainbow Dragon",
+      "attribute": "LIGHT",
+      "type": "Dragon/Effect",
+      "level": 8,
+      "atk": 3000,
+      "def": 0,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "45409943": {
+      "name": "Luce the Dusk's Dark",
       "attribute": "DARK",
-      "type": "Fiend/Link/Effect",
-      "materials": "2+ monsters, including a Fiend monster",
-      "is_main_deck": false,
-      "verified": true
-    },
-    "49867899": {
-      "name": "Fiendsmith's Sequence",
-      "link_rating": 2,
-      "atk": 1600,
-      "attribute": "LIGHT",
-      "type": "Fiend/Link/Effect",
-      "materials": "2 monsters, including a LIGHT Fiend monster",
-      "is_main_deck": false,
-      "verified": true
-    },
-    "2463794": {
-      "name": "Fiendsmith's Requiem",
-      "link_rating": 1,
-      "atk": 600,
-      "attribute": "LIGHT",
-      "type": "Fiend/Link/Effect",
-      "materials": "1 LIGHT Fiend monster",
-      "is_main_deck": false,
-      "verified": true
-    },
-    "82135803": {
-      "name": "Fiendsmith's Desirae",
-      "level": 7,
-      "atk": 2500,
-      "def": 2000,
-      "attribute": "LIGHT",
       "type": "Fiend/Fusion/Effect",
-      "materials": "Fiendsmith Engraver + 2 LIGHT Fiend monsters",
+      "level": 8,
+      "atk": 3500,
+      "def": 3000,
       "is_main_deck": false,
-      "verified": true
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "45445571": {
+      "name": "The Duke of Demise",
+      "attribute": "DARK",
+      "type": "Fiend/Fusion/Effect",
+      "level": 6,
+      "atk": 2000,
+      "def": 1700,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
     "46640168": {
       "name": "Fiendsmith's Lacrima",
+      "attribute": "LIGHT",
+      "type": "Fiend/Fusion/Effect",
       "level": 6,
       "atk": 2400,
+      "def": 2400,
+      "is_main_deck": false,
+      "notes": "BANNED in TCG. DEF corrected to match CDB (was 1800)",
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "46772449": {
+      "name": "Evilswarm Exciton Knight",
+      "attribute": "LIGHT",
+      "type": "Fiend/Xyz/Effect",
+      "rank": 4,
+      "atk": 1900,
+      "def": 0,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "48452496": {
+      "name": "Snake-Eyes Flamberge Dragon",
+      "attribute": "FIRE",
+      "type": "Dragon/Effect",
+      "level": 8,
+      "atk": 3000,
+      "def": 2500,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "49568943": {
+      "name": "Vaylantz World - Shinra Bansho",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "49867899": {
+      "name": "Fiendsmith's Sequence",
+      "attribute": "LIGHT",
+      "type": "Fiend/Link/Effect",
+      "link_rating": 2,
+      "atk": 1200,
+      "is_main_deck": false,
+      "notes": "ATK corrected to match CDB (was 1600)",
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "50277355": {
+      "name": "Cross-Sheep",
+      "attribute": "EARTH",
+      "type": "Beast/Link/Effect",
+      "link_rating": 2,
+      "atk": 700,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "53932291": {
+      "name": "Speedroid Taketomborg",
+      "attribute": "WIND",
+      "type": "Machine/Effect",
+      "level": 3,
+      "atk": 600,
+      "def": 1200,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "58699500": {
+      "name": "Cherubini, Ebon Angel of the Burning Abyss",
+      "attribute": "DARK",
+      "type": "Fairy/Link/Effect",
+      "link_rating": 2,
+      "atk": 500,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "60764609": {
+      "name": "Fiendsmith Engraver",
+      "attribute": "LIGHT",
+      "type": "Fiend/Effect",
+      "level": 6,
+      "atk": 1800,
+      "def": 2400,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "63945693": {
+      "name": "Rainbow Bridge",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "71593652": {
+      "name": "Mutiny in the Sky",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "75952542": {
+      "name": "Vaylantz World - Konig Wissen",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "79559912": {
+      "name": "D/D/D Wave High King Caesar",
+      "attribute": "WATER",
+      "type": "Fiend/Xyz/Effect",
+      "rank": 6,
+      "atk": 2800,
       "def": 1800,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "79856792": {
+      "name": "Rainbow Dragon",
+      "attribute": "LIGHT",
+      "type": "Dragon/Effect",
+      "level": 10,
+      "atk": 4000,
+      "def": 0,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "81035362": {
+      "name": "Fiendish Rhino Warrior",
+      "attribute": "EARTH",
+      "type": "Fiend/Effect",
+      "level": 3,
+      "atk": 1400,
+      "def": 900,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "81275020": {
+      "name": "Speedroid Terrortop",
+      "attribute": "WIND",
+      "type": "Machine/Effect",
+      "level": 3,
+      "atk": 1200,
+      "def": 600,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "82135803": {
+      "name": "Fiendsmith's Desirae",
       "attribute": "LIGHT",
       "type": "Fiend/Fusion/Effect",
-      "materials": "2 LIGHT Fiend monsters",
-      "is_main_deck": false,
-      "notes": "BANNED in TCG as of 2026-01-26",
-      "verified": true
-    },
-    "11464648": {
-      "name": "Fiendsmith's Rextremende",
-      "level": 8,
+      "level": 9,
       "atk": 2800,
       "def": 2400,
-      "attribute": "LIGHT",
-      "type": "Fiend/Fusion/Effect",
-      "materials": "1 Fiendsmith Fusion Monster + 1 Fusion or Link Monster",
       "is_main_deck": false,
-      "verified": true
+      "notes": "Stats corrected to match CDB (was level 7, 2500/2000)",
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "88942504": {
+      "name": "Melomelody the Brass Djinn",
+      "attribute": "LIGHT",
+      "type": "Fiend/Xyz/Effect",
+      "rank": 3,
+      "atk": 1400,
+      "def": 1600,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
     },
     "93860227": {
       "name": "Necroquip Princess",
+      "attribute": "DARK",
+      "type": "Fiend/Fusion/Effect",
       "level": 6,
       "atk": 2000,
       "def": 2000,
-      "attribute": "DARK",
-      "type": "Fiend/Fusion/Effect",
-      "materials": "1 monster equipped with a Monster Card + 1 Fiend Monster Card",
       "is_main_deck": false,
       "notes": "Contact Fusion - sends from hand/field to GY",
-      "verified": true
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "97651498": {
+      "name": "Fabled Lurrie",
+      "attribute": "LIGHT",
+      "type": "Fiend/Effect",
+      "level": 1,
+      "atk": 200,
+      "def": 400,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "98567237": {
+      "name": "Fiendsmith's Tract",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "99989863": {
+      "name": "Fiendsmith in Paradise",
+      "card_type": "Trap",
+      "trap_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26"
+    },
+    "10000040": {
+      "name": "Holactie the Creator of Light",
+      "attribute": "DIVINE",
+      "type": "Creator God/Effect",
+      "level": 12,
+      "atk": -2,
+      "def": -2,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "cards.cdb",
+      "verified_date": "2026-01-26",
+      "notes": "Filler card - cannot be normal summoned, ATK/DEF are ? (represented as -2 in CDB)"
     }
   },
   "unverified_cards": {
@@ -191,16 +564,33 @@
   "level_6_fiends": {
     "_note": "Cards that can be used as Caesar Xyz materials",
     "cards": [
-      {"id": "60764609", "name": "Fiendsmith Engraver"},
-      {"id": "46640168", "name": "Fiendsmith's Lacrima (Fusion)", "notes": "BANNED"},
-      {"id": "93860227", "name": "Necroquip Princess"}
+      {
+        "id": "60764609",
+        "name": "Fiendsmith Engraver"
+      },
+      {
+        "id": "46640168",
+        "name": "Fiendsmith's Lacrima (Fusion)",
+        "notes": "BANNED"
+      },
+      {
+        "id": "93860227",
+        "name": "Necroquip Princess"
+      }
     ]
   },
   "level_1_light_fiends": {
     "_note": "Cards that can be used for Requiem Link-1",
     "cards": [
-      {"id": "97651498", "name": "Fabled Lurrie"},
-      {"id": "35552986", "name": "Fiendsmith Token", "notes": "Created by Sanct"}
+      {
+        "id": "97651498",
+        "name": "Fabled Lurrie"
+      },
+      {
+        "id": "35552986",
+        "name": "Fiendsmith Token",
+        "notes": "Created by Sanct"
+      }
     ]
   }
 }

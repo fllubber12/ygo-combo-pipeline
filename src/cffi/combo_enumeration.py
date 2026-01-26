@@ -271,13 +271,27 @@ def find_sum_combinations_flexible(
 
 # Load from locked library
 LOCKED_LIBRARY_PATH = Path(__file__).parents[2] / "config" / "locked_library.json"
+CONSTANTS_PATH = Path(__file__).parents[2] / "config" / "constants.json"
 
-# Starting state
-ENGRAVER = 60764609
+# Load constants from config file (anti-hallucination: no hardcoded card IDs)
+def _load_constants() -> dict:
+    """Load pipeline constants from config/constants.json."""
+    if not CONSTANTS_PATH.exists():
+        raise FileNotFoundError(
+            f"constants.json not found at {CONSTANTS_PATH}. "
+            "This file is required - do not use hardcoded card IDs."
+        )
+    with open(CONSTANTS_PATH) as f:
+        return json.load(f)
+
+_CONSTANTS = _load_constants()
+
+# Starting state - loaded from config (verified against cards.cdb)
+ENGRAVER = _CONSTANTS["default_hand"]["starter"]  # Fiendsmith Engraver
 
 # Standardized filler/dead card: Holactie cannot be summoned normally and has no
 # relevant effects during combo testing. Use this for deck padding and hand filler.
-HOLACTIE = 10000040  # Holactie the Creator of Light
+HOLACTIE = _CONSTANTS["default_hand"]["filler"]  # Holactie the Creator of Light
 
 # Limits
 MAX_DEPTH = 50          # Maximum actions per path

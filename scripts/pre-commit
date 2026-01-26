@@ -1,0 +1,53 @@
+#!/bin/bash
+# Pre-commit hook for YGO-Combo-Pipeline
+# Validates card data integrity before allowing commits
+
+set -e
+
+echo "Running pre-commit validation..."
+
+# Check if relevant files changed
+CHANGED_FILES=$(git diff --cached --name-only)
+
+NEED_VALIDATION=false
+if echo "$CHANGED_FILES" | grep -q "config/locked_library.json"; then
+    NEED_VALIDATION=true
+fi
+if echo "$CHANGED_FILES" | grep -q "config/verified_cards.json"; then
+    NEED_VALIDATION=true
+fi
+if echo "$CHANGED_FILES" | grep -q "config/evaluation_config.json"; then
+    NEED_VALIDATION=true
+fi
+if echo "$CHANGED_FILES" | grep -q "config/constants.json"; then
+    NEED_VALIDATION=true
+fi
+
+if [ "$NEED_VALIDATION" = true ]; then
+    echo "Card data files changed - running validation..."
+
+    # Validate locked_library.json
+    if [ -f "scripts/validate_library_integrity.py" ]; then
+        echo "  Validating locked_library.json..."
+        python3 scripts/validate_library_integrity.py
+        if [ $? -ne 0 ]; then
+            echo "locked_library.json validation failed!"
+            exit 1
+        fi
+    fi
+
+    # Validate verified_cards.json
+    if [ -f "scripts/validate_verified_cards.py" ]; then
+        echo "  Validating verified_cards.json..."
+        python3 scripts/validate_verified_cards.py
+        if [ $? -ne 0 ]; then
+            echo "verified_cards.json validation failed!"
+            exit 1
+        fi
+    fi
+
+    echo "Card data validation passed"
+fi
+
+echo "All pre-commit checks passed"
+exit 0

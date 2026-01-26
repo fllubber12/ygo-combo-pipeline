@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "verified_card.schema.json",
+  "title": "Verified Card",
+  "description": "Schema for a verified Yu-Gi-Oh! card entry",
+  "type": "object",
+  "required": ["name", "verified"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Official card name"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "description": "Monster level (for non-Xyz, non-Link monsters)"
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 13,
+      "description": "Xyz monster rank"
+    },
+    "link_rating": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6,
+      "description": "Link monster rating"
+    },
+    "atk": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "ATK value"
+    },
+    "def": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "DEF value (not applicable for Link monsters)"
+    },
+    "attribute": {
+      "type": "string",
+      "enum": ["DARK", "LIGHT", "EARTH", "WATER", "FIRE", "WIND", "DIVINE"],
+      "description": "Monster attribute"
+    },
+    "type": {
+      "type": "string",
+      "description": "Card type (e.g., 'Fiend/Effect', 'Fiend/Xyz/Effect')"
+    },
+    "card_type": {
+      "type": "string",
+      "enum": ["Spell", "Trap"],
+      "description": "For Spell/Trap cards"
+    },
+    "spell_type": {
+      "type": "string",
+      "enum": ["Normal", "Continuous", "Quick-Play", "Equip", "Field", "Ritual"],
+      "description": "Spell card subtype"
+    },
+    "trap_type": {
+      "type": "string",
+      "enum": ["Normal", "Continuous", "Counter"],
+      "description": "Trap card subtype"
+    },
+    "is_main_deck": {
+      "type": "boolean",
+      "description": "True if card goes in main deck"
+    },
+    "materials": {
+      "type": "string",
+      "description": "Summoning materials requirement"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the card"
+    },
+    "verified": {
+      "type": "boolean",
+      "const": true,
+      "description": "Must be true for all entries"
+    },
+    "verification_source": {
+      "type": "string",
+      "description": "Source used for verification (e.g., cards.cdb, URL)"
+    },
+    "verified_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Date when verification was performed (YYYY-MM-DD)"
+    }
+  }
+}
