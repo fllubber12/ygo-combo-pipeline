@@ -204,20 +204,69 @@ When running the next audit, verify:
 
 ## Audit Process
 
-After each implementation cycle, a full codebase audit is performed. The audit produces a **Fix Instructions Document** that:
+After every implementation cycle:
 
-1. Lists all issues found with severity (Critical/Medium/Low)
-2. Provides exact code changes needed for each fix
-3. Includes verification steps
-4. Specifies commit message format
+1. **Run tests**: `python -m pytest tests/ -v`
+2. **Commit**: `git add . && git commit -m "description"`
+3. **Push**: `git push`
+4. **Output verification block** (see Post-Commit Audit Protocol below)
+5. **Paste URLs** to auditor for verification
+6. **Iterate** if issues found
 
-### Audit Workflow
+### URL Format
 
-1. **Trigger**: After any P0-P4 implementation is committed
-2. **Scope**: All 16 core files fetched and reviewed
-3. **Output**: `V{N}_FIX_INSTRUCTIONS.md` document
-4. **Execution**: Claude Code applies fixes from document
-5. **Verification**: Re-fetch files to confirm changes
+Use blob URLs with commit SHA for instant verification:
+```
+https://github.com/fllubber12/ygo-combo-pipeline/blob/{SHA}/path/to/file.py
+```
+
+Do NOT use raw.githubusercontent.com URLs - they have 5-15 minute CDN cache delays.
+
+### Post-Commit Audit Protocol
+
+After every `git push`, output the following for audit verification:
+
+**1. Commit Info:**
+```
+Commit: [SHA]
+Message: [commit message]
+Files changed: [list]
+```
+
+**2. Verification URLs (replace [SHA] with actual commit hash):**
+
+Core Files:
+```
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/ocg_bindings.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/engine_interface.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/paths.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/combo_enumeration.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/state_representation.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/transposition_table.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/zobrist.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/src/cffi/parallel_search.py
+```
+
+Test Files:
+```
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/unit/test_state.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/unit/test_zobrist.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/unit/test_parallel.py
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/tests/README.md
+```
+
+Documentation:
+```
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/README.md
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/CLAUDE.md
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/docs/RESEARCH.md
+https://github.com/fllubber12/ygo-combo-pipeline/blob/[SHA]/docs/IMPLEMENTATION_ROADMAP.md
+```
+
+**3. Test Summary:**
+```
+Tests: [X] passed, [Y] skipped, [Z] failed
+```
 
 ### Files to Audit
 
