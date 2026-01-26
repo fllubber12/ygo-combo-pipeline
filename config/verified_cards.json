@@ -67,6 +67,17 @@
       "is_main_deck": true,
       "verified": true
     },
+    "35552986": {
+      "name": "Fiendsmith Token",
+      "level": 1,
+      "atk": 0,
+      "def": 0,
+      "attribute": "LIGHT",
+      "type": "Fiend/Token",
+      "is_main_deck": false,
+      "notes": "Created by Fiendsmith's Sanct",
+      "verified": true
+    },
     "79559912": {
       "name": "D/D/D Wave High King Caesar",
       "rank": 6,
@@ -189,7 +200,7 @@
     "_note": "Cards that can be used for Requiem Link-1",
     "cards": [
       {"id": "97651498", "name": "Fabled Lurrie"},
-      {"id": "token", "name": "Fiendsmith Token", "notes": "Created by Sanct"}
+      {"id": "35552986", "name": "Fiendsmith Token", "notes": "Created by Sanct"}
     ]
   }
 }

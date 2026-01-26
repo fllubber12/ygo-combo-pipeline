@@ -77,37 +77,56 @@
 
 ## 3. Message Parsing: Where Card Data Comes From
 
-### MSG_SELECT_SUM (Critical)
+### MSG_SELECT_SUM (Critical) - BUG IDENTIFIED
 
 **File:** `combo_enumeration.py:826-908`
 
-**Current Format Assumption (14-byte cards, BE header):**
-```
-Header:
-  - player: 1 byte
-  - select_mode: 1 byte
-  - select_min: 1 byte
-  - select_max: 1 byte
-  - target_sum: 4 bytes BIG-ENDIAN
-  - can_count: 4 bytes BIG-ENDIAN
-  - padding: 3 bytes
+**ROOT CAUSE IDENTIFIED (2026-01-26):**
 
-Card (14 bytes each):
+The parser uses 14-byte card entries but ygopro-core uses **18-byte** entries.
+
+**Correct Format (18-byte cards) from ygopro-core source:**
+
+From `card.h:26-31`:
+```cpp
+struct loc_info {
+    uint8_t controler;   // 1 byte
+    uint8_t location;    // 1 byte
+    uint32_t sequence;   // 4 bytes
+    uint32_t position;   // 4 bytes  <-- MISSING FROM PARSER!
+};
+```
+
+From `playerop.cpp:815-818`:
+```cpp
+message->write<uint32_t>(pcard->data.code);     // 4 bytes
+message->write(pcard->get_info_location());     // 10 bytes (loc_info)
+message->write<uint32_t>(pcard->sum_param);     // 4 bytes
+```
+
+**Correct Card Format (18 bytes):**
+```
+Card (18 bytes each):
   - code: 4 bytes LE
-  - controller: 1 byte
+  - controler: 1 byte
   - location: 1 byte
   - sequence: 4 bytes LE
+  - position: 4 bytes LE  <-- MISSING!
   - sum_param: 4 bytes LE
 ```
 
-**Observed Issue:**
-```
-RAW: 000001010000000100000002000000c1319f0300040000000001000000...
-Parsed: Fiendsmith Engraver sum_param=0x00000001 (Level 1)
-Expected: sum_param=0x00000006 (Level 6)
-```
+**Bug Explanation:**
+- Current parser reads bytes 10-13 as sum_param
+- Correct offset is bytes 14-17
+- Bytes 10-13 contain `position` field (often = 1 or 5)
+- This is why Engraver shows level=1 instead of level=6
 
-**Status:** BUG - Engine sends level=1 for Level 6 monsters
+**Integration Test:** `tests/integration/test_card_validation.py`
+- Confirms 18-byte format parses correctly
+- Demonstrates bug with 14-byte format
+- Validates against `config/verified_cards.json`
+
+**Status:** BUG CONFIRMED - Parser reads position as sum_param
 
 ### MSG_SELECT_CARD
 
@@ -207,26 +226,36 @@ python3 src/cffi/combo_enumeration.py --max-depth 25 --max-paths 50 --verbose 2>
 
 ## 7. Recommendations
 
-### Immediate
+### Immediate - CRITICAL FIX REQUIRED
 
-1. **Verify cards.cdb has correct data**
-   ```sql
-   SELECT id, name, level FROM datas JOIN texts USING(id)
-   WHERE id IN (60764609, 97651498, 79559912);
+1. **Fix MSG_SELECT_SUM parser to use 18-byte card format**
+   - File: `combo_enumeration.py:790-823`
+   - Change: Add 4-byte `position` field before `sum_param`
+   - New offset for sum_param: 14 (not 10)
+
+   ```python
+   # Current (BUGGY):
+   sum_param = struct.unpack_from('<I', data, offset + 10)[0]  # Reads position!
+
+   # Fixed:
+   position = struct.unpack_from('<I', data, offset + 10)[0]
+   sum_param = struct.unpack_from('<I', data, offset + 14)[0]  # Correct offset
    ```
 
-2. **Add raw hex logging permanently** (already done in combo_enumeration.py)
-
-3. **Create unit tests for SELECT_SUM parsing** with known hex inputs
+2. **Run integration test to verify fix:**
+   ```bash
+   python3 tests/integration/test_card_validation.py
+   ```
 
 ### Medium-term
 
-1. **Compare against edo9300/ygopro-core source**
-   - Verify MSG_SELECT_SUM format in `field.cpp`
-   - Check if sum_param encoding differs from raw level
-
-2. **Add CardValidator integration** to combo_enumeration.py
+1. **Add CardValidator integration** to combo_enumeration.py
    - Warn when parsed level doesn't match verified level
+   - Log discrepancies for debugging
+
+2. **Create parser version detection**
+   - Some ygopro-core builds may use different formats
+   - Auto-detect based on message size or header
 
 ### Long-term
 

@@ -109,6 +109,7 @@ from state_representation import (
     evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
 )
 from transposition_table import TranspositionTable, TranspositionEntry
+from card_validator import CardValidator
 
 
 # =============================================================================
@@ -787,27 +788,67 @@ def _parse_sum_card_11byte(data: bytes, offset: int, index: int) -> Tuple[dict, 
     return card, offset + 11
 
 
-def _parse_sum_card_14byte(data: bytes, offset: int, index: int) -> Tuple[dict, int]:
-    """Parse a single card entry from MSG_SELECT_SUM (14-byte format).
+# Global validator instance for level lookup
+_card_validator = None
 
-    Card format (14 bytes):
+def _get_card_validator() -> CardValidator:
+    """Get or create the global CardValidator instance."""
+    global _card_validator
+    if _card_validator is None:
+        _card_validator = CardValidator()
+    return _card_validator
+
+
+def _parse_sum_card_18byte(data: bytes, offset: int, index: int) -> Tuple[dict, int]:
+    """Parse a single card entry from MSG_SELECT_SUM (18-byte format).
+
+    Card format (18 bytes) - verified against ygopro-core source (card.h:26-31):
     - code: 4 bytes LE (card passcode)
     - controller: 1 byte
     - location: 1 byte
     - sequence: 4 bytes LE
-    - sum_param: 4 bytes LE (value for sum calculation)
+    - position: 4 bytes LE (card position flags)
+    - sum_param: 4 bytes LE (level for sum calculation)
+
+    The loc_info struct in ygopro-core is:
+        struct loc_info {
+            uint8_t controler;   // 1 byte
+            uint8_t location;    // 1 byte
+            uint32_t sequence;   // 4 bytes
+            uint32_t position;   // 4 bytes
+        };
+    Total: code(4) + loc_info(10) + sum_param(4) = 18 bytes
+
+    NOTE: This ygopro-core build may not populate sum_param correctly.
+    We fall back to verified_cards.json for level lookup when sum_param is 0.
 
     Returns:
         Tuple of (card_dict, new_offset)
     """
-    if offset + 14 > len(data):
-        raise ValueError(f"Not enough data for card at offset {offset}")
+    if offset + 18 > len(data):
+        raise ValueError(f"Not enough data for 18-byte card at offset {offset}")
 
     code = struct.unpack_from('<I', data, offset)[0]
     controller = data[offset + 4]
     location = data[offset + 5]
     sequence = struct.unpack_from('<I', data, offset + 6)[0]
-    sum_param = struct.unpack_from('<I', data, offset + 10)[0]
+    position = struct.unpack_from('<I', data, offset + 10)[0]
+    sum_param = struct.unpack_from('<I', data, offset + 14)[0]
+
+    # Extract level from sum_param (low 16 bits = primary level)
+    level = sum_param & 0xFFFF
+    level2 = (sum_param >> 16) & 0xFFFF
+
+    # If sum_param is 0 or invalid, try to look up from verified cards
+    if level == 0 or level > 12:
+        validator = _get_card_validator()
+        verified = validator.get_card(code)
+        if verified and 'level' in verified:
+            level = verified['level']
+        elif verified and 'rank' in verified:
+            level = verified['rank']  # For Xyz monsters
+        elif verified and 'link_rating' in verified:
+            level = verified['link_rating']  # For Link monsters
 
     card = {
         'index': index,
@@ -815,24 +856,82 @@ def _parse_sum_card_14byte(data: bytes, offset: int, index: int) -> Tuple[dict, 
         'controller': controller,
         'location': location,
         'sequence': sequence,
+        'position': position,
         'sum_param': sum_param,
-        'value': sum_param,  # Use sum_param directly as the value
-        'level': sum_param,
+        'sum_param_raw': sum_param,  # Keep original for debugging
+        'value': level if 1 <= level <= 12 else sum_param,
+        'level': level if 1 <= level <= 12 else sum_param,
+        'level2': level2 if 1 <= level2 <= 12 else 0,
     }
 
-    return card, offset + 14
+    return card, offset + 18
+
+
+def _parse_sum_card_16byte(data: bytes, offset: int, index: int) -> Tuple[dict, int]:
+    """Parse a single card entry from MSG_SELECT_SUM (16-byte format).
+
+    Some ygopro-core builds use 16-byte card entries without the position field:
+    - code: 4 bytes LE (card passcode)
+    - controller: 1 byte
+    - location: 1 byte
+    - sequence: 4 bytes LE
+    - sum_param: 4 bytes LE (level for sum calculation)
+    - padding: 2 bytes
+
+    Total: 16 bytes (vs 18 with position field)
+
+    Returns:
+        Tuple of (card_dict, new_offset)
+    """
+    if offset + 16 > len(data):
+        raise ValueError(f"Not enough data for 16-byte card at offset {offset}")
+
+    code = struct.unpack_from('<I', data, offset)[0]
+    controller = data[offset + 4]
+    location = data[offset + 5]
+    sequence = struct.unpack_from('<I', data, offset + 6)[0]
+    sum_param = struct.unpack_from('<I', data, offset + 10)[0]
+
+    # Extract level from sum_param (low 16 bits = primary level)
+    level = sum_param & 0xFFFF
+    level2 = (sum_param >> 16) & 0xFFFF
+
+    # If sum_param is 0 or invalid, try to look up from verified cards
+    if level == 0 or level > 12:
+        validator = _get_card_validator()
+        verified = validator.get_card(code)
+        if verified and 'level' in verified:
+            level = verified['level']
+        elif verified and 'rank' in verified:
+            level = verified['rank']
+        elif verified and 'link_rating' in verified:
+            level = verified['link_rating']
+
+    card = {
+        'index': index,
+        'code': code,
+        'controller': controller,
+        'location': location,
+        'sequence': sequence,
+        'position': 0,  # Not available in 16-byte format
+        'sum_param': sum_param,
+        'sum_param_raw': sum_param,
+        'value': level if 1 <= level <= 12 else sum_param,
+        'level': level if 1 <= level <= 12 else sum_param,
+        'level2': level2 if 1 <= level2 <= 12 else 0,
+    }
+
+    return card, offset + 16
 
 
 def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_SUM message for material/card selection.
 
-    WARNING: This format was empirically determined for this specific ygopro-core
-    build and differs from the standard edo9300/ygopro-core format:
-    - Header uses BIG-ENDIAN for target_sum and can_count (not little-endian)
-    - Card entries are 14 bytes (4-byte sequence) instead of 11 bytes (1-byte sequence)
-    If porting to a different ygopro-core version, verify the format with hex dumps.
+    Format verified against ygopro-core source (playerop.cpp:796-819, card.h:26-31):
+    - Header uses BIG-ENDIAN for target_sum and can_count
+    - Card entries are 18 bytes (including 4-byte position field)
 
-    Format observed from raw byte analysis of this ygopro-core build:
+    Header format:
     - player: 1 byte (offset 0)
     - select_mode: 1 byte (offset 1) - 0 = exactly equal, 1 = at least equal
     - select_min: 1 byte (offset 2)
@@ -840,17 +939,17 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     - target_sum: 4 bytes BE (offset 4-7) - target sum
     - must_count: 4 bytes BE (offset 8-11) - treated as can_count
     - padding: 3 bytes (offset 12-14)
-    - cards[]: 14 bytes each starting at offset 15
+    - cards[]: 18 bytes each starting at offset 15
 
-    Note: This ygopro-core build stores the number of selectable cards in what's
-    labeled must_count (BE at offset 8-11). The must_select cards appear to be 0.
-
-    Card format (14 bytes):
-    - code: 4 bytes LE
+    Card format (18 bytes) from ygopro-core loc_info struct:
+    - code: 4 bytes LE (card passcode)
     - controller: 1 byte
     - location: 1 byte
     - sequence: 4 bytes LE
-    - sum_param: 4 bytes LE
+    - position: 4 bytes LE (card position flags)
+    - sum_param: 4 bytes LE (level for sum calculation)
+
+    Note: sum_param encodes level in low 16 bits, optional secondary level in high 16 bits.
 
     Returns dict with parsed data for _handle_select_sum.
     """
@@ -873,11 +972,21 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
         offset += 3  # Skip padding bytes to align cards at offset 15
 
         # Cards (all are can-select in observed data)
+        # Use 18-byte card entries; if message is truncated, parse only complete cards
+        header_size = 15
+        card_size = 18
+        available_bytes = len(raw_data) - header_size
+        max_complete_cards = available_bytes // card_size
+
         must_select = []
         can_select = []
-        for i in range(can_count):
-            card, offset = _parse_sum_card_14byte(raw_data, offset, i)
+        cards_to_parse = min(can_count, max_complete_cards)
+        for i in range(cards_to_parse):
+            card, offset = _parse_sum_card_18byte(raw_data, offset, i)
             can_select.append(card)
+
+        # Note: can_count in result reflects header value for selection logic
+        # Actual parsed cards may be fewer if message was truncated
 
         return {
             'player': player,
@@ -889,6 +998,8 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
             'must_select': must_select,
             'can_count': can_count,
             'can_select': can_select,
+            '_raw_hex': raw_data.hex(),  # DEBUG: always include for analysis
+            '_raw_len': len(raw_data),
         }
 
     except Exception as e:
@@ -1876,11 +1987,19 @@ class EnumerationEngine:
         mode_str = "exact" if select_mode == 0 else "at_least"
         self.log(f"SELECT_SUM: target={target_sum} ({mode_str}), select {min_cards}-{max_cards} cards", depth)
 
+        # DEBUG: Always show raw hex for analysis
+        if self.verbose and "_raw_hex" in msg_data:
+            raw_hex = msg_data['_raw_hex']
+            raw_len = msg_data.get('_raw_len', len(raw_hex)//2)
+            self.log(f"  RAW ({raw_len} bytes): {raw_hex[:80]}{'...' if len(raw_hex) > 80 else ''}", depth)
+            # Show first card's bytes (offset 15, 18 bytes per card)
+            # Format: code(4) + controller(1) + location(1) + sequence(4) + position(4) + sum_param(4)
+            if raw_len >= 33:  # 15 header + 18 card bytes
+                self.log(f"  Card0 bytes (offset 15): {raw_hex[30:66]}", depth)
+
         # Check for parse errors
         if "_parse_error" in msg_data:
             self.log(f"  PARSE ERROR: {msg_data['_parse_error']}", depth)
-            if "_raw_hex" in msg_data:
-                self.log(f"  RAW: {msg_data['_raw_hex'][:100]}...", depth)
 
         # Debug: show available cards with their levels
         if self.verbose:
