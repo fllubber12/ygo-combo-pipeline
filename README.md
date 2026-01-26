@@ -32,6 +32,8 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 
 ## Documentation
 
+- [Research Report](docs/RESEARCH.md) - Algorithm analysis, related work, design decisions
+- [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md) - Prioritized improvements (P0-P4)
 - [Roadmap](docs/COMBO_PIPELINE_ROADMAP.md) - Comprehensive project plan
 - [Architecture Research](docs/ARCHITECTURE_RESEARCH.md) - Technical design notes
 - [Project Inventory](docs/PROJECT_INVENTORY.md) - File structure reference
@@ -55,6 +57,8 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 │   └── integration/             # Integration tests
 │       └── test_fiendsmith_duel.py
 └── docs/                        # Documentation
+    ├── RESEARCH.md              # Algorithm research report
+    └── IMPLEMENTATION_ROADMAP.md # Prioritized improvements
 ```
 
 ## Dependencies

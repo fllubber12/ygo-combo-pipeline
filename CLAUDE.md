@@ -88,6 +88,19 @@ python -m pytest tests/ --cov=src/cffi --cov-report=html
 
 ## Audit History
 
+### V6 Audit (January 2026) - COMPLETED
+
+| Priority | Issue | Status |
+|----------|-------|--------|
+| High | transposition_table.py regression check (already correct) | Done |
+| Medium | README.md doesn't reference new docs (RESEARCH.md, IMPLEMENTATION_ROADMAP.md) | Done |
+| Medium | README.md structure section needs docs subfolder | Done |
+| Medium | CLAUDE.md missing V6 audit entry | Done |
+
+**New Documentation Added:**
+- `docs/RESEARCH.md` - Comprehensive algorithm research and related work analysis
+- `docs/IMPLEMENTATION_ROADMAP.md` - Prioritized improvement plan (P0-P4)
+
 ### V4 Audit (January 2026) - COMPLETED
 
 | Priority | Issue | Status |
@@ -140,6 +153,8 @@ When running the next audit, verify:
 | `src/cffi/transposition_table.py` | Memoization cache |
 | `config/locked_library.json` | 26-card Fiendsmith library |
 | `config/evaluation_config.json` | Board evaluation weights |
+| `docs/RESEARCH.md` | Algorithm research, related work analysis |
+| `docs/IMPLEMENTATION_ROADMAP.md` | P0-P4 prioritized improvements |
 
 ---
 
