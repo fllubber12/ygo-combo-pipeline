@@ -1,0 +1,195 @@
+{
+  "metadata": {
+    "source": "Web searches: YGOProDeck, Yugipedia, Master Duel Meta, Official Neuron DB",
+    "audit_date": "2026-01-26",
+    "verified_by": "Human review of web search results",
+    "notes": "All card data verified against official sources. Cards not in this file should be verified before use."
+  },
+  "cards": {
+    "60764609": {
+      "name": "Fiendsmith Engraver",
+      "level": 6,
+      "atk": 1800,
+      "def": 2400,
+      "attribute": "LIGHT",
+      "type": "Fiend/Effect",
+      "is_main_deck": true,
+      "verified": true
+    },
+    "97651498": {
+      "name": "Fabled Lurrie",
+      "level": 1,
+      "atk": 200,
+      "def": 400,
+      "attribute": "LIGHT",
+      "type": "Fiend/Effect",
+      "is_main_deck": true,
+      "verified": true
+    },
+    "28803166": {
+      "name": "Lacrima the Crimson Tears",
+      "level": 4,
+      "atk": 1200,
+      "def": 1200,
+      "attribute": "LIGHT",
+      "type": "Fiend/Effect",
+      "is_main_deck": true,
+      "notes": "Always treated as Fiendsmith card",
+      "verified": true
+    },
+    "98567237": {
+      "name": "Fiendsmith's Tract",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true
+    },
+    "35552985": {
+      "name": "Fiendsmith's Sanct",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "notes": "Creates Level 1 Fiendsmith Token",
+      "verified": true
+    },
+    "26434972": {
+      "name": "Fiendsmith Kyrie",
+      "card_type": "Trap",
+      "trap_type": "Normal",
+      "is_main_deck": true,
+      "notes": "Can Fusion Summon using equipped monsters as material",
+      "verified": true
+    },
+    "99989863": {
+      "name": "Fiendsmith in Paradise",
+      "card_type": "Trap",
+      "trap_type": "Normal",
+      "is_main_deck": true,
+      "verified": true
+    },
+    "79559912": {
+      "name": "D/D/D Wave High King Caesar",
+      "rank": 6,
+      "atk": 2800,
+      "def": 1800,
+      "attribute": "WATER",
+      "type": "Fiend/Xyz/Effect",
+      "materials": "2 Level 6 Fiend monsters",
+      "is_main_deck": false,
+      "verified": true
+    },
+    "4731783": {
+      "name": "A Bao A Qu, the Lightless Shadow",
+      "link_rating": 4,
+      "atk": 2800,
+      "attribute": "DARK",
+      "type": "Fiend/Link/Effect",
+      "materials": "2+ monsters, including a Fiend monster",
+      "is_main_deck": false,
+      "verified": true
+    },
+    "49867899": {
+      "name": "Fiendsmith's Sequence",
+      "link_rating": 2,
+      "atk": 1600,
+      "attribute": "LIGHT",
+      "type": "Fiend/Link/Effect",
+      "materials": "2 monsters, including a LIGHT Fiend monster",
+      "is_main_deck": false,
+      "verified": true
+    },
+    "2463794": {
+      "name": "Fiendsmith's Requiem",
+      "link_rating": 1,
+      "atk": 600,
+      "attribute": "LIGHT",
+      "type": "Fiend/Link/Effect",
+      "materials": "1 LIGHT Fiend monster",
+      "is_main_deck": false,
+      "verified": true
+    },
+    "82135803": {
+      "name": "Fiendsmith's Desirae",
+      "level": 7,
+      "atk": 2500,
+      "def": 2000,
+      "attribute": "LIGHT",
+      "type": "Fiend/Fusion/Effect",
+      "materials": "Fiendsmith Engraver + 2 LIGHT Fiend monsters",
+      "is_main_deck": false,
+      "verified": true
+    },
+    "46640168": {
+      "name": "Fiendsmith's Lacrima",
+      "level": 6,
+      "atk": 2400,
+      "def": 1800,
+      "attribute": "LIGHT",
+      "type": "Fiend/Fusion/Effect",
+      "materials": "2 LIGHT Fiend monsters",
+      "is_main_deck": false,
+      "notes": "BANNED in TCG as of 2026-01-26",
+      "verified": true
+    },
+    "11464648": {
+      "name": "Fiendsmith's Rextremende",
+      "level": 8,
+      "atk": 2800,
+      "def": 2400,
+      "attribute": "LIGHT",
+      "type": "Fiend/Fusion/Effect",
+      "materials": "1 Fiendsmith Fusion Monster + 1 Fusion or Link Monster",
+      "is_main_deck": false,
+      "verified": true
+    },
+    "93860227": {
+      "name": "Necroquip Princess",
+      "level": 6,
+      "atk": 2000,
+      "def": 2000,
+      "attribute": "DARK",
+      "type": "Fiend/Fusion/Effect",
+      "materials": "1 monster equipped with a Monster Card + 1 Fiend Monster Card",
+      "is_main_deck": false,
+      "notes": "Contact Fusion - sends from hand/field to GY",
+      "verified": true
+    }
+  },
+  "unverified_cards": {
+    "_note": "Cards in locked_library.json that need verification before adding here",
+    "cards": [
+      "32991300 - Fiendsmith's Agnumday",
+      "29301450 - S:P Little Knight",
+      "58699500 - Cherubini, Ebon Angel of the Burning Abyss",
+      "46772449 - Evilswarm Exciton Knight",
+      "88942504 - Melomelody the Brass Djinn",
+      "48452496 - Snake-Eyes Flamberge Dragon",
+      "45445571 - The Duke of Demise",
+      "50277355 - Cross-Sheep",
+      "71593652 - Mutiny in the Sky",
+      "19000848 - Buio the Dawn's Light",
+      "45409943 - Luce the Dusk's Dark",
+      "81275020 - Speedroid Terrortop",
+      "53932291 - Speedroid Taketomborg",
+      "81035362 - Fiendish Rhino Warrior",
+      "28143384 - Aerial Eater",
+      "9674034 - Snake-Eye Ash",
+      "Crystal Beast package"
+    ]
+  },
+  "level_6_fiends": {
+    "_note": "Cards that can be used as Caesar Xyz materials",
+    "cards": [
+      {"id": "60764609", "name": "Fiendsmith Engraver"},
+      {"id": "46640168", "name": "Fiendsmith's Lacrima (Fusion)", "notes": "BANNED"},
+      {"id": "93860227", "name": "Necroquip Princess"}
+    ]
+  },
+  "level_1_light_fiends": {
+    "_note": "Cards that can be used for Requiem Link-1",
+    "cards": [
+      {"id": "97651498", "name": "Fabled Lurrie"},
+      {"id": "token", "name": "Fiendsmith Token", "notes": "Created by Sanct"}
+    ]
+  }
+}
