@@ -88,6 +88,23 @@ python -m pytest tests/ --cov=src/cffi --cov-report=html
 
 ## Audit History
 
+### P4 Implementation: ML Encoding (January 2026) - COMPLETED
+
+Implemented ygo-agent compatible state encoding for ML integration:
+
+| Component | Status |
+|-----------|--------|
+| `src/cffi/ml_encoding.py` | Created - StateEncoder, ActionEncoder, ObservationEncoder |
+| `tests/unit/test_ml_encoding.py` | Created - 45 tests |
+
+**Key Features:**
+- 41-feature card encoding (ygo-agent compatible)
+- 23-feature global state encoding
+- 14-feature action encoding
+- 16-step action history buffer
+- Batch encoding utilities for training data
+- BoardSignature integration
+
 ### P3 Implementation: Iterative Deepening (January 2026) - COMPLETED
 
 Implemented iterative deepening wrapper for shortest-first combo discovery:
@@ -270,11 +287,13 @@ https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/c
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/parallel_search.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/card_roles.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/iterative_deepening.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/ml_encoding.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_state.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_zobrist.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_parallel.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_card_roles.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_iterative_deepening.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_ml_encoding.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/README.md
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/CLAUDE.md
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/docs/RESEARCH.md
@@ -301,10 +320,10 @@ echo "Verification URLs:"
 for f in src/cffi/ocg_bindings.py src/cffi/engine_interface.py src/cffi/paths.py \
          src/cffi/combo_enumeration.py src/cffi/state_representation.py \
          src/cffi/transposition_table.py src/cffi/zobrist.py src/cffi/parallel_search.py \
-         src/cffi/card_roles.py src/cffi/iterative_deepening.py \
+         src/cffi/card_roles.py src/cffi/iterative_deepening.py src/cffi/ml_encoding.py \
          tests/unit/test_state.py tests/unit/test_zobrist.py \
          tests/unit/test_parallel.py tests/unit/test_card_roles.py \
-         tests/unit/test_iterative_deepening.py \
+         tests/unit/test_iterative_deepening.py tests/unit/test_ml_encoding.py \
          README.md CLAUDE.md docs/RESEARCH.md docs/IMPLEMENTATION_ROADMAP.md; do
   echo "https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/$SHA/$f"
 done
@@ -312,7 +331,7 @@ done
 
 ### Files to Audit
 
-**Source (10 files):**
+**Source (11 files):**
 ```
 src/cffi/ocg_bindings.py
 src/cffi/engine_interface.py
@@ -324,15 +343,17 @@ src/cffi/zobrist.py
 src/cffi/parallel_search.py
 src/cffi/card_roles.py
 src/cffi/iterative_deepening.py
+src/cffi/ml_encoding.py
 ```
 
-**Tests (6 files):**
+**Tests (7 files):**
 ```
 tests/unit/test_state.py
 tests/unit/test_zobrist.py
 tests/unit/test_parallel.py
 tests/unit/test_card_roles.py
 tests/unit/test_iterative_deepening.py
+tests/unit/test_ml_encoding.py
 tests/README.md
 ```
 
@@ -376,6 +397,7 @@ This ensures fixes can be applied mechanically without ambiguity.
 | `src/cffi/parallel_search.py` | Parallel enumeration across starting hands |
 | `src/cffi/card_roles.py` | Card role classification for move ordering |
 | `src/cffi/iterative_deepening.py` | Iterative deepening search wrapper |
+| `src/cffi/ml_encoding.py` | ML-compatible state encoding (ygo-agent format) |
 | `config/locked_library.json` | 26-card Fiendsmith library |
 | `config/card_roles.json` | Manual card role overrides |
 | `config/evaluation_config.json` | Board evaluation weights |

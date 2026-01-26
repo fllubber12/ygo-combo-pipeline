@@ -51,7 +51,8 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
 │   ├── zobrist.py                   # O(1) Zobrist hashing
 │   ├── parallel_search.py           # Parallel enumeration
 │   ├── card_roles.py                # Card role classification
-│   └── iterative_deepening.py       # Depth-limited search
+│   ├── iterative_deepening.py       # Depth-limited search
+│   └── ml_encoding.py               # ML-compatible state encoding
 ├── config/                      # Configuration files
 │   ├── locked_library.json          # 26-card library
 │   └── card_roles.json              # Card role overrides
@@ -64,7 +65,8 @@ python combo_enumeration.py --max-depth 25 --max-paths 1000
         ├── test_zobrist.py          # Zobrist hashing tests
         ├── test_parallel.py         # Parallel search tests
         ├── test_card_roles.py       # Card role tests
-        └── test_iterative_deepening.py  # Iterative deepening tests
+        ├── test_iterative_deepening.py  # Iterative deepening tests
+        └── test_ml_encoding.py      # ML encoding tests
 ```
 
 ## Dependencies
