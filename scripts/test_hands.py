@@ -139,46 +139,55 @@ def list_presets():
 
 def run_hand_test(hand: List[int], max_depth: int = 25, verbose: bool = False):
     """Run enumeration with specific hand."""
-    
+
     # Import engine
     try:
-        from combo_enumeration import EnumerationEngine, EnumerationConfig, get_deck_lists
+        from engine_interface import init_card_database, load_library, set_lib
+        from combo_enumeration import EnumerationEngine, load_locked_library, get_deck_lists
+        import combo_enumeration
     except ImportError as e:
         print(f"ERROR: Could not import engine: {e}")
         return None
-    
+
+    # Initialize engine
+    print("Initializing card database...")
+    if not init_card_database():
+        print("ERROR: Failed to initialize card database")
+        return None
+
+    lib = load_library()
+    set_lib(lib)
+
     # Load library
     library_path = Path("config/locked_library.json")
     if not library_path.exists():
         print(f"ERROR: Library not found: {library_path}")
         return None
-    
+
     print("=" * 60)
     print("HAND TEST")
     print("=" * 60)
-    
+
     # Show hand
-    print("\n📋 Starting Hand:")
+    print("\n Starting Hand:")
     for i, code in enumerate(hand):
         name = next((k for k, v in CARDS.items() if v == code), f"Unknown({code})")
         print(f"  {i+1}. {name} ({code})")
-    
+
     # Load deck
-    print(f"\n📚 Loading library from {library_path}...")
-    main_deck, extra_deck = get_deck_lists(library_path)
+    print(f"\n Loading library from {library_path}...")
+    library = load_locked_library()
+    main_deck, extra_deck = get_deck_lists(library)
     print(f"  Main deck: {len(main_deck)} cards")
     print(f"  Extra deck: {len(extra_deck)} cards")
-    
-    # Create config
-    config = EnumerationConfig(
-        max_depth=max_depth,
-        max_paths=1000,
-        verbose=verbose,
-    )
-    
+
+    # Set limits
+    combo_enumeration.MAX_DEPTH = max_depth
+    combo_enumeration.MAX_PATHS = 1000
+
     # Create engine
-    print(f"\n🎮 Running enumeration (max_depth={max_depth})...")
-    engine = EnumerationEngine(config, main_deck, extra_deck)
+    print(f"\n Running enumeration (max_depth={max_depth})...")
+    engine = EnumerationEngine(lib, main_deck, extra_deck, verbose=verbose)
     
     # Run with specific hand
     try:
