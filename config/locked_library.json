@@ -1,6 +1,11 @@
 {
+  "_WARNING": "DO NOT MODIFY THIS FILE WITHOUT USER VERIFICATION",
+  "_LOCKED": true,
+  "_verified_by": "User",
+  "_verified_date": "2026-01-26",
+  "_instructions": "Any changes to this library require explicit user approval. Do not add, remove, or modify cards without asking first.",
   "name": "Crystal Beast Fiendsmith Library",
-  "description": "Crystal Beast Fiendsmith deck for combo analysis",
+  "description": "Crystal Beast Fiendsmith deck for combo analysis - LOCKED",
   "cards": {
     "53932291": {
       "is_extra_deck": false,
@@ -222,51 +227,24 @@
       "name": "Luce the Dusk's Dark",
       "count": 1
     },
-    "37440988": {
+    "45445571": {
       "is_extra_deck": true,
-      "name": "Rainbow Overdragon",
+      "name": "The Duke of Demise",
       "count": 1
     },
-    "84544192": {
+    "50277355": {
       "is_extra_deck": true,
-      "name": "Ultimate Crystal Rainbow Dragon Overdrive",
-      "count": 1
-    },
-    "79606837": {
-      "is_extra_deck": true,
-      "name": "Herald of the Arc Light",
-      "count": 1
-    },
-    "27552504": {
-      "is_extra_deck": true,
-      "name": "Beatrice, Lady of the Eternal",
-      "count": 1
-    },
-    "2857636": {
-      "is_extra_deck": true,
-      "name": "Knightmare Phoenix",
-      "count": 1
-    },
-    "38342335": {
-      "is_extra_deck": true,
-      "name": "Knightmare Unicorn",
-      "count": 1
-    },
-    "86066372": {
-      "is_extra_deck": true,
-      "name": "Accesscode Talker",
-      "count": 1
-    },
-    "4280258": {
-      "is_extra_deck": true,
-      "name": "Apollousa, Bow of the Goddess",
+      "name": "Cross-Sheep",
       "count": 1
     }
   },
   "_meta": {
     "main_deck_total": 50,
     "main_deck_unique": 27,
-    "extra_deck_total": 25,
+    "extra_deck_total": 19,
+    "verified": true,
+    "locked": true,
+    "last_modified": "2026-01-26",
     "converted_from": "config/cb_fiendsmith_library.json"
   }
 }

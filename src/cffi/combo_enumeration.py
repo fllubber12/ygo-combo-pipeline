@@ -337,8 +337,11 @@ def load_locked_library():
     with open(LOCKED_LIBRARY_PATH) as f:
         library = json.load(f)
 
-    if library.get("_meta", {}).get("verification_required", True):
+    meta = library.get("_meta", {})
+    if not meta.get("verified", False):
         logger.warning("Locked library not yet verified!")
+    if library.get("_LOCKED", False):
+        logger.info("Using LOCKED library - do not modify without user approval")
 
     return library
 
@@ -822,6 +825,12 @@ def _parse_sum_card_14byte(data: bytes, offset: int, index: int) -> Tuple[dict, 
 
 def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_SUM message for material/card selection.
+
+    WARNING: This format was empirically determined for this specific ygopro-core
+    build and differs from the standard edo9300/ygopro-core format:
+    - Header uses BIG-ENDIAN for target_sum and can_count (not little-endian)
+    - Card entries are 14 bytes (4-byte sequence) instead of 11 bytes (1-byte sequence)
+    If porting to a different ygopro-core version, verify the format with hex dumps.
 
     Format observed from raw byte analysis of this ygopro-core build:
     - player: 1 byte (offset 0)
