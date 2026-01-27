@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from collections import defaultdict, Counter
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "ygo_combo"))
 
 
 def get_message_constants():
@@ -140,7 +140,7 @@ def run_audit():
     # Check combo_enumeration for handlers
     print("\n📋 Checking combo_enumeration.py for handlers...")
     
-    combo_enum_path = Path("src/cffi/combo_enumeration.py")
+    combo_enum_path = Path("src/ygo_combo/combo_enumeration.py")
     if combo_enum_path.exists():
         content = combo_enum_path.read_text()
         

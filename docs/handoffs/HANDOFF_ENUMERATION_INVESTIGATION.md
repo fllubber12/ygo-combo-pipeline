@@ -32,7 +32,7 @@ The combo enumeration cannot find the gold standard combo (Engraver → A Bao A 
 
 ### Uncommitted Changes (Local Only)
 
-1. **`src/cffi/combo_enumeration.py`** - Added `--prioritize-cards` option
+1. **`src/ygo_combo/combo_enumeration.py`** - Added `--prioritize-cards` option
    - Allows specifying card passcodes to explore first during SELECT_CARD
    - User decided NOT to use this approach (wants thorough investigation instead)
 
@@ -97,12 +97,12 @@ The low intermediate state pruning (3) suggests paths diverge early and rarely r
    - But loses determinism
 
 4. **Is iterative deepening the answer?**
-   - Already implemented in `src/cffi/iterative_deepening.py`
+   - Already implemented in `src/ygo_combo/iterative_deepening.py`
    - Finds shortest combos first
    - But may still miss deep combos due to budget
 
 5. **Can we use card roles for smart pruning?**
-   - `src/cffi/card_roles.py` classifies cards as STARTER, EXTENDER, PAYOFF, etc.
+   - `src/ygo_combo/card_roles.py` classifies cards as STARTER, EXTENDER, PAYOFF, etc.
    - Could prune branches that activate extenders before starters
    - But may prune valid combo lines
 
@@ -132,14 +132,14 @@ Full 23-step sequence in `config/gold_standard_combo.json`
 ## Files for Review
 
 ### Core Enumeration
-- `src/cffi/combo_enumeration.py` - Main DFS enumeration engine
-- `src/cffi/state_representation.py` - BoardSignature, IntermediateState classes
-- `src/cffi/transposition_table.py` - Memoization cache
+- `src/ygo_combo/combo_enumeration.py` - Main DFS enumeration engine
+- `src/ygo_combo/state_representation.py` - BoardSignature, IntermediateState classes
+- `src/ygo_combo/transposition_table.py` - Memoization cache
 
 ### Alternative Search Strategies (Already Implemented)
-- `src/cffi/iterative_deepening.py` - Iterative deepening wrapper
-- `src/cffi/card_roles.py` - Card role classification for move ordering
-- `src/cffi/zobrist.py` - O(1) incremental hashing
+- `src/ygo_combo/iterative_deepening.py` - Iterative deepening wrapper
+- `src/ygo_combo/card_roles.py` - Card role classification for move ordering
+- `src/ygo_combo/zobrist.py` - O(1) incremental hashing
 
 ### Research Documentation
 - `docs/RESEARCH.md` - Game AI research report
@@ -157,7 +157,7 @@ Full 23-step sequence in `config/gold_standard_combo.json`
 export YGOPRO_SCRIPTS_PATH=/Users/zacharyhartley/ygopro-scripts
 
 # Run enumeration
-python3 src/cffi/combo_enumeration.py --max-paths 50000 --max-depth 50
+python3 src/ygo_combo/combo_enumeration.py --max-paths 50000 --max-depth 50
 
 # Validate gold standard
 python3 scripts/validate_gold_standard_combo.py --show-steps

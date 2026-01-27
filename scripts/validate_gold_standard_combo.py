@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "ygo_combo"))
 
 # =============================================================================
 # CARD PASSCODES (from verified_cards.json)
@@ -344,7 +344,7 @@ def main():
     print("=" * 70)
     print("""
 To find this combo in enumeration:
-1. Run: python src/cffi/combo_enumeration.py --max-depth 50 --max-paths 100000
+1. Run: python src/ygo_combo/combo_enumeration.py --max-depth 50 --max-paths 100000
 2. Look for terminal with A Bao A Qu + Caesar on field
 3. Or search results for specific action sequence
 

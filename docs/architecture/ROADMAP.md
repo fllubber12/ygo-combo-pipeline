@@ -18,7 +18,7 @@ Based on the research report, here's a prioritized action plan for improving the
 
 ## P0: Zobrist Hashing (High Priority)
 
-**Location**: New file `src/cffi/zobrist.py`
+**Location**: New file `src/ygo_combo/zobrist.py`
 
 **Design**:
 ```python
@@ -69,7 +69,7 @@ class ZobristHasher:
 
 ## P1: Parallel Search Architecture
 
-**Location**: New file `src/cffi/parallel_search.py`
+**Location**: New file `src/ygo_combo/parallel_search.py`
 
 **Design**:
 ```python
@@ -107,7 +107,7 @@ def enumerate_from_hand(hand: Tuple[int, ...]) -> List[ComboResult]:
 
 ## P2: Card Role Classification
 
-**Location**: New file `src/cffi/card_roles.py`
+**Location**: New file `src/ygo_combo/card_roles.py`
 
 **Design**:
 ```python
@@ -145,7 +145,7 @@ def prioritize_actions(actions: List[Action], roles: Dict[int, CardRole]) -> Lis
 
 ## P3: Iterative Deepening Wrapper
 
-**Location**: Add to `src/cffi/combo_enumeration.py`
+**Location**: Add to `src/ygo_combo/combo_enumeration.py`
 
 **Design**:
 ```python
@@ -178,7 +178,7 @@ def enumerate_iterative(engine: EnumerationEngine, max_depth: int):
 
 ## P4: ygo-agent State Encoding
 
-**Location**: New file `src/cffi/ml_encoding.py`
+**Location**: New file `src/ygo_combo/ml_encoding.py`
 
 **Design** (from ygo-agent):
 ```python

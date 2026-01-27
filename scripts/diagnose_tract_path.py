@@ -15,7 +15,7 @@ from pathlib import Path
 import io
 
 # Setup paths
-sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "ygo_combo"))
 
 # Set environment
 if not os.environ.get("YGOPRO_SCRIPTS_PATH"):

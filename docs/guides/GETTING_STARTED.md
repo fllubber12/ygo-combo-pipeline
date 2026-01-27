@@ -181,7 +181,7 @@ Card Usage Frequency (across 847 successful combos):
 
 ### Engine import errors
 1. Make sure you're in the ygo-combo-pipeline directory
-2. Check Python path includes src/cffi
+2. Check Python path includes src/ygo_combo
 3. Verify ygopro-core library is built
 
 ### Combo analysis hangs

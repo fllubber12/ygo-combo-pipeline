@@ -37,10 +37,10 @@ export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-scripts
 ```bash
 # Verify everything works
 python3 -m pytest tests/ -v                                   # All tests
-python3 src/cffi/combo_enumeration.py --max-depth 15 --max-paths 100  # Quick test
+python3 src/ygo_combo/combo_enumeration.py --max-depth 15 --max-paths 100  # Quick test
 
 # Run verification
-python3 src/cffi/combo_enumeration.py --max-depth 25 --max-paths 1000 --output verify.json
+python3 src/ygo_combo/combo_enumeration.py --max-depth 25 --max-paths 1000 --output verify.json
 ```
 
 ---
@@ -316,7 +316,7 @@ Options:
 
 **Verification Commands**:
 ```bash
-cd src/cffi
+cd src/ygo_combo
 
 # 1. Run state representation tests (expect: 19 passing)
 python3 -m pytest tests/unit/test_state.py -v
@@ -383,7 +383,7 @@ python3 -c "import json; d=json.load(open('verify.json')); print(f\"Terminals: {
 
 **Verification Commands**:
 ```bash
-cd src/cffi
+cd src/ygo_combo
 
 # 1. State space measurement at different depths
 for depth in 25 30 35; do
@@ -1138,7 +1138,7 @@ python3 combo_enumeration.py --max-depth 10 --max-paths 50 --verbose
 ### Test Commands
 
 ```bash
-cd src/cffi
+cd src/ygo_combo
 
 # Unit tests (19 tests)
 python3 -m pytest tests/unit/test_state.py -v
@@ -1247,14 +1247,14 @@ Run this verification before major changes:
 cd .
 
 # Verify passcodes match
-grep -r "79559912" docs/ src/cffi/  # Caesar
-grep -r "4731783" docs/ src/cffi/   # A Bao A Qu
-grep -r "60764609" docs/ src/cffi/  # Engraver
+grep -r "79559912" docs/ src/ygo_combo/  # Caesar
+grep -r "4731783" docs/ src/ygo_combo/   # A Bao A Qu
+grep -r "60764609" docs/ src/ygo_combo/  # Engraver
 
 # Verify files exist
-ls -la src/cffi/combo_enumeration.py
-ls -la src/cffi/state_representation.py
-ls -la src/cffi/transposition_table.py
+ls -la src/ygo_combo/combo_enumeration.py
+ls -la src/ygo_combo/state_representation.py
+ls -la src/ygo_combo/transposition_table.py
 ls -la config/locked_library.json
 
 # Verify card count
@@ -1584,10 +1584,10 @@ Option 3: **Breadth-first at low depths**
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/cffi/combo_enumeration.py` | Main enumeration engine | ✅ Working |
-| `src/cffi/state_representation.py` | BoardSignature, IntermediateState | ✅ Working |
-| `src/cffi/transposition_table.py` | Memoization cache | ✅ Working |
-| `src/cffi/ocg_bindings.py` | CFFI FFI interface | ✅ Working |
+| `src/ygo_combo/combo_enumeration.py` | Main enumeration engine | ✅ Working |
+| `src/ygo_combo/state_representation.py` | BoardSignature, IntermediateState | ✅ Working |
+| `src/ygo_combo/transposition_table.py` | Memoization cache | ✅ Working |
+| `src/ygo_combo/ocg_bindings.py` | CFFI FFI interface | ✅ Working |
 | `tests/integration/test_fiendsmith_duel.py` | Duel creation utilities | ✅ Working |
 
 ### Test Files
@@ -1607,16 +1607,16 @@ Option 3: **Breadth-first at low depths**
 
 | File | Contents |
 |------|----------|
-| `src/cffi/verification_run.json` | Latest enumeration results |
-| `src/cffi/enumeration_results.json` | Historical results |
+| `src/ygo_combo/verification_run.json` | Latest enumeration results |
+| `src/ygo_combo/enumeration_results.json` | Historical results |
 
 ### External Dependencies
 
 | File | Purpose |
 |------|---------|
-| `src/cffi/build/libygo.dylib` | ygopro-core library (macOS) |
-| `src/cffi/build/libygo.so` | ygopro-core library (Linux) |
-| `src/cffi/build/libygo.dll` | ygopro-core library (Windows) |
+| `src/ygo_combo/build/libygo.dylib` | ygopro-core library (macOS) |
+| `src/ygo_combo/build/libygo.so` | ygopro-core library (Linux) |
+| `src/ygo_combo/build/libygo.dll` | ygopro-core library (Windows) |
 | `script/*.lua` | Card effect scripts (set via YGOPRO_SCRIPTS_PATH) |
 
 ---

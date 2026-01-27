@@ -146,8 +146,8 @@ If issues found, note:
 |------|---------|
 | `scripts/test_engraver_combo.py` | Minimal test script |
 | `config/cb_fiendsmith_library.json` | Card passcodes |
-| `src/cffi/combo_enumeration.py` | Core enumeration engine |
-| `src/cffi/engine_interface.py` | ygopro-core bindings |
+| `src/ygo_combo/combo_enumeration.py` | Core enumeration engine |
+| `src/ygo_combo/engine_interface.py` | ygopro-core bindings |
 
 ---
 

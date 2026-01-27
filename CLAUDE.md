@@ -87,7 +87,7 @@ All card data **MUST** come from (in order of preference):
 
 ### Validation Module
 
-Use `src/cffi/card_validator.py`:
+Use `src/ygo_combo/card_validator.py`:
 
 ```python
 from card_validator import CardValidator, get_verified_card
@@ -189,7 +189,7 @@ python -m pytest tests/ -v
 python -m pytest tests/unit/test_state.py -v
 
 # Run with coverage
-python -m pytest tests/ --cov=src/cffi --cov-report=html
+python -m pytest tests/ --cov=src/ygo_combo --cov-report=html
 ```
 
 ---
@@ -228,7 +228,7 @@ Implemented ygo-agent compatible state encoding for ML integration:
 
 | Component | Status |
 |-----------|--------|
-| `src/cffi/ml_encoding.py` | Created - StateEncoder, ActionEncoder, ObservationEncoder |
+| `src/ygo_combo/ml_encoding.py` | Created - StateEncoder, ActionEncoder, ObservationEncoder |
 | `tests/unit/test_ml_encoding.py` | Created - 45 tests |
 
 **Key Features:**
@@ -245,7 +245,7 @@ Implemented iterative deepening wrapper for shortest-first combo discovery:
 
 | Component | Status |
 |-----------|--------|
-| `src/cffi/iterative_deepening.py` | Created - SearchConfig, IterativeDeepeningSearch |
+| `src/ygo_combo/iterative_deepening.py` | Created - SearchConfig, IterativeDeepeningSearch |
 | `tests/unit/test_iterative_deepening.py` | Created - 22 tests |
 
 **Key Features:**
@@ -261,7 +261,7 @@ Implemented card role classification for move ordering and pruning:
 
 | Component | Status |
 |-----------|--------|
-| `src/cffi/card_roles.py` | Created - CardRole enum, CardRoleClassifier |
+| `src/ygo_combo/card_roles.py` | Created - CardRole enum, CardRoleClassifier |
 | `config/card_roles.json` | Created - Fiendsmith library classifications |
 | `tests/unit/test_card_roles.py` | Created - 20 tests |
 
@@ -290,8 +290,8 @@ Implemented parallel enumeration across C(n,k) starting hands for near-linear sp
 
 | Component | Status |
 |-----------|--------|
-| `src/cffi/parallel_search.py` | Created - ParallelConfig, ComboResult, ParallelResult, process pool |
-| `src/cffi/combo_enumeration.py` | Updated - enumerate_from_hand() stub added |
+| `src/ygo_combo/parallel_search.py` | Created - ParallelConfig, ComboResult, ParallelResult, process pool |
+| `src/ygo_combo/combo_enumeration.py` | Updated - enumerate_from_hand() stub added |
 | `tests/unit/test_parallel.py` | Created - 13 tests |
 | CLI interface | --workers, --estimate flags |
 
@@ -308,9 +308,9 @@ Implemented O(1) incremental hashing for transposition table performance:
 
 | Component | Status |
 |-----------|--------|
-| `src/cffi/zobrist.py` | Created - ZobristHasher, StateChange, CardState |
-| `src/cffi/transposition_table.py` | Updated - int/str hash support, enhanced stats |
-| `src/cffi/state_representation.py` | Updated - zobrist_hash() methods on BoardSignature, IntermediateState |
+| `src/ygo_combo/zobrist.py` | Created - ZobristHasher, StateChange, CardState |
+| `src/ygo_combo/transposition_table.py` | Updated - int/str hash support, enhanced stats |
+| `src/ygo_combo/state_representation.py` | Updated - zobrist_hash() methods on BoardSignature, IntermediateState |
 | `tests/unit/test_zobrist.py` | Created - 14 tests |
 
 **Key Features:**
@@ -431,17 +431,17 @@ Files changed: [list]
 
 Use commit-pinned RAW URLs (these bypass CDN cache):
 ```
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/ocg_bindings.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/engine_interface.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/paths.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/combo_enumeration.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/state_representation.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/transposition_table.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/zobrist.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/parallel_search.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/card_roles.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/iterative_deepening.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/cffi/ml_encoding.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/ocg_bindings.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/engine_interface.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/paths.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/combo_enumeration.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/state_representation.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/transposition_table.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/zobrist.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/parallel_search.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/card_roles.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/iterative_deepening.py
+https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/src/ygo_combo/ml_encoding.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_state.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_zobrist.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/[FULL_SHA]/tests/unit/test_parallel.py
@@ -471,10 +471,10 @@ SHA=$(git rev-parse HEAD)
 echo "Commit: $SHA"
 echo ""
 echo "Verification URLs:"
-for f in src/cffi/ocg_bindings.py src/cffi/engine_interface.py src/cffi/paths.py \
-         src/cffi/combo_enumeration.py src/cffi/state_representation.py \
-         src/cffi/transposition_table.py src/cffi/zobrist.py src/cffi/parallel_search.py \
-         src/cffi/card_roles.py src/cffi/iterative_deepening.py src/cffi/ml_encoding.py \
+for f in src/ygo_combo/ocg_bindings.py src/ygo_combo/engine_interface.py src/ygo_combo/paths.py \
+         src/ygo_combo/combo_enumeration.py src/ygo_combo/state_representation.py \
+         src/ygo_combo/transposition_table.py src/ygo_combo/zobrist.py src/ygo_combo/parallel_search.py \
+         src/ygo_combo/card_roles.py src/ygo_combo/iterative_deepening.py src/ygo_combo/ml_encoding.py \
          tests/unit/test_state.py tests/unit/test_zobrist.py \
          tests/unit/test_parallel.py tests/unit/test_card_roles.py \
          tests/unit/test_iterative_deepening.py tests/unit/test_ml_encoding.py \
@@ -487,17 +487,17 @@ done
 
 **Source (11 files):**
 ```
-src/cffi/ocg_bindings.py
-src/cffi/engine_interface.py
-src/cffi/paths.py
-src/cffi/combo_enumeration.py
-src/cffi/state_representation.py
-src/cffi/transposition_table.py
-src/cffi/zobrist.py
-src/cffi/parallel_search.py
-src/cffi/card_roles.py
-src/cffi/iterative_deepening.py
-src/cffi/ml_encoding.py
+src/ygo_combo/ocg_bindings.py
+src/ygo_combo/engine_interface.py
+src/ygo_combo/paths.py
+src/ygo_combo/combo_enumeration.py
+src/ygo_combo/state_representation.py
+src/ygo_combo/transposition_table.py
+src/ygo_combo/zobrist.py
+src/ygo_combo/parallel_search.py
+src/ygo_combo/card_roles.py
+src/ygo_combo/iterative_deepening.py
+src/ygo_combo/ml_encoding.py
 ```
 
 **Tests (7 files):**
@@ -541,18 +541,18 @@ This ensures fixes can be applied mechanically without ambiguity.
 
 | File | Purpose |
 |------|---------|
-| `src/cffi/ocg_bindings.py` | CFFI bindings, MSG_*/QUERY_* constants |
-| `src/cffi/engine_interface.py` | EngineContext, callbacks, parsing |
-| `src/cffi/paths.py` | Centralized path configuration |
-| `src/cffi/combo_enumeration.py` | Core DFS enumeration engine |
-| `src/cffi/state_representation.py` | BoardSignature, IntermediateState, evaluation |
-| `src/cffi/transposition_table.py` | Memoization cache with depth-preferred eviction |
-| `src/cffi/zobrist.py` | O(1) incremental Zobrist hashing |
-| `src/cffi/parallel_search.py` | Parallel enumeration across starting hands |
-| `src/cffi/card_roles.py` | Card role classification for move ordering |
-| `src/cffi/iterative_deepening.py` | Iterative deepening search wrapper |
-| `src/cffi/ml_encoding.py` | ML-compatible state encoding (ygo-agent format) |
-| `src/cffi/card_validator.py` | Verified card data validation (anti-hallucination) |
+| `src/ygo_combo/ocg_bindings.py` | CFFI bindings, MSG_*/QUERY_* constants |
+| `src/ygo_combo/engine_interface.py` | EngineContext, callbacks, parsing |
+| `src/ygo_combo/paths.py` | Centralized path configuration |
+| `src/ygo_combo/combo_enumeration.py` | Core DFS enumeration engine |
+| `src/ygo_combo/state_representation.py` | BoardSignature, IntermediateState, evaluation |
+| `src/ygo_combo/transposition_table.py` | Memoization cache with depth-preferred eviction |
+| `src/ygo_combo/zobrist.py` | O(1) incremental Zobrist hashing |
+| `src/ygo_combo/parallel_search.py` | Parallel enumeration across starting hands |
+| `src/ygo_combo/card_roles.py` | Card role classification for move ordering |
+| `src/ygo_combo/iterative_deepening.py` | Iterative deepening search wrapper |
+| `src/ygo_combo/ml_encoding.py` | ML-compatible state encoding (ygo-agent format) |
+| `src/ygo_combo/card_validator.py` | Verified card data validation (anti-hallucination) |
 | `config/locked_library.json` | **LOCKED** - Crystal Beast Fiendsmith library (19 extra deck). DO NOT MODIFY without user approval. |
 | `config/verified_cards.json` | **LOCKED** - Triple-verified card data (48 cards). Checksum-protected. DO NOT MODIFY without audit. |
 | `config/card_roles.json` | Manual card role overrides |
@@ -576,7 +576,7 @@ export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-core/scripts
 
 # Required files
 cards.cdb              # Card database in project root
-src/cffi/build/libygo.dylib  # Built ygopro-core library
+src/ygo_combo/build/libygo.dylib  # Built ygopro-core library
 ```
 
 ---

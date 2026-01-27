@@ -1,7 +1,7 @@
 # Project Inventory Report
 
 > Generated: 2026-01-25
-> Working Directory: `src/cffi`
+> Working Directory: `src/ygo_combo`
 > Total Size: 18 MB (cffi dir) | ~930 MB (full Testing dir)
 
 ---
@@ -27,7 +27,7 @@
 
 ```
 
-├── src/cffi/           # Current working directory (18 MB)
+├── src/ygo_combo/           # Current working directory (18 MB)
 │   ├── build/          # Compiled binaries (2.7 MB)
 │   ├── deps/           # Lua 5.3.5 source (2.3 MB)
 │   └── .pytest_cache/  # Test cache (20 KB)
@@ -244,7 +244,7 @@ Multiple timestamped handoff archives exist. These are **intentional backups** f
 
 ## Full File Listing
 
-### `src/cffi/` (Sorted by Size)
+### `src/ygo_combo/` (Sorted by Size)
 
 ```
 SIZE       MODIFIED         FILE

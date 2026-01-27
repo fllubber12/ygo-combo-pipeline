@@ -254,9 +254,9 @@ UPDATED_HANDLE_SELECT_SUM = '''
 def find_combo_enumeration_path():
     """Find the combo_enumeration.py file."""
     possible_paths = [
-        Path("src/cffi/combo_enumeration.py"),
+        Path("src/ygo_combo/combo_enumeration.py"),
         Path("combo_enumeration.py"),
-        Path(__file__).parent.parent / "src" / "cffi" / "combo_enumeration.py",
+        Path(__file__).parent.parent / "src" / "ygo_combo" / "combo_enumeration.py",
     ]
     
     for path in possible_paths:

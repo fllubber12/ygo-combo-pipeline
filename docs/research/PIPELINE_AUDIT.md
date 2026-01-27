@@ -12,12 +12,12 @@
 
 | File | Card Data Usage | Data Source |
 |------|-----------------|-------------|
-| `src/cffi/combo_enumeration.py` | Parses MSG_SELECT_SUM, extracts level/sum_param | ygopro-core engine messages |
-| `src/cffi/engine_interface.py` | Card code lookup, script loading | cards.cdb, script files |
-| `src/cffi/state_representation.py` | BoardSignature with card codes | Engine state queries |
-| `src/cffi/card_validator.py` | Validates card attributes | config/verified_cards.json |
-| `src/cffi/card_roles.py` | Card role classification | config/card_roles.json |
-| `src/cffi/ml_encoding.py` | Card feature encoding | Engine state + cards.cdb |
+| `src/ygo_combo/combo_enumeration.py` | Parses MSG_SELECT_SUM, extracts level/sum_param | ygopro-core engine messages |
+| `src/ygo_combo/engine_interface.py` | Card code lookup, script loading | cards.cdb, script files |
+| `src/ygo_combo/state_representation.py` | BoardSignature with card codes | Engine state queries |
+| `src/ygo_combo/card_validator.py` | Validates card attributes | config/verified_cards.json |
+| `src/ygo_combo/card_roles.py` | Card role classification | config/card_roles.json |
+| `src/ygo_combo/ml_encoding.py` | Card feature encoding | Engine state + cards.cdb |
 
 ### Configuration Files
 
@@ -219,7 +219,7 @@ Expected output: `60764609|Fiendsmith Engraver|6|1800|2400`
 
 ```bash
 export YGOPRO_SCRIPTS_PATH=/Users/zacharyhartley/ygopro-scripts
-python3 src/cffi/combo_enumeration.py --max-depth 25 --max-paths 50 --verbose 2>&1 | grep -A10 "SELECT_SUM.*Caesar"
+python3 src/ygo_combo/combo_enumeration.py --max-depth 25 --max-paths 50 --verbose 2>&1 | grep -A10 "SELECT_SUM.*Caesar"
 ```
 
 ---
@@ -270,8 +270,8 @@ python3 src/cffi/combo_enumeration.py --max-depth 25 --max-paths 50 --verbose 2>
 | File | Change |
 |------|--------|
 | `config/verified_cards.json` | Created - human-verified card data |
-| `src/cffi/card_validator.py` | Created - validation module |
-| `src/cffi/combo_enumeration.py` | Added raw hex debug logging |
+| `src/ygo_combo/card_validator.py` | Created - validation module |
+| `src/ygo_combo/combo_enumeration.py` | Added raw hex debug logging |
 | `CLAUDE.md` | Added CARD DATA RULES section |
 | `docs/PIPELINE_AUDIT.md` | Created - this document |
 

@@ -12,7 +12,7 @@
    export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-core/scripts
    ```
 2. Verify `cards.cdb` exists in project root
-3. Verify `libygo.dylib` (or `.so`/`.dll`) exists in `src/cffi/build/`
+3. Verify `libygo.dylib` (or `.so`/`.dll`) exists in `src/ygo_combo/build/`
 
 ### Card Not Found
 
@@ -43,7 +43,7 @@
 **Solution:**
 1. Ensure you're in the project root directory
 2. Run tests with `python -m pytest tests/` (not just `pytest`)
-3. Verify `tests/conftest.py` adds `src/cffi` to path
+3. Verify `tests/conftest.py` adds `src/ygo_combo` to path
 
 ### Pre-commit Hook Fails
 

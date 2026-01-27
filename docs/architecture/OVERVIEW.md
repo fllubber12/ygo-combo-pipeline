@@ -75,11 +75,11 @@ combo_enumeration.py, state_representation.py, transposition_table.py
 
 | File | Purpose |
 |------|---------|
-| `src/cffi/ocg_bindings.py` | CFFI bindings, MSG_*/QUERY_* constants |
-| `src/cffi/engine_interface.py` | EngineContext, callbacks, parsing |
-| `src/cffi/combo_enumeration.py` | Core DFS enumeration engine |
-| `src/cffi/state_representation.py` | BoardSignature, IntermediateState |
-| `src/cffi/transposition_table.py` | Memoization cache |
-| `src/cffi/zobrist.py` | O(1) incremental hashing |
-| `src/cffi/iterative_deepening.py` | IDDFS search wrapper |
-| `src/cffi/ml_encoding.py` | ML-compatible state encoding |
+| `src/ygo_combo/ocg_bindings.py` | CFFI bindings, MSG_*/QUERY_* constants |
+| `src/ygo_combo/engine_interface.py` | EngineContext, callbacks, parsing |
+| `src/ygo_combo/combo_enumeration.py` | Core DFS enumeration engine |
+| `src/ygo_combo/state_representation.py` | BoardSignature, IntermediateState |
+| `src/ygo_combo/transposition_table.py` | Memoization cache |
+| `src/ygo_combo/zobrist.py` | O(1) incremental hashing |
+| `src/ygo_combo/iterative_deepening.py` | IDDFS search wrapper |
+| `src/ygo_combo/ml_encoding.py` | ML-compatible state encoding |

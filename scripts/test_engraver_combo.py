@@ -25,7 +25,7 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "ygo_combo"))
 
 
 # =============================================================================

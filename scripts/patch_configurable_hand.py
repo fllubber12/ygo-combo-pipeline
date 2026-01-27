@@ -24,7 +24,7 @@ from pathlib import Path
 from datetime import datetime
 
 
-TARGET_FILE = Path("src/cffi/combo_enumeration.py")
+TARGET_FILE = Path("src/ygo_combo/combo_enumeration.py")
 BACKUP_SUFFIX = ".pre_hand_patch.bak"
 
 

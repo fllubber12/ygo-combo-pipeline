@@ -18,7 +18,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Dict
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "ygo_combo"))
 
 if not os.environ.get("YGOPRO_SCRIPTS_PATH"):
     os.environ["YGOPRO_SCRIPTS_PATH"] = "/Users/zacharyhartley/ygopro-scripts"

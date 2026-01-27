@@ -22,7 +22,7 @@ import argparse
 from pathlib import Path
 from typing import List, Dict
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "ygo_combo"))
 
 
 # =============================================================================

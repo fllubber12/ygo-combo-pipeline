@@ -21,7 +21,7 @@ All locked library cards verified:
 - Effects resolve with correct outcomes
 
 ### Combo Enumeration Engine - COMPLETE
-- Built `src/cffi/combo_enumeration.py` with full exhaustive enumeration
+- Built `src/ygo_combo/combo_enumeration.py` with full exhaustive enumeration
 - Forward replay approach (creates fresh duel for each path)
 - Handles all message types (IDLE, SELECT_CARD, SELECT_CHAIN, SELECT_PLACE, etc.)
 - Records terminal states with full action sequences
@@ -46,12 +46,12 @@ PASS Terminal Depth Distribution:
 ## Current State
 
 ### Files Created
-- `src/cffi/ocg_bindings.py` - CFFI bindings for ocgcore
-- `src/cffi/test_fiendsmith_duel.py` - Working duel with card loading
-- `src/cffi/test_full_combo.py` - Combo execution test
-- `src/cffi/verify_all_cards.py` - Card verification suite (26/26 passing)
-- `src/cffi/combo_enumeration.py` - **NEW** Exhaustive enumeration engine
-- `src/cffi/build/libygo.dylib` - Compiled engine (2.8MB)
+- `src/ygo_combo/ocg_bindings.py` - CFFI bindings for ocgcore
+- `src/ygo_combo/test_fiendsmith_duel.py` - Working duel with card loading
+- `src/ygo_combo/test_full_combo.py` - Combo execution test
+- `src/ygo_combo/verify_all_cards.py` - Card verification suite (26/26 passing)
+- `src/ygo_combo/combo_enumeration.py` - **NEW** Exhaustive enumeration engine
+- `src/ygo_combo/build/libygo.dylib` - Compiled engine (2.8MB)
 - `config/locked_library.json` - **NEW** Full card library with 26 cards
 - `docs/ARCHITECTURE_RESEARCH.md` - Full research findings
 - `docs/CFFI_PROTOTYPE_PLAN.md` - Build instructions
@@ -175,7 +175,7 @@ struct.pack("<i", -1)  # -1 to decline
 ## Running the Enumeration Engine
 
 ```bash
-cd src/cffi
+cd src/ygo_combo
 
 # Quick test (20 paths)
 python3 combo_enumeration.py --max-depth 12 --max-paths 20 -v

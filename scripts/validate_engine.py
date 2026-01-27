@@ -178,7 +178,7 @@ def test_6_engine_import() -> bool:
     print("\n=== TEST 6: Engine Import ===")
     try:
         # Try to import the engine modules
-        sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "cffi"))
+        sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "ygo_combo"))
 
         from combo_enumeration import EnumerationEngine
         from state_representation import BoardSignature

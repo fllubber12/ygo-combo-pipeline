@@ -117,13 +117,13 @@ def handle_select_sum(self, data):
 ### Step 1: Identify All Message Types in ocg_bindings.py
 
 ```bash
-grep -n "MSG_" src/cffi/ocg_bindings.py
+grep -n "MSG_" src/ygo_combo/ocg_bindings.py
 ```
 
 ### Step 2: Check Which Handlers Exist
 
 ```bash
-grep -n "def.*handle\|def.*process\|MSG_" src/cffi/combo_enumeration.py | head -50
+grep -n "def.*handle\|def.*process\|MSG_" src/ygo_combo/combo_enumeration.py | head -50
 ```
 
 ### Step 3: Run Enumeration with Message Logging
@@ -192,9 +192,9 @@ Run enumeration and log every message type encountered.
 
 | File | Changes |
 |------|---------|
-| `src/cffi/ocg_bindings.py` | Verify/add message constants |
-| `src/cffi/combo_enumeration.py` | Add message handlers |
-| `src/cffi/engine_interface.py` | May need parsing helpers |
+| `src/ygo_combo/ocg_bindings.py` | Verify/add message constants |
+| `src/ygo_combo/combo_enumeration.py` | Add message handlers |
+| `src/ygo_combo/engine_interface.py` | May need parsing helpers |
 
 ---
 
