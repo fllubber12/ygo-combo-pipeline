@@ -283,7 +283,12 @@ def build_select_unselect_card_response(index: int) -> Tuple[int, bytes]:
 def build_select_tribute_response(selected_indices: list) -> bytes:
     """Build response for MSG_SELECT_TRIBUTE.
 
-    Format: 1-byte count + 1-byte indices
+    Format per ygopro-core parse_response_cards (playerop.cpp:237-275):
+    - type (i32): 0 = u32 indices, 1 = u16 indices, 2 = u8 indices
+    - count (u32): number of selected cards
+    - indices: based on type (u32/u16/u8 each)
+
+    We use type 0 (u32 indices) for consistency with SELECT_CARD.
 
     Args:
         selected_indices: List of 0-indexed tribute card indices.
@@ -292,4 +297,7 @@ def build_select_tribute_response(selected_indices: list) -> bytes:
         Packed response bytes.
     """
     count = len(selected_indices)
-    return struct.pack('<B' + 'B' * count, count, *selected_indices)
+    data = struct.pack('<iI', 0, count)  # type=0, count
+    for idx in selected_indices:
+        data += struct.pack('<I', idx)  # u32 indices
+    return data
