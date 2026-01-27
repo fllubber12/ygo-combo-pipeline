@@ -208,8 +208,8 @@ def _enumerate_hand(hand: Tuple[int, ...]) -> ComboResult:
     _init_worker_engine()
 
     try:
-        # Import enumeration logic
-        from combo_enumeration import enumerate_from_hand
+        # Import enumeration logic (use absolute import for worker processes)
+        from src.ygo_combo.combo_enumeration import enumerate_from_hand
 
         # Run enumeration
         result = enumerate_from_hand(

@@ -748,7 +748,7 @@ class EnumerationEngine(MessageHandlerMixin):
 
 def enumerate_from_hand(
     hand: Tuple[int, ...],
-    deck: List[int],
+    deck: List[int] = None,
     max_depth: int = 25,
     max_paths: int = 0,
 ) -> Dict[str, Any]:
@@ -759,7 +759,7 @@ def enumerate_from_hand(
 
     Args:
         hand: Tuple of card passcodes for starting hand.
-        deck: Full deck list (for extra deck setup).
+        deck: Full deck list (optional, uses locked library if None).
         max_depth: Maximum search depth.
         max_paths: Maximum paths to explore (0 = unlimited).
 
@@ -770,27 +770,82 @@ def enumerate_from_hand(
             - paths_explored: Number of paths explored
             - max_depth_reached: Deepest point in search tree
     """
+    global MAX_DEPTH, MAX_PATHS
+
+    # Override global limits with function parameters
+    original_max_depth = MAX_DEPTH
+    original_max_paths = MAX_PATHS
+    MAX_DEPTH = max_depth
+    MAX_PATHS = max_paths if max_paths > 0 else 100000
+
     terminal_hashes: List[str] = []
     best_score = 0.0
     paths_explored = 0
     max_depth_reached = 0
 
-    # Create transposition table for this hand
-    tt = TranspositionTable(max_size=100_000)
-
     try:
-        # Placeholder: actual enumeration logic goes here
-        # For now, return empty results
-        #
-        # TODO: Implement full enumeration with specific hand setup:
-        # 1. Create duel with exact hand cards (not random draw)
-        # 2. Run DFS enumeration from that state
-        # 3. Collect terminal board hashes and scores
-        # 4. Return serializable results
-        pass
+        # Initialize card database if not already done
+        init_card_database()
+
+        # Load library and get deck lists
+        library = load_locked_library()
+        main_deck, extra_deck = get_deck_lists(library)
+
+        # Load the shared library
+        lib = load_library()
+        set_lib(lib)
+
+        # Create engine with library deck
+        engine = EnumerationEngine(
+            lib=lib,
+            main_deck=main_deck,
+            extra_deck=extra_deck,
+            verbose=False,
+            dedupe_boards=True,
+            dedupe_intermediate=True,
+        )
+
+        # Run enumeration from specific hand
+        terminals = engine.enumerate_from_hand(list(hand))
+
+        # Extract results
+        paths_explored = engine.paths_explored
+        max_depth_reached = engine.max_depth_seen
+
+        # Collect terminal hashes and find best score
+        for terminal in terminals:
+            if terminal.board_hash:
+                terminal_hashes.append(terminal.board_hash)
+
+            # Evaluate board quality if we have board state
+            if terminal.board_state:
+                try:
+                    # Build signature for evaluation
+                    player_data = terminal.board_state.get("player0", {})
+                    monsters = frozenset(m.get("code", 0) for m in player_data.get("monsters", []))
+                    sig = BoardSignature(
+                        monsters=monsters,
+                        spells=frozenset(),
+                        graveyard=frozenset(),
+                        hand=frozenset(),
+                        banished=frozenset(),
+                        extra_deck=frozenset(),
+                        equips=frozenset(),
+                    )
+                    eval_result = evaluate_board_quality(sig)
+                    score = eval_result.get("score", 0.0)
+                    if score > best_score:
+                        best_score = score
+                except Exception:
+                    pass
 
     except Exception as e:
         logger.warning(f"Enumeration error for hand {hand}: {e}")
+
+    finally:
+        # Restore global limits
+        MAX_DEPTH = original_max_depth
+        MAX_PATHS = original_max_paths
 
     return {
         "terminal_hashes": terminal_hashes,
