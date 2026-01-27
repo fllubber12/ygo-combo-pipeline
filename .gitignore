@@ -103,3 +103,4 @@ cards.cdb
 
 # Generated reports (regeneratable by running scripts)
 reports/
+.hypothesis/
