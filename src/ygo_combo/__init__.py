@@ -49,6 +49,15 @@ from .types import Action, TerminalState
 # Ranking
 from .ranking import ComboScore, ComboRanker, SortKey, rank_terminals
 
+# Sampling
+from .sampling import (
+    StratifiedSampler,
+    SamplingConfig,
+    SamplingResult,
+    HandComposition,
+    sample_hands,
+)
+
 __all__ = [
     # Bindings
     "ffi",
@@ -80,4 +89,10 @@ __all__ = [
     "ComboRanker",
     "SortKey",
     "rank_terminals",
+    # Sampling
+    "StratifiedSampler",
+    "SamplingConfig",
+    "SamplingResult",
+    "HandComposition",
+    "sample_hands",
 ]
