@@ -389,14 +389,18 @@ def _parse_sum_card_18byte(data: bytes, offset: int, index: int) -> Tuple[dict, 
 
     # If sum_param is 0 or invalid, try to look up from verified cards
     if level == 0 or level > 12:
-        validator = _get_card_validator()
-        verified = validator.get_card(code)
-        if verified and 'level' in verified:
-            level = verified['level']
-        elif verified and 'rank' in verified:
-            level = verified['rank']  # For Xyz monsters
-        elif verified and 'link_rating' in verified:
-            level = verified['link_rating']  # For Link monsters
+        try:
+            validator = _get_card_validator()
+            verified = validator.get_card(code)
+            if verified and 'level' in verified:
+                level = verified['level']
+            elif verified and 'rank' in verified:
+                level = verified['rank']  # For Xyz monsters
+            elif verified and 'link_rating' in verified:
+                level = verified['link_rating']  # For Link monsters
+        except FileNotFoundError:
+            # verified_cards.json not found - use sum_param as-is
+            pass
 
     card = {
         'index': index,
@@ -446,14 +450,18 @@ def _parse_sum_card_16byte(data: bytes, offset: int, index: int) -> Tuple[dict, 
 
     # If sum_param is 0 or invalid, try to look up from verified cards
     if level == 0 or level > 12:
-        validator = _get_card_validator()
-        verified = validator.get_card(code)
-        if verified and 'level' in verified:
-            level = verified['level']
-        elif verified and 'rank' in verified:
-            level = verified['rank']
-        elif verified and 'link_rating' in verified:
-            level = verified['link_rating']
+        try:
+            validator = _get_card_validator()
+            verified = validator.get_card(code)
+            if verified and 'level' in verified:
+                level = verified['level']
+            elif verified and 'rank' in verified:
+                level = verified['rank']
+            elif verified and 'link_rating' in verified:
+                level = verified['link_rating']
+        except FileNotFoundError:
+            # verified_cards.json not found - use sum_param as-is
+            pass
 
     card = {
         'index': index,
@@ -520,17 +528,37 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
         offset += 3  # Skip padding bytes to align cards at offset 15
 
         # Cards (all are can-select in observed data)
-        # Use 18-byte card entries; if message is truncated, parse only complete cards
+        # Auto-detect card size based on message length and card count
+        # Possible sizes: 11, 16, or 18 bytes per card
         header_size = 15
-        card_size = 18
         available_bytes = len(raw_data) - header_size
+
+        # Determine card size from available bytes and expected count
+        # NOTE: This ygopro-core build consistently uses 16-byte card format
+        # (without the 4-byte position field). The engine may pad messages to
+        # 18 bytes but sum_param is always at offset 10, not 14. So we always
+        # use 16-byte parsing and handle extra padding gracefully.
+        if can_count > 0:
+            bytes_per_card = available_bytes // can_count
+            # Always use 16-byte parser for this engine (sum_param at offset 10)
+            # Only fall back to 11-byte if there's truly not enough data
+            if bytes_per_card >= 16:
+                card_size = 16
+                parse_func = _parse_sum_card_16byte
+            else:
+                card_size = 11
+                parse_func = _parse_sum_card_11byte
+        else:
+            card_size = 16  # Default
+            parse_func = _parse_sum_card_16byte
+
         max_complete_cards = available_bytes // card_size
 
         must_select = []
         can_select = []
         cards_to_parse = min(can_count, max_complete_cards)
         for i in range(cards_to_parse):
-            card, offset = _parse_sum_card_18byte(raw_data, offset, i)
+            card, offset = parse_func(raw_data, offset, i)
             can_select.append(card)
 
         # Note: can_count in result reflects header value for selection logic

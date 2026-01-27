@@ -61,6 +61,10 @@ class TranspositionTable:
         self.max_size = max_size
         self.hits = 0
         self.misses = 0
+        self.evictions = 0
+        self.evicted_entries = 0
+        self.stores = 0
+        self.overwrites = 0
 
     def lookup(self, state_hash: Union[int, str]) -> Optional[TranspositionEntry]:
         """
@@ -89,6 +93,9 @@ class TranspositionTable:
             state_hash: Zobrist hash (int) or MD5 hash (str) of the state.
             entry: TranspositionEntry to store.
         """
+        self.stores += 1
+        if state_hash in self.table:
+            self.overwrites += 1
         if len(self.table) >= self.max_size:
             self._evict()
         self.table[state_hash] = entry
@@ -107,6 +114,8 @@ class TranspositionTable:
         if not self.table:
             return
 
+        self.evictions += 1
+
         # Sort by (creation_depth, visit_count) ascending
         # Remove shallow/low-visit entries first
         sorted_entries = sorted(
@@ -116,6 +125,7 @@ class TranspositionTable:
 
         # Remove bottom 10%
         to_remove = max(1, len(sorted_entries) // 10)
+        self.evicted_entries += to_remove
         for key, _ in sorted_entries[:to_remove]:
             del self.table[key]
 
@@ -124,33 +134,49 @@ class TranspositionTable:
         self.table.clear()
         self.hits = 0
         self.misses = 0
+        self.evictions = 0
+        self.evicted_entries = 0
+        self.stores = 0
+        self.overwrites = 0
 
     def stats(self) -> dict:
         """
         Return cache statistics.
 
         Returns:
-            Dictionary with size, hits, misses, hit_rate, and depth distribution.
+            Dictionary with size, hits, misses, hit_rate, depth distribution,
+            stores, overwrites, evictions, and evicted_entries.
         """
         total = self.hits + self.misses
-        
+
         # Calculate depth distribution
         depth_counts: Dict[int, int] = {}
         for entry in self.table.values():
             depth = entry.creation_depth
             depth_counts[depth] = depth_counts.get(depth, 0) + 1
-        
+
+        # Calculate visit count stats
+        visit_counts = [e.visit_count for e in self.table.values()] if self.table else [0]
+        max_visits = max(visit_counts) if visit_counts else 0
+        avg_visits = sum(visit_counts) / len(visit_counts) if visit_counts else 0.0
+
         return {
             "size": len(self.table),
             "max_size": self.max_size,
             "hits": self.hits,
             "misses": self.misses,
             "hit_rate": self.hits / total if total > 0 else 0.0,
+            "stores": self.stores,
+            "overwrites": self.overwrites,
+            "evictions": self.evictions,
+            "evicted_entries": self.evicted_entries,
             "depth_distribution": depth_counts,
             "avg_depth": (
                 sum(d * c for d, c in depth_counts.items()) / len(self.table)
                 if self.table else 0.0
             ),
+            "max_visits": max_visits,
+            "avg_visits": avg_visits,
         }
 
     def __len__(self) -> int:

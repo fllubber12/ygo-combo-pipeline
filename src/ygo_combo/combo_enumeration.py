@@ -386,6 +386,7 @@ class Action:
     description: str
     card_code: int = None
     card_name: str = None
+    context_hash: int = None  # For SELECT_CARD: hash of the prompt context
 
     def to_dict(self):
         d = asdict(self)
@@ -785,6 +786,11 @@ class EnumerationEngine:
         self.duplicate_boards_skipped = 0  # Counter for stats
         self.intermediate_states_pruned = 0  # Counter for intermediate pruning
 
+        # Failed choice tracking for SELECT_SUM_CANCEL backtracking
+        # Maps (context_hash) -> set of failed card codes
+        # Context hash identifies the SELECT_CARD prompt (based on available cards)
+        self.failed_at_context: Dict[int, set] = {}
+
         # Custom starting hand (None = use default)
         self._starting_hand = None
 
@@ -799,6 +805,35 @@ class EnumerationEngine:
         if self.verbose:
             indent = "  " * depth
             print(f"{indent}{msg}")
+
+    def _compute_select_card_context(self, select_data: dict) -> int:
+        """Compute a context hash for a SELECT_CARD prompt.
+
+        The context identifies this specific decision point based on:
+        - Which cards are available to select
+        - The selection constraints (min/max)
+
+        This allows us to track which cards have failed at THIS decision point,
+        even if we reach it via different paths.
+        """
+        cards = select_data.get("cards", [])
+        codes = tuple(sorted(card.get("code", 0) for card in cards))
+        min_sel = select_data.get("min", 1)
+        max_sel = select_data.get("max", 1)
+        return hash((codes, min_sel, max_sel))
+
+    def _mark_card_failed_at_context(self, context_hash: int, card_code: int):
+        """Mark a card as failed at a specific SELECT_CARD context.
+
+        Called when a SELECT_CARD choice leads to SELECT_SUM_CANCEL.
+        """
+        if context_hash not in self.failed_at_context:
+            self.failed_at_context[context_hash] = set()
+        self.failed_at_context[context_hash].add(card_code)
+
+    def _get_failed_cards_at_context(self, context_hash: int) -> set:
+        """Get the set of cards that have failed at this context."""
+        return self.failed_at_context.get(context_hash, set())
 
     def enumerate_all(self):
         """Main entry point - enumerate all paths from starting state."""
@@ -1232,7 +1267,10 @@ class EnumerationEngine:
 
         self.log(f"SELECT_CARD: {len(cards)} cards, select {min_sel}-{max_sel}", depth)
 
-        # Find cards that led to SELECT_SUM_CANCEL in this path
+        # Compute context hash for this SELECT_CARD prompt
+        context_hash = self._compute_select_card_context(select_data)
+
+        # Method 1: Find cards that led to SELECT_SUM_CANCEL in this path
         # Pattern: SELECT_CARD(code X) followed by SELECT_SUM_CANCEL
         failed_codes = set()
         for i in range(len(action_history) - 1):
@@ -1242,6 +1280,12 @@ class EnumerationEngine:
                 next_action.action_type == "SELECT_SUM_CANCEL" and
                 action.card_code is not None):
                 failed_codes.add(action.card_code)
+
+        # Method 2: Get context-based failed codes (persistent across paths)
+        # NOTE: This is disabled for now as it can be too aggressive
+        # The action_history based tracking (Method 1) is more precise
+        # context_failed = self._get_failed_cards_at_context(context_hash)
+        # failed_codes.update(context_failed)
 
         if failed_codes:
             failed_names = [get_card_name(c) for c in failed_codes]
@@ -1289,6 +1333,7 @@ class EnumerationEngine:
                     description=f"Select {name}",
                     card_code=code,
                     card_name=name,
+                    context_hash=context_hash,
                 )
 
                 self.log(f"Branch: Select {name} (idx {i}, {len(unique_cards)} unique)", depth)
@@ -1524,6 +1569,22 @@ class EnumerationEngine:
 
         # Branch 1: Cancel the selection (valid for optional effects)
         # Many Fiendsmith effects are optional, so canceling is a valid path
+        #
+        # CRITICAL: Mark the preceding SELECT_CARD choice as failed at its context
+        # This prevents infinite loops when the engine re-prompts the same SELECT_CARD
+        last_select_card = None
+        for action in reversed(action_history):
+            if action.action_type == "SELECT_CARD" and action.card_code is not None:
+                last_select_card = action
+                break
+
+        if last_select_card and last_select_card.context_hash is not None:
+            self._mark_card_failed_at_context(
+                last_select_card.context_hash,
+                last_select_card.card_code
+            )
+            self.log(f"  Marked {last_select_card.card_name} as failed at context {last_select_card.context_hash}", depth)
+
         cancel_response = struct.pack("<i", -1)
         cancel_action = Action(
             action_type="SELECT_SUM_CANCEL",
@@ -1579,16 +1640,23 @@ class EnumerationEngine:
             seen_code_combos.add(combo_codes)
             
             # Build response for MSG_SELECT_SUM
-            # Try format: must_count (always 0) + select_count + indices
-            # Or just count + indices as u32s
+            # Response format (from ygopro-core playerop.cpp parse_response_cards):
+            # - int32_t type (0 = u32 indices, 1 = u16 indices, 3 = bitfield)
+            # - For type 0: uint32_t count + uint32_t indices[]
             full_indices = list(combo_indices)
 
-            # Format: int32(-1) to cancel, or int32(0) + count + indices
-            # Try simpler: just u32 indices
-            response = struct.pack("<I", len(full_indices))
+            # Format: i32(type=0) + u32(count) + u32[] indices
+            count = len(full_indices)
+            response = struct.pack('<iI', 0, count)
             for idx in full_indices:
-                response += struct.pack("<I", idx)
-            
+                response += struct.pack('<I', idx)
+
+            # Debug: show exact response bytes
+            if self.verbose:
+                hex_resp = response.hex()
+                self.log(f"  SELECT_SUM response ({len(response)} bytes): {hex_resp}", depth)
+                self.log(f"  Indices: {full_indices} (can_select has {len(can_select)} cards)", depth)
+
             # Build description
             card_names = [get_card_name(can_select[i].get("code", 0)) for i in combo_indices]
             total_sum = sum(can_select[i].get("value", 0) for i in combo_indices)
@@ -1608,6 +1676,7 @@ class EnumerationEngine:
         # If no valid combinations found and cancel didn't work, try index 0 as fallback
         if not valid_combos and can_select:
             self.log(f"  No valid combos, trying fallback (index 0)", depth)
+            # Format: i32(type=0) + u32(count) + u32 index (same as valid selections)
             fallback_response = struct.pack("<iII", 0, 1, 0)
             fallback_action = Action(
                 action_type="SELECT_SUM_FALLBACK",
