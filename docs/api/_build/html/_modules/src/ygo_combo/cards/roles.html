@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.cards.roles &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.cards.roles</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.cards.roles</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Card role classification for move ordering and pruning.</span>
+
+<span class="sd">Classifies cards into roles (Starter, Extender, Payoff, etc.) to enable:</span>
+<span class="sd">1. Better move ordering (starters first, then extenders, then payoffs)</span>
+<span class="sd">2. Pruning (skip extenders if no starter has been activated)</span>
+<span class="sd">3. Combo pattern recognition</span>
+
+<span class="sd">Roles are determined by card effects and deck context. This module supports</span>
+<span class="sd">both heuristic classification and manual overrides via config.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    from card_roles import CardRoleClassifier, CardRole</span>
+
+<span class="sd">    classifier = CardRoleClassifier.from_config(&quot;config/card_roles.json&quot;)</span>
+<span class="sd">    role = classifier.get_role(60764609)  # Engraver -&gt; STARTER</span>
+
+<span class="sd">    # Prioritize actions</span>
+<span class="sd">    ordered = classifier.prioritize_actions(actions)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">auto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+
+<div class="viewcode-block" id="CardRole">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRole">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardRole</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Card role classification for combo sequencing.</span>
+
+<span class="sd">    Lower values = higher priority in move ordering.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">STARTER</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c1"># Initiates combos (1-card starters, self-activating)</span>
+    <span class="n">EXTENDER</span> <span class="o">=</span> <span class="mi">2</span>     <span class="c1"># Continues combos (requires setup, adds bodies)</span>
+    <span class="n">PAYOFF</span> <span class="o">=</span> <span class="mi">3</span>       <span class="c1"># End goals (boss monsters, negates, interaction)</span>
+    <span class="n">UTILITY</span> <span class="o">=</span> <span class="mi">4</span>      <span class="c1"># Support cards (hand traps, removal, protection)</span>
+    <span class="n">GARNET</span> <span class="o">=</span> <span class="mi">5</span>       <span class="c1"># Bricks (must be in deck, not hand)</span>
+    <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="mi">99</span>     <span class="c1"># Not yet classified</span></div>
+
+
+
+<div class="viewcode-block" id="CardClassification">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardClassification">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardClassification</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Complete classification info for a single card.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        passcode: Card passcode (unique identifier)</span>
+<span class="sd">        role: Primary role classification</span>
+<span class="sd">        tags: Additional descriptive tags (e.g., &quot;tuner&quot;, &quot;link_material&quot;)</span>
+<span class="sd">        priority_boost: Adjustment to default role priority (negative = higher)</span>
+<span class="sd">        notes: Human-readable notes about the card</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">passcode</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">role</span><span class="p">:</span> <span class="n">CardRole</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">)</span>
+    <span class="n">priority_boost</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<div class="viewcode-block" id="CardClassification.effective_priority">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardClassification.effective_priority">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">effective_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get effective priority (role value + boost).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">priority_boost</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ActionWithRole">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.ActionWithRole">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ActionWithRole</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Action paired with its card&#39;s role for sorting.</span>
+
+<span class="sd">    Used internally by prioritize_actions().</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">action</span><span class="p">:</span> <span class="nb">dict</span>  <span class="c1"># Original action dict from idle_data</span>
+    <span class="n">role</span><span class="p">:</span> <span class="n">CardRole</span>
+    <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">card_code</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+
+<div class="viewcode-block" id="CardRoleClassifier">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardRoleClassifier</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Classifies cards into roles for move ordering.</span>
+
+<span class="sd">    Supports:</span>
+<span class="sd">    - Manual classification via config file</span>
+<span class="sd">    - Heuristic classification based on card properties</span>
+<span class="sd">    - Runtime classification updates</span>
+
+<span class="sd">    Thread-safe after initialization (read-only lookups).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CardRoleClassifier.__init__">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize empty classifier.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">CardClassification</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_role_sets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">CardRole</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">role</span><span class="p">:</span> <span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">CardRole</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.from_config">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.from_config">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CardRoleClassifier&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load classifier from JSON config file.</span>
+
+<span class="sd">        Config format:</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;cards&quot;: {</span>
+<span class="sd">                &quot;60764609&quot;: {</span>
+<span class="sd">                    &quot;role&quot;: &quot;STARTER&quot;,</span>
+<span class="sd">                    &quot;tags&quot;: [&quot;fiendsmith&quot;, &quot;hand_activatable&quot;],</span>
+<span class="sd">                    &quot;priority_boost&quot;: 0,</span>
+<span class="sd">                    &quot;notes&quot;: &quot;Fiendsmith Engraver - 1-card starter&quot;</span>
+<span class="sd">                },</span>
+<span class="sd">                ...</span>
+<span class="sd">            },</span>
+<span class="sd">            &quot;default_role&quot;: &quot;UNKNOWN&quot;</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">classifier</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">classifier</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">passcode_str</span><span class="p">,</span> <span class="n">card_data</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cards&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">passcode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">passcode_str</span><span class="p">)</span>
+            <span class="n">role_str</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;UNKNOWN&quot;</span><span class="p">)</span>
+            <span class="n">role</span> <span class="o">=</span> <span class="n">CardRole</span><span class="p">[</span><span class="n">role_str</span><span class="p">]</span> <span class="k">if</span> <span class="n">role_str</span> <span class="ow">in</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">__members__</span> <span class="k">else</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">UNKNOWN</span>
+
+            <span class="n">classification</span> <span class="o">=</span> <span class="n">CardClassification</span><span class="p">(</span>
+                <span class="n">passcode</span><span class="o">=</span><span class="n">passcode</span><span class="p">,</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tags&quot;</span><span class="p">,</span> <span class="p">[])),</span>
+                <span class="n">priority_boost</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;priority_boost&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">notes</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;notes&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">classifier</span><span class="o">.</span><span class="n">add_classification</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">classifier</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.from_locked_library">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.from_locked_library">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_locked_library</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">library_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CardRoleClassifier&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create classifier from locked library with heuristic classification.</span>
+
+<span class="sd">        Uses card properties from locked_library.json to guess roles:</span>
+<span class="sd">        - Cards with &quot;hand&quot; activation -&gt; likely STARTER</span>
+<span class="sd">        - Extra deck monsters -&gt; likely PAYOFF or EXTENDER</span>
+<span class="sd">        - High-level main deck monsters -&gt; likely GARNET</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">classifier</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">classifier</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">library_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">library</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">passcode_str</span><span class="p">,</span> <span class="n">card_data</span> <span class="ow">in</span> <span class="n">library</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cards&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">passcode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">passcode_str</span><span class="p">)</span>
+            <span class="n">role</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">_heuristic_classify</span><span class="p">(</span><span class="n">card_data</span><span class="p">)</span>
+
+            <span class="n">classification</span> <span class="o">=</span> <span class="n">CardClassification</span><span class="p">(</span>
+                <span class="n">passcode</span><span class="o">=</span><span class="n">passcode</span><span class="p">,</span>
+                <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(),</span>
+                <span class="n">notes</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Heuristic: </span><span class="si">{</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">classifier</span><span class="o">.</span><span class="n">add_classification</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">classifier</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_heuristic_classify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CardRole</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Heuristic role classification based on card properties.</span>
+
+<span class="sd">        This is a best-effort guess; manual config overrides are preferred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_extra</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_extra_deck&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">card_type</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="c1"># Extra deck monsters</span>
+        <span class="k">if</span> <span class="n">is_extra</span><span class="p">:</span>
+            <span class="c1"># Link monsters with high link rating -&gt; PAYOFF</span>
+            <span class="n">link_rating</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;link_rating&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">link_rating</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span>
+            <span class="c1"># Lower link monsters -&gt; EXTENDER (stepping stones)</span>
+            <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">EXTENDER</span>
+
+        <span class="c1"># Main deck analysis</span>
+        <span class="c1"># High-level monsters that can&#39;t be normal summoned -&gt; GARNET</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="mi">5</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_special_summon_self</span><span class="p">(</span><span class="n">card_data</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">GARNET</span>
+
+        <span class="c1"># Fiendsmith cards are mostly starters</span>
+        <span class="k">if</span> <span class="s2">&quot;fiendsmith&quot;</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;engraver&quot;</span> <span class="ow">in</span> <span class="n">name</span> <span class="ow">or</span> <span class="s2">&quot;sequence&quot;</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">STARTER</span>
+            <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">EXTENDER</span>
+
+        <span class="c1"># Default: UNKNOWN (needs manual classification)</span>
+        <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">UNKNOWN</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_can_special_summon_self</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if card can special summon itself (heuristic).&quot;&quot;&quot;</span>
+        <span class="c1"># This would need effect text parsing for accuracy</span>
+        <span class="c1"># For now, assume extra deck monsters can, main deck high-levels can&#39;t</span>
+        <span class="k">return</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_extra_deck&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CardRoleClassifier.add_classification">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.add_classification">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">classification</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add or update a card classification.&quot;&quot;&quot;</span>
+        <span class="n">passcode</span> <span class="o">=</span> <span class="n">classification</span><span class="o">.</span><span class="n">passcode</span>
+
+        <span class="c1"># Remove from old role set if exists</span>
+        <span class="k">if</span> <span class="n">passcode</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="p">:</span>
+            <span class="n">old_role</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="p">[</span><span class="n">passcode</span><span class="p">]</span><span class="o">.</span><span class="n">role</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_role_sets</span><span class="p">[</span><span class="n">old_role</span><span class="p">]</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">passcode</span><span class="p">)</span>
+
+        <span class="c1"># Add to new role set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="p">[</span><span class="n">passcode</span><span class="p">]</span> <span class="o">=</span> <span class="n">classification</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_role_sets</span><span class="p">[</span><span class="n">classification</span><span class="o">.</span><span class="n">role</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">passcode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.get_role">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.get_role">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">passcode</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CardRole</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get role for a card (UNKNOWN if not classified).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">passcode</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="p">[</span><span class="n">passcode</span><span class="p">]</span><span class="o">.</span><span class="n">role</span>
+        <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">UNKNOWN</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.get_classification">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.get_classification">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">passcode</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CardClassification</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get full classification for a card.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">passcode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.get_priority">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.get_priority">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">passcode</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get effective priority for a card (lower = higher priority).&quot;&quot;&quot;</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">passcode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">classification</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">classification</span><span class="o">.</span><span class="n">effective_priority</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="o">.</span><span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.get_cards_by_role">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.get_cards_by_role">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cards_by_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="n">CardRole</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all passcodes with a given role.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_role_sets</span><span class="p">[</span><span class="n">role</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.prioritize_actions">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_actions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prioritize_actions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+        <span class="n">code_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sort actions by card role priority.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            actions: List of action dicts (from idle_data parsing)</span>
+<span class="sd">            code_key: Key name for card passcode in action dict</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Actions sorted by priority (starters first, then extenders, etc.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_sort_key</span><span class="p">(</span><span class="n">action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+            <span class="n">code</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">code_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_priority</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="c1"># Secondary sort by passcode for determinism</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">actions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">get_sort_key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.prioritize_idle_actions">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_idle_actions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prioritize_idle_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idle_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sort all action lists in idle_data by card role priority.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idle_data: Parsed MSG_IDLE data with activatable, spsummon, etc.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            New idle_data dict with sorted action lists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">idle_data</span><span class="p">)</span>
+
+        <span class="c1"># Sort each action list</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;activatable&quot;</span><span class="p">,</span> <span class="s2">&quot;spsummon&quot;</span><span class="p">,</span> <span class="s2">&quot;summonable&quot;</span><span class="p">,</span> <span class="s2">&quot;mset&quot;</span><span class="p">,</span> <span class="s2">&quot;sset&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prioritize_actions</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.should_prune_extenders">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.should_prune_extenders">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_prune_extenders</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">actions_taken</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+        <span class="n">code_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if extender actions should be pruned.</span>
+
+<span class="sd">        Heuristic: If no starter has been activated yet, extenders are</span>
+<span class="sd">        unlikely to lead to good boards. This enables early pruning.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            actions_taken: List of actions already taken this path</span>
+<span class="sd">            code_key: Key name for card passcode in action dict</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if extenders should be skipped (no starter activated)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">starters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_role_sets</span><span class="p">[</span><span class="n">CardRole</span><span class="o">.</span><span class="n">STARTER</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions_taken</span><span class="p">:</span>
+            <span class="n">code</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">code_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">code</span> <span class="ow">in</span> <span class="n">starters</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Starter found, don&#39;t prune</span>
+
+        <span class="c1"># No starter activated -&gt; prune extenders</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.filter_by_role">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.filter_by_role">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">filter_by_role</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+        <span class="n">allowed_roles</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">CardRole</span><span class="p">],</span>
+        <span class="n">code_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;code&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter actions to only include cards with allowed roles.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            actions: List of action dicts</span>
+<span class="sd">            allowed_roles: Set of CardRole values to allow</span>
+<span class="sd">            code_key: Key name for card passcode in action dict</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Filtered list of actions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="n">code</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">code_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">role</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_role</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">allowed_roles</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.stats">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.stats">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return classification statistics.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;total_classified&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="p">),</span>
+            <span class="s2">&quot;by_role&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">role</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">codes</span><span class="p">)</span> <span class="k">for</span> <span class="n">role</span><span class="p">,</span> <span class="n">codes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_role_sets</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="s2">&quot;unknown_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_role_sets</span><span class="p">[</span><span class="n">CardRole</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">]),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.to_config">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.to_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export classifications to config format.&quot;&quot;&quot;</span>
+        <span class="n">cards</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">passcode</span><span class="p">,</span> <span class="n">classification</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifications</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">cards</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">passcode</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="n">classification</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">tags</span><span class="p">),</span>
+                <span class="s2">&quot;priority_boost&quot;</span><span class="p">:</span> <span class="n">classification</span><span class="o">.</span><span class="n">priority_boost</span><span class="p">,</span>
+                <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="n">classification</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;cards&quot;</span><span class="p">:</span> <span class="n">cards</span><span class="p">,</span> <span class="s2">&quot;default_role&quot;</span><span class="p">:</span> <span class="s2">&quot;UNKNOWN&quot;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CardRoleClassifier.save_config">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.CardRoleClassifier.save_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save classifications to JSON config file.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_config</span><span class="p">(),</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># FIENDSMITH LIBRARY CLASSIFICATIONS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="get_fiendsmith_classifications">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.get_fiendsmith_classifications">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_fiendsmith_classifications</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">CardClassification</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pre-defined classifications for the Fiendsmith library.</span>
+
+<span class="sd">    These are manually verified role assignments for optimal move ordering.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="c1"># === STARTERS (1-card combo initiators) ===</span>
+        <span class="mi">60764609</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">60764609</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">STARTER</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;fiendsmith&quot;</span><span class="p">,</span> <span class="s2">&quot;hand_activatable&quot;</span><span class="p">,</span> <span class="s2">&quot;sends_to_gy&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Fiendsmith Engraver - Primary 1-card starter&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">49867899</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">49867899</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">STARTER</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;fiendsmith&quot;</span><span class="p">,</span> <span class="s2">&quot;hand_activatable&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Fiendsmith Sequence - Secondary starter&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+
+        <span class="c1"># === EXTENDERS (require setup, add bodies) ===</span>
+        <span class="mi">2463794</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">2463794</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">EXTENDER</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;fiendsmith&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">,</span> <span class="s2">&quot;link1&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Fiendsmith&#39;s Requiem - Link-1 extender&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">35552986</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">35552986</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">EXTENDER</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;token&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Fiendsmith Token&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+
+        <span class="c1"># === PAYOFFS (end boards, interaction) ===</span>
+        <span class="mi">79559912</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">79559912</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;boss&quot;</span><span class="p">,</span> <span class="s2">&quot;xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;rank6&quot;</span><span class="p">,</span> <span class="s2">&quot;negate&quot;</span><span class="p">]),</span>
+            <span class="n">priority_boost</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># High priority payoff</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;D/D/D Wave High King Caesar - Negates SS effects&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">29301450</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">29301450</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;boss&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">,</span> <span class="s2">&quot;link2&quot;</span><span class="p">,</span> <span class="s2">&quot;banish&quot;</span><span class="p">]),</span>
+            <span class="n">priority_boost</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;S:P Little Knight - Banishes on response&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">4731783</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">4731783</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;boss&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">,</span> <span class="s2">&quot;interaction&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;A Bao A Qu - Destruction/banish&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">32991300</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">32991300</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;fiendsmith&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Fiendsmith&#39;s Agnumday&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">82135803</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">82135803</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;fiendsmith&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Fiendsmith&#39;s Desirae&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">11464648</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">11464648</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;fiendsmith&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Fiendsmith&#39;s Rextremende&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="mi">45409943</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">45409943</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;boss&quot;</span><span class="p">,</span> <span class="s2">&quot;link&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Luce the Dusk&#39;s Dark&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+
+        <span class="c1"># === GARNETS (bricks if drawn) ===</span>
+        <span class="mi">10000040</span><span class="p">:</span> <span class="n">CardClassification</span><span class="p">(</span>
+            <span class="n">passcode</span><span class="o">=</span><span class="mi">10000040</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">CardRole</span><span class="o">.</span><span class="n">GARNET</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">([</span><span class="s2">&quot;filler&quot;</span><span class="p">,</span> <span class="s2">&quot;brick&quot;</span><span class="p">]),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;Holactie - Dead card (filler)&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="create_fiendsmith_classifier">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.roles.create_fiendsmith_classifier">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_fiendsmith_classifier</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">CardRoleClassifier</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a classifier pre-loaded with Fiendsmith classifications.&quot;&quot;&quot;</span>
+    <span class="n">classifier</span> <span class="o">=</span> <span class="n">CardRoleClassifier</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">classification</span> <span class="ow">in</span> <span class="n">get_fiendsmith_classifications</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">classifier</span><span class="o">.</span><span class="n">add_classification</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">classifier</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># TESTS</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Card Role Classification Tests&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="c1"># Test 1: Create classifier with Fiendsmith cards</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">1. Fiendsmith classifier:&quot;</span><span class="p">)</span>
+    <span class="n">classifier</span> <span class="o">=</span> <span class="n">create_fiendsmith_classifier</span><span class="p">()</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">stats</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Total classified: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;total_classified&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   By role: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;by_role&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 2: Get role for known card</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">2. Role lookups:&quot;</span><span class="p">)</span>
+    <span class="n">engraver_role</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">get_role</span><span class="p">(</span><span class="mi">60764609</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Engraver (60764609): </span><span class="si">{</span><span class="n">engraver_role</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">engraver_role</span> <span class="o">==</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">STARTER</span>
+
+    <span class="n">caesar_role</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">get_role</span><span class="p">(</span><span class="mi">79559912</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Caesar (79559912): </span><span class="si">{</span><span class="n">caesar_role</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">caesar_role</span> <span class="o">==</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">PAYOFF</span>
+
+    <span class="n">unknown_role</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">get_role</span><span class="p">(</span><span class="mi">99999999</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Unknown (99999999): </span><span class="si">{</span><span class="n">unknown_role</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">unknown_role</span> <span class="o">==</span> <span class="n">CardRole</span><span class="o">.</span><span class="n">UNKNOWN</span>
+
+    <span class="c1"># Test 3: Priority ordering</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">3. Priority ordering:&quot;</span><span class="p">)</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">79559912</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Caesar&quot;</span><span class="p">},</span>      <span class="c1"># PAYOFF</span>
+        <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">60764609</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Engraver&quot;</span><span class="p">},</span>    <span class="c1"># STARTER</span>
+        <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">2463794</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Requiem&quot;</span><span class="p">},</span>      <span class="c1"># EXTENDER</span>
+        <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">10000040</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Holactie&quot;</span><span class="p">},</span>    <span class="c1"># GARNET</span>
+    <span class="p">]</span>
+
+    <span class="n">sorted_actions</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">prioritize_actions</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Before:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   After:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">sorted_actions</span><span class="p">])</span>
+
+    <span class="c1"># Verify order: STARTER &lt; EXTENDER &lt; PAYOFF &lt; GARNET</span>
+    <span class="k">assert</span> <span class="n">sorted_actions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Engraver&quot;</span>   <span class="c1"># STARTER (1)</span>
+    <span class="k">assert</span> <span class="n">sorted_actions</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Requiem&quot;</span>    <span class="c1"># EXTENDER (2)</span>
+
+    <span class="c1"># Test 4: Extender pruning</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">4. Extender pruning heuristic:&quot;</span><span class="p">)</span>
+    <span class="n">no_starter_actions</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">2463794</span><span class="p">}]</span>  <span class="c1"># Only extender</span>
+    <span class="n">should_prune</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">should_prune_extenders</span><span class="p">(</span><span class="n">no_starter_actions</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   No starter activated, prune extenders: </span><span class="si">{</span><span class="n">should_prune</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">should_prune</span> <span class="o">==</span> <span class="kc">True</span>
+
+    <span class="n">with_starter_actions</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">60764609</span><span class="p">}]</span>  <span class="c1"># Starter activated</span>
+    <span class="n">should_prune</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">should_prune_extenders</span><span class="p">(</span><span class="n">with_starter_actions</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Starter activated, prune extenders: </span><span class="si">{</span><span class="n">should_prune</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">should_prune</span> <span class="o">==</span> <span class="kc">False</span>
+
+    <span class="c1"># Test 5: Filter by role</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">5. Filter by role:&quot;</span><span class="p">)</span>
+    <span class="n">starters_only</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">filter_by_role</span><span class="p">(</span>
+        <span class="n">actions</span><span class="p">,</span>
+        <span class="n">allowed_roles</span><span class="o">=</span><span class="p">{</span><span class="n">CardRole</span><span class="o">.</span><span class="n">STARTER</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Starters only: </span><span class="si">{</span><span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">starters_only</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">starters_only</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="k">assert</span> <span class="n">starters_only</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Engraver&quot;</span>
+
+    <span class="c1"># Test 6: Config export/import</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">6. Config export:&quot;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">to_config</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Exported </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;cards&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> cards&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 7: Get cards by role</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">7. Cards by role:&quot;</span><span class="p">)</span>
+    <span class="n">starters</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">get_cards_by_role</span><span class="p">(</span><span class="n">CardRole</span><span class="o">.</span><span class="n">STARTER</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Starters: </span><span class="si">{</span><span class="n">starters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="mi">60764609</span> <span class="ow">in</span> <span class="n">starters</span>
+    <span class="k">assert</span> <span class="mi">49867899</span> <span class="ow">in</span> <span class="n">starters</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All tests passed!&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1377 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.encoding.ml &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.encoding.ml</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.encoding.ml</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ML-compatible state encoding for YuGiOh game states.</span>
+
+<span class="sd">Implements ygo-agent compatible feature encoding for future ML integration.</span>
+<span class="sd">Provides standardized representations suitable for neural network input.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    from ml_encoding import StateEncoder, ActionEncoder, EncodingConfig</span>
+
+<span class="sd">    config = EncodingConfig(max_cards=160, history_length=16)</span>
+<span class="sd">    encoder = StateEncoder(config)</span>
+
+<span class="sd">    # Encode a game state</span>
+<span class="sd">    features = encoder.encode_state(board_state)</span>
+
+<span class="sd">    # Encode actions for policy network</span>
+<span class="sd">    action_encoder = ActionEncoder(config)</span>
+<span class="sd">    action_features = action_encoder.encode_actions(idle_data)</span>
+
+<span class="sd">Architecture:</span>
+<span class="sd">    StateEncoder produces a fixed-size tensor representation:</span>
+<span class="sd">    - Card features: (max_cards × card_feature_dim)</span>
+<span class="sd">    - Global features: (global_feature_dim,)</span>
+<span class="sd">    - History features: (history_length × action_feature_dim)</span>
+
+<span class="sd">    This enables batch processing and neural network compatibility.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Set</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntEnum</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CONSTANTS</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="c1"># Card locations (ygo-agent compatible)</span>
+<div class="viewcode-block" id="CardLocation">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.CardLocation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardLocation</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card location encoding.&quot;&quot;&quot;</span>
+    <span class="n">DECK</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">HAND</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">MONSTER_ZONE</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">SPELL_ZONE</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">GRAVEYARD</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">BANISHED</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">EXTRA_DECK</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">FIELD_ZONE</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">PENDULUM_ZONE</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="mi">9</span></div>
+
+
+
+<span class="c1"># Card positions</span>
+<div class="viewcode-block" id="CardPosition">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.CardPosition">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardPosition</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card position encoding.&quot;&quot;&quot;</span>
+    <span class="n">FACE_UP_ATTACK</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">FACE_DOWN_ATTACK</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">FACE_UP_DEFENSE</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">FACE_DOWN_DEFENSE</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">FACE_UP</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">FACE_DOWN</span> <span class="o">=</span> <span class="mi">5</span></div>
+
+
+
+<span class="c1"># Card attributes</span>
+<div class="viewcode-block" id="CardAttribute">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.CardAttribute">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardAttribute</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card attribute encoding.&quot;&quot;&quot;</span>
+    <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">EARTH</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">WATER</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">FIRE</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">WIND</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">LIGHT</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">DARK</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">DIVINE</span> <span class="o">=</span> <span class="mi">7</span></div>
+
+
+
+<span class="c1"># Card types (simplified)</span>
+<div class="viewcode-block" id="CardType">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.CardType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardType</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Card type encoding.&quot;&quot;&quot;</span>
+    <span class="n">MONSTER</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">SPELL</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">TRAP</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">LINK</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">XYZ</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">SYNCHRO</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">FUSION</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">PENDULUM</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">RITUAL</span> <span class="o">=</span> <span class="mi">8</span></div>
+
+
+
+<span class="c1"># Action types</span>
+<div class="viewcode-block" id="ActionType">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ActionType</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Action type encoding.&quot;&quot;&quot;</span>
+    <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">NORMAL_SUMMON</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">SPECIAL_SUMMON</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ACTIVATE</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">SET</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">ATTACK</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">CHANGE_POSITION</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">TO_BATTLE_PHASE</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">TO_END_PHASE</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">CHAIN</span> <span class="o">=</span> <span class="mi">9</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CONFIGURATION</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="EncodingConfig">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.EncodingConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EncodingConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration for ML encoding.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        max_cards: Maximum cards to encode (padding for fixed-size tensor).</span>
+<span class="sd">        card_feature_dim: Features per card.</span>
+<span class="sd">        global_feature_dim: Global state features.</span>
+<span class="sd">        history_length: Number of past actions to encode.</span>
+<span class="sd">        action_feature_dim: Features per action.</span>
+<span class="sd">        normalize_stats: Normalize ATK/DEF/LP to [0,1] range.</span>
+<span class="sd">        use_embeddings: Use learned embeddings for card IDs (placeholder).</span>
+<span class="sd">        include_hidden: Include hidden information (deck order, etc.).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">max_cards</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">160</span>
+    <span class="n">card_feature_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">41</span>
+    <span class="n">global_feature_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">23</span>
+    <span class="n">history_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">action_feature_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">14</span>
+    <span class="n">normalize_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">use_embeddings</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">include_hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Normalization constants</span>
+    <span class="n">max_atk</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">max_def</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">max_lp</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8000</span>
+    <span class="n">max_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">max_counters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CARD FEATURES</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="CardFeatures">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.CardFeatures">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardFeatures</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ML features for a single card (41 features, ygo-agent compatible).</span>
+
+<span class="sd">    Encoding:</span>
+<span class="sd">        - card_id: Unique identifier (for embedding lookup)</span>
+<span class="sd">        - location: Current zone (categorical, 10 values)</span>
+<span class="sd">        - sequence: Position within zone (0-indexed)</span>
+<span class="sd">        - owner: Controlling player (0 or 1)</span>
+<span class="sd">        - position: ATK/DEF/face-down (categorical, 6 values)</span>
+<span class="sd">        - attribute: EARTH/WATER/etc (categorical, 8 values)</span>
+<span class="sd">        - card_type: Monster/Spell/Trap/etc (categorical, 9 values)</span>
+<span class="sd">        - level: Monster level/rank (1-12)</span>
+<span class="sd">        - atk: Attack points (normalized)</span>
+<span class="sd">        - defense: Defense points (normalized)</span>
+<span class="sd">        - link_rating: Link monster rating (0-8)</span>
+<span class="sd">        - counters: Spell counters etc</span>
+<span class="sd">        - negated: Effect negated (binary)</span>
+<span class="sd">        - targeted: Currently targeted (binary)</span>
+<span class="sd">        - can_attack: Can attack this turn (binary)</span>
+<span class="sd">        - attacked: Has attacked this turn (binary)</span>
+<span class="sd">        - summoned_this_turn: Was summoned this turn (binary)</span>
+<span class="sd">        - link_markers: 8-bit mask of link arrows</span>
+<span class="sd">        - pendulum_scale: Pendulum scale value (0-13)</span>
+<span class="sd">        - is_tuner: Tuner monster (binary)</span>
+<span class="sd">        - extra: Additional flags packed into remaining features</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">card_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">location</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">UNKNOWN</span>
+    <span class="n">sequence</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">owner</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">position</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_UP</span>
+    <span class="n">attribute</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CardAttribute</span><span class="o">.</span><span class="n">NONE</span>
+    <span class="n">card_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CardType</span><span class="o">.</span><span class="n">MONSTER</span>
+    <span class="n">level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">atk</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Normalized</span>
+    <span class="n">defense</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Normalized</span>
+    <span class="n">link_rating</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">counters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">negated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">targeted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">can_attack</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">attacked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">summoned_this_turn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">link_markers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 8-bit mask</span>
+    <span class="n">pendulum_scale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">is_tuner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># Packed extras</span>
+    <span class="n">is_effect</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">is_xyz_material</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">overlay_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CardFeatures.to_vector">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.CardFeatures.to_vector">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert to feature vector (41 floats).</span>
+
+<span class="sd">        Order matches ygo-agent for compatibility.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+
+        <span class="c1"># Normalize card_id to [0,1] range using hash</span>
+        <span class="n">card_id_norm</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">card_id</span> <span class="o">%</span> <span class="mi">100000000</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100000000.0</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">card_id_norm</span><span class="p">,</span>                    <span class="c1"># 0: Card ID (normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">/</span> <span class="mf">9.0</span><span class="p">,</span>             <span class="c1"># 1: Location (normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">/</span> <span class="mf">7.0</span><span class="p">,</span>             <span class="c1"># 2: Sequence (normalized)</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="p">),</span>               <span class="c1"># 3: Owner</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">/</span> <span class="mf">5.0</span><span class="p">,</span>             <span class="c1"># 4: Position (normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span> <span class="o">/</span> <span class="mf">7.0</span><span class="p">,</span>            <span class="c1"># 5: Attribute (normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">card_type</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">,</span>            <span class="c1"># 6: Card type (normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">max_level</span><span class="p">,</span>   <span class="c1"># 7: Level (normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">atk</span><span class="p">,</span>                        <span class="c1"># 8: ATK (pre-normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">defense</span><span class="p">,</span>                    <span class="c1"># 9: DEF (pre-normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">link_rating</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">,</span>          <span class="c1"># 10: Link rating (normalized)</span>
+            <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">counters</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">max_counters</span><span class="p">)</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">max_counters</span><span class="p">,</span>  <span class="c1"># 11</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">negated</span><span class="p">),</span>             <span class="c1"># 12: Negated</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targeted</span><span class="p">),</span>            <span class="c1"># 13: Targeted</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">can_attack</span><span class="p">),</span>          <span class="c1"># 14: Can attack</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attacked</span><span class="p">),</span>            <span class="c1"># 15: Attacked</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summoned_this_turn</span><span class="p">),</span>  <span class="c1"># 16: Summoned this turn</span>
+            <span class="c1"># Link markers as 8 separate bits (17-24)</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">link_markers</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pendulum_scale</span> <span class="o">/</span> <span class="mf">13.0</span><span class="p">,</span>      <span class="c1"># 25: Pendulum scale</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_tuner</span><span class="p">),</span>            <span class="c1"># 26: Is tuner</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_effect</span><span class="p">),</span>           <span class="c1"># 27: Is effect monster</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_xyz_material</span><span class="p">),</span>     <span class="c1"># 28: Is XYZ material</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overlay_count</span> <span class="o">/</span> <span class="mf">5.0</span><span class="p">,</span>        <span class="c1"># 29: Overlay count</span>
+            <span class="c1"># Reserved for future use (30-40)</span>
+            <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CardFeatures.from_card_data">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.CardFeatures.from_card_data">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_card_data</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">card_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CardFeatures&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create CardFeatures from raw card data dict.</span>
+
+<span class="sd">        Expected keys: code, location, position, owner, sequence, atk, def, etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+
+        <span class="c1"># Normalize ATK/DEF</span>
+        <span class="n">raw_atk</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;atk&quot;</span><span class="p">,</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;attack&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="ow">or</span> <span class="mi">0</span>
+        <span class="n">raw_def</span> <span class="o">=</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;def&quot;</span><span class="p">,</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;defense&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="ow">or</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">normalize_stats</span><span class="p">:</span>
+            <span class="n">norm_atk</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">raw_atk</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">max_atk</span><span class="p">)</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">max_atk</span>
+            <span class="n">norm_def</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">raw_def</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">max_def</span><span class="p">)</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">max_def</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">norm_atk</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">raw_atk</span><span class="p">)</span>
+            <span class="n">norm_def</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">raw_def</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">card_id</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">,</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">location</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">_parse_location</span><span class="p">(</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">sequence</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sequence&quot;</span><span class="p">,</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seq&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">owner</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;owner&quot;</span><span class="p">,</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;controller&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">position</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">_parse_position</span><span class="p">(</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">attribute</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;attribute&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">card_type</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">_parse_card_type</span><span class="p">(</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">level</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rank&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">atk</span><span class="o">=</span><span class="n">norm_atk</span><span class="p">,</span>
+            <span class="n">defense</span><span class="o">=</span><span class="n">norm_def</span><span class="p">,</span>
+            <span class="n">link_rating</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;link_rating&quot;</span><span class="p">,</span> <span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;link&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">counters</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;counters&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">negated</span><span class="o">=</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;negated&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="n">is_tuner</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">card_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x1000</span><span class="p">),</span>  <span class="c1"># TYPE_TUNER</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_location</span><span class="p">(</span><span class="n">loc</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ygopro-core location to CardLocation.&quot;&quot;&quot;</span>
+        <span class="c1"># ygopro-core location constants</span>
+        <span class="n">LOC_DECK</span> <span class="o">=</span> <span class="mh">0x01</span>
+        <span class="n">LOC_HAND</span> <span class="o">=</span> <span class="mh">0x02</span>
+        <span class="n">LOC_MZONE</span> <span class="o">=</span> <span class="mh">0x04</span>
+        <span class="n">LOC_SZONE</span> <span class="o">=</span> <span class="mh">0x08</span>
+        <span class="n">LOC_GRAVE</span> <span class="o">=</span> <span class="mh">0x10</span>
+        <span class="n">LOC_REMOVED</span> <span class="o">=</span> <span class="mh">0x20</span>
+        <span class="n">LOC_EXTRA</span> <span class="o">=</span> <span class="mh">0x40</span>
+        <span class="n">LOC_FZONE</span> <span class="o">=</span> <span class="mh">0x100</span>
+        <span class="n">LOC_PZONE</span> <span class="o">=</span> <span class="mh">0x200</span>
+
+        <span class="k">if</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_DECK</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">DECK</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_HAND</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">HAND</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_MZONE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">MONSTER_ZONE</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_SZONE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">SPELL_ZONE</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_GRAVE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">GRAVEYARD</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_REMOVED</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">BANISHED</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_EXTRA</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">EXTRA_DECK</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_FZONE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">FIELD_ZONE</span>
+        <span class="k">elif</span> <span class="n">loc</span> <span class="o">&amp;</span> <span class="n">LOC_PZONE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">PENDULUM_ZONE</span>
+        <span class="k">return</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">UNKNOWN</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_position</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ygopro-core position to CardPosition.&quot;&quot;&quot;</span>
+        <span class="n">POS_FACEUP_ATTACK</span> <span class="o">=</span> <span class="mh">0x1</span>
+        <span class="n">POS_FACEDOWN_ATTACK</span> <span class="o">=</span> <span class="mh">0x2</span>
+        <span class="n">POS_FACEUP_DEFENSE</span> <span class="o">=</span> <span class="mh">0x4</span>
+        <span class="n">POS_FACEDOWN_DEFENSE</span> <span class="o">=</span> <span class="mh">0x8</span>
+        <span class="n">POS_FACEUP</span> <span class="o">=</span> <span class="mh">0x5</span>
+        <span class="n">POS_FACEDOWN</span> <span class="o">=</span> <span class="mh">0xA</span>
+
+        <span class="k">if</span> <span class="n">pos</span> <span class="o">&amp;</span> <span class="n">POS_FACEUP_ATTACK</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_UP_ATTACK</span>
+        <span class="k">elif</span> <span class="n">pos</span> <span class="o">&amp;</span> <span class="n">POS_FACEDOWN_ATTACK</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_DOWN_ATTACK</span>
+        <span class="k">elif</span> <span class="n">pos</span> <span class="o">&amp;</span> <span class="n">POS_FACEUP_DEFENSE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_UP_DEFENSE</span>
+        <span class="k">elif</span> <span class="n">pos</span> <span class="o">&amp;</span> <span class="n">POS_FACEDOWN_DEFENSE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_DOWN_DEFENSE</span>
+        <span class="k">elif</span> <span class="n">pos</span> <span class="o">&amp;</span> <span class="n">POS_FACEUP</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_UP</span>
+        <span class="k">elif</span> <span class="n">pos</span> <span class="o">&amp;</span> <span class="n">POS_FACEDOWN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_DOWN</span>
+        <span class="k">return</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_UP</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_card_type</span><span class="p">(</span><span class="n">type_flags</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ygopro-core type flags to CardType.&quot;&quot;&quot;</span>
+        <span class="n">TYPE_MONSTER</span> <span class="o">=</span> <span class="mh">0x1</span>
+        <span class="n">TYPE_SPELL</span> <span class="o">=</span> <span class="mh">0x2</span>
+        <span class="n">TYPE_TRAP</span> <span class="o">=</span> <span class="mh">0x4</span>
+        <span class="n">TYPE_FUSION</span> <span class="o">=</span> <span class="mh">0x40</span>
+        <span class="n">TYPE_RITUAL</span> <span class="o">=</span> <span class="mh">0x80</span>
+        <span class="n">TYPE_SYNCHRO</span> <span class="o">=</span> <span class="mh">0x2000</span>
+        <span class="n">TYPE_XYZ</span> <span class="o">=</span> <span class="mh">0x800000</span>
+        <span class="n">TYPE_PENDULUM</span> <span class="o">=</span> <span class="mh">0x1000000</span>
+        <span class="n">TYPE_LINK</span> <span class="o">=</span> <span class="mh">0x4000000</span>
+
+        <span class="k">if</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_LINK</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">LINK</span>
+        <span class="k">elif</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_XYZ</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">XYZ</span>
+        <span class="k">elif</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_SYNCHRO</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">SYNCHRO</span>
+        <span class="k">elif</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_FUSION</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">FUSION</span>
+        <span class="k">elif</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_PENDULUM</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">PENDULUM</span>
+        <span class="k">elif</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_RITUAL</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">RITUAL</span>
+        <span class="k">elif</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_SPELL</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">SPELL</span>
+        <span class="k">elif</span> <span class="n">type_flags</span> <span class="o">&amp;</span> <span class="n">TYPE_TRAP</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">TRAP</span>
+        <span class="k">return</span> <span class="n">CardType</span><span class="o">.</span><span class="n">MONSTER</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># GLOBAL FEATURES</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="GlobalFeatures">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.GlobalFeatures">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GlobalFeatures</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ML features for global game state (23 features).</span>
+
+<span class="sd">    Includes turn count, phase, LP, card counts, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">turn_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">phase</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 0=Draw, 1=Standby, 2=Main1, 3=Battle, 4=Main2, 5=End</span>
+    <span class="n">current_player</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Player 0 stats</span>
+    <span class="n">lp_p0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Normalized</span>
+    <span class="n">hand_count_p0</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">deck_count_p0</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">35</span>
+    <span class="n">gy_count_p0</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">banished_count_p0</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">extra_count_p0</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span>
+
+    <span class="c1"># Player 1 stats</span>
+    <span class="n">lp_p1</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">hand_count_p1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">deck_count_p1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">35</span>
+    <span class="n">gy_count_p1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">banished_count_p1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">extra_count_p1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span>
+
+    <span class="c1"># Turn restrictions</span>
+    <span class="n">normal_summon_used</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">can_battle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Chain state</span>
+    <span class="n">chain_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Extra info</span>
+    <span class="n">turn_of_player</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Whose turn is it</span>
+    <span class="n">first_turn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Is this the first turn of the duel</span>
+
+<div class="viewcode-block" id="GlobalFeatures.to_vector">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.GlobalFeatures.to_vector">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to feature vector (23 floats).&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">turn_count</span> <span class="o">/</span> <span class="mf">20.0</span><span class="p">,</span>          <span class="c1"># 0: Turn count (normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phase</span> <span class="o">/</span> <span class="mf">5.0</span><span class="p">,</span>                <span class="c1"># 1: Phase (normalized)</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_player</span><span class="p">),</span>       <span class="c1"># 2: Current player</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lp_p0</span><span class="p">,</span>                       <span class="c1"># 3: LP P0 (pre-normalized)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hand_count_p0</span> <span class="o">/</span> <span class="mf">10.0</span><span class="p">,</span>        <span class="c1"># 4: Hand P0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deck_count_p0</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span>        <span class="c1"># 5: Deck P0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gy_count_p0</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">,</span>          <span class="c1"># 6: GY P0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">banished_count_p0</span> <span class="o">/</span> <span class="mf">20.0</span><span class="p">,</span>    <span class="c1"># 7: Banished P0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extra_count_p0</span> <span class="o">/</span> <span class="mf">15.0</span><span class="p">,</span>       <span class="c1"># 8: Extra P0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lp_p1</span><span class="p">,</span>                       <span class="c1"># 9: LP P1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hand_count_p1</span> <span class="o">/</span> <span class="mf">10.0</span><span class="p">,</span>        <span class="c1"># 10: Hand P1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deck_count_p1</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span>        <span class="c1"># 11: Deck P1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gy_count_p1</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">,</span>          <span class="c1"># 12: GY P1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">banished_count_p1</span> <span class="o">/</span> <span class="mf">20.0</span><span class="p">,</span>    <span class="c1"># 13: Banished P1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extra_count_p1</span> <span class="o">/</span> <span class="mf">15.0</span><span class="p">,</span>       <span class="c1"># 14: Extra P1</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normal_summon_used</span><span class="p">),</span>   <span class="c1"># 15: Normal summon used</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">can_battle</span><span class="p">),</span>           <span class="c1"># 16: Can battle</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chain_depth</span> <span class="o">/</span> <span class="mf">10.0</span><span class="p">,</span>          <span class="c1"># 17: Chain depth</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turn_of_player</span><span class="p">),</span>       <span class="c1"># 18: Turn of player</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_turn</span><span class="p">),</span>           <span class="c1"># 19: First turn</span>
+            <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span>                    <span class="c1"># 20-22: Reserved</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="GlobalFeatures.from_game_state">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.GlobalFeatures.from_game_state">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_game_state</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">game_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;GlobalFeatures&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create GlobalFeatures from game state dict.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+
+        <span class="c1"># Normalize LP</span>
+        <span class="n">lp_p0_raw</span> <span class="o">=</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lp&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">8000</span><span class="p">,</span> <span class="mi">8000</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lp&quot;</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lp_p0&quot;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)</span>
+        <span class="n">lp_p1_raw</span> <span class="o">=</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lp&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">8000</span><span class="p">,</span> <span class="mi">8000</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lp&quot;</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lp_p1&quot;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">normalize_stats</span><span class="p">:</span>
+            <span class="n">lp_p0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">lp_p0_raw</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">max_lp</span><span class="p">)</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">max_lp</span>
+            <span class="n">lp_p1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">lp_p1_raw</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">max_lp</span><span class="p">)</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">max_lp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lp_p0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lp_p0_raw</span><span class="p">)</span>
+            <span class="n">lp_p1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lp_p1_raw</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">turn_count</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;turn_count&quot;</span><span class="p">,</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;turn&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="n">phase</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;phase&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">current_player</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_player&quot;</span><span class="p">,</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tp&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">lp_p0</span><span class="o">=</span><span class="n">lp_p0</span><span class="p">,</span>
+            <span class="n">lp_p1</span><span class="o">=</span><span class="n">lp_p1</span><span class="p">,</span>
+            <span class="n">hand_count_p0</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hand_count_p0&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hand&quot;</span><span class="p">,</span> <span class="p">[]))),</span>
+            <span class="n">deck_count_p0</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;deck_count_p0&quot;</span><span class="p">,</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;deck_count&quot;</span><span class="p">,</span> <span class="mi">35</span><span class="p">)),</span>
+            <span class="n">gy_count_p0</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gy_count_p0&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;graveyard&quot;</span><span class="p">,</span> <span class="p">[]))),</span>
+            <span class="n">banished_count_p0</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;banished_count_p0&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;banished&quot;</span><span class="p">,</span> <span class="p">[]))),</span>
+            <span class="n">extra_count_p0</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_count_p0&quot;</span><span class="p">,</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_count&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)),</span>
+            <span class="n">normal_summon_used</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;normal_summon_used&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="n">can_battle</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;can_battle&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="n">chain_depth</span><span class="o">=</span><span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chain_depth&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># ACTION FEATURES</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="ActionFeatures">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionFeatures">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ActionFeatures</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ML features for a single action (14 features).</span>
+
+<span class="sd">    Used for action history encoding and policy network output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">action_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">NONE</span>
+    <span class="n">card_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">card_location</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">UNKNOWN</span>
+    <span class="n">target_location</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">UNKNOWN</span>
+    <span class="n">sequence</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">response_to</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Action being responded to</span>
+    <span class="n">chain_link</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">effect_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">position</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CardPosition</span><span class="o">.</span><span class="n">FACE_UP</span>
+    <span class="n">attack_target</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Computed features</span>
+    <span class="n">is_mandatory</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">is_quick</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">is_chain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">reserved</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<div class="viewcode-block" id="ActionFeatures.to_vector">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionFeatures.to_vector">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to feature vector (14 floats).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_type</span> <span class="o">/</span> <span class="mf">9.0</span><span class="p">,</span>           <span class="c1"># 0: Action type</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">card_id</span> <span class="o">%</span> <span class="mi">100000000</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100000000.0</span><span class="p">,</span>  <span class="c1"># 1: Card ID</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">card_location</span> <span class="o">/</span> <span class="mf">9.0</span><span class="p">,</span>         <span class="c1"># 2: Card location</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_location</span> <span class="o">/</span> <span class="mf">9.0</span><span class="p">,</span>       <span class="c1"># 3: Target location</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">/</span> <span class="mf">7.0</span><span class="p">,</span>              <span class="c1"># 4: Sequence</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">response_to</span> <span class="o">/</span> <span class="mf">9.0</span><span class="p">,</span>           <span class="c1"># 5: Response to</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chain_link</span> <span class="o">/</span> <span class="mf">10.0</span><span class="p">,</span>           <span class="c1"># 6: Chain link</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">effect_index</span> <span class="o">/</span> <span class="mf">5.0</span><span class="p">,</span>          <span class="c1"># 7: Effect index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">/</span> <span class="mf">5.0</span><span class="p">,</span>              <span class="c1"># 8: Position</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attack_target</span> <span class="o">/</span> <span class="mf">7.0</span><span class="p">,</span>         <span class="c1"># 9: Attack target</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_mandatory</span><span class="p">),</span>         <span class="c1"># 10: Is mandatory</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_quick</span><span class="p">),</span>             <span class="c1"># 11: Is quick</span>
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_chain</span><span class="p">),</span>             <span class="c1"># 12: Is chain</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reserved</span><span class="p">,</span>                    <span class="c1"># 13: Reserved</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="ActionFeatures.from_action_dict">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionFeatures.from_action_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_action_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;ActionFeatures&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create ActionFeatures from action dictionary.&quot;&quot;&quot;</span>
+        <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">NONE</span>
+
+        <span class="c1"># Determine action type from dict keys/values</span>
+        <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;summon&quot;</span> <span class="ow">or</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;summon&quot;</span><span class="p">):</span>
+            <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">NORMAL_SUMMON</span>
+        <span class="k">elif</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;spsummon&quot;</span> <span class="ow">or</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spsummon&quot;</span><span class="p">):</span>
+            <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">SPECIAL_SUMMON</span>
+        <span class="k">elif</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;activate&quot;</span> <span class="ow">or</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;activate&quot;</span><span class="p">):</span>
+            <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">ACTIVATE</span>
+        <span class="k">elif</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;set&quot;</span> <span class="ow">or</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;set&quot;</span><span class="p">):</span>
+            <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">SET</span>
+        <span class="k">elif</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;attack&quot;</span><span class="p">:</span>
+            <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">ATTACK</span>
+        <span class="k">elif</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;to_bp&quot;</span><span class="p">):</span>
+            <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">TO_BATTLE_PHASE</span>
+        <span class="k">elif</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;to_ep&quot;</span><span class="p">):</span>
+            <span class="n">action_type</span> <span class="o">=</span> <span class="n">ActionType</span><span class="o">.</span><span class="n">TO_END_PHASE</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">action_type</span><span class="o">=</span><span class="n">action_type</span><span class="p">,</span>
+            <span class="n">card_id</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;code&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;card_id&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">card_location</span><span class="o">=</span><span class="n">CardFeatures</span><span class="o">.</span><span class="n">_parse_location</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">sequence</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sequence&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seq&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">effect_index</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;effect_index&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;desc&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># STATE ENCODER</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="StateEncoder">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.StateEncoder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StateEncoder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encodes full game state to ML-compatible feature tensors.</span>
+
+<span class="sd">    Output shape: (max_cards × card_feature_dim) + (global_feature_dim)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="StateEncoder.__init__">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.StateEncoder.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize encoder with config.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="StateEncoder.encode_state">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.StateEncoder.encode_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">game_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">cards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode complete game state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            game_state: Global state dict with turn, phase, LP, etc.</span>
+<span class="sd">            cards: List of card data dicts.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict with &#39;card_features&#39; (flat list), &#39;global_features&#39; (list).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Encode global features</span>
+        <span class="n">global_features</span> <span class="o">=</span> <span class="n">GlobalFeatures</span><span class="o">.</span><span class="n">from_game_state</span><span class="p">(</span><span class="n">game_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">global_vec</span> <span class="o">=</span> <span class="n">global_features</span><span class="o">.</span><span class="n">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="c1"># Encode card features</span>
+        <span class="n">cards</span> <span class="o">=</span> <span class="n">cards</span> <span class="ow">or</span> <span class="n">game_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cards&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">card_vecs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">card_data</span> <span class="ow">in</span> <span class="n">cards</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_cards</span><span class="p">]:</span>
+            <span class="n">card_features</span> <span class="o">=</span> <span class="n">CardFeatures</span><span class="o">.</span><span class="n">from_card_data</span><span class="p">(</span><span class="n">card_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+            <span class="n">card_vecs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">card_features</span><span class="o">.</span><span class="n">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">))</span>
+
+        <span class="c1"># Pad to max_cards</span>
+        <span class="n">padding_needed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_cards</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">cards</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">padding_needed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">empty_card</span> <span class="o">=</span> <span class="n">CardFeatures</span><span class="p">()</span>
+            <span class="n">empty_vec</span> <span class="o">=</span> <span class="n">empty_card</span><span class="o">.</span><span class="n">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">padding_needed</span><span class="p">):</span>
+                <span class="n">card_vecs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">empty_vec</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;card_features&quot;</span><span class="p">:</span> <span class="n">card_vecs</span><span class="p">,</span>
+            <span class="s2">&quot;global_features&quot;</span><span class="p">:</span> <span class="n">global_vec</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="StateEncoder.encode_board_signature">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.StateEncoder.encode_board_signature">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_board_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">board_sig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode a BoardSignature object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            board_sig: BoardSignature from state_representation.py</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Encoded features dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Convert BoardSignature to game_state dict</span>
+        <span class="n">game_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;hand&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">hand</span><span class="p">),</span>
+            <span class="s2">&quot;monsters&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">monsters</span><span class="p">),</span>
+            <span class="s2">&quot;spells&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">spells</span><span class="p">),</span>
+            <span class="s2">&quot;graveyard&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">graveyard</span><span class="p">),</span>
+            <span class="s2">&quot;banished&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">banished</span><span class="p">),</span>
+            <span class="s2">&quot;extra_deck_used&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">extra_deck_used</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Build cards list from all zones</span>
+        <span class="n">cards</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Hand</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">code</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">hand</span><span class="p">):</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x02</span><span class="p">,</span>  <span class="c1"># LOC_HAND</span>
+                <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="c1"># Monsters</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">code</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">monsters</span><span class="p">):</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x04</span><span class="p">,</span>  <span class="c1"># LOC_MZONE</span>
+                <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;position&quot;</span><span class="p">:</span> <span class="mh">0x1</span><span class="p">,</span>  <span class="c1"># FACE_UP_ATTACK</span>
+            <span class="p">})</span>
+
+        <span class="c1"># Spells/Traps</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">code</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">spells</span><span class="p">):</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x08</span><span class="p">,</span>  <span class="c1"># LOC_SZONE</span>
+                <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="c1"># Graveyard</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">code</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">graveyard</span><span class="p">):</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x10</span><span class="p">,</span>  <span class="c1"># LOC_GRAVE</span>
+                <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="c1"># Banished</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">code</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">board_sig</span><span class="o">.</span><span class="n">banished</span><span class="p">):</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x20</span><span class="p">,</span>  <span class="c1"># LOC_REMOVED</span>
+                <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_state</span><span class="p">(</span><span class="n">game_state</span><span class="p">,</span> <span class="n">cards</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StateEncoder.batch_encode">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.StateEncoder.batch_encode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">batch_encode</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">states</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Batch encode multiple states.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            states: List of game state dicts.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict with batched features.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_card_features</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">all_global_features</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="n">encoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="n">all_card_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="s2">&quot;card_features&quot;</span><span class="p">])</span>
+            <span class="n">all_global_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="s2">&quot;global_features&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;card_features&quot;</span><span class="p">:</span> <span class="n">all_card_features</span><span class="p">,</span>
+            <span class="s2">&quot;global_features&quot;</span><span class="p">:</span> <span class="n">all_global_features</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="StateEncoder.get_output_shapes">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.StateEncoder.get_output_shapes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return output tensor shapes.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;card_features&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_cards</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">card_feature_dim</span><span class="p">,),</span>
+            <span class="s2">&quot;global_features&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">global_feature_dim</span><span class="p">,),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># ACTION ENCODER</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="ActionEncoder">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionEncoder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ActionEncoder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encodes actions for policy network input/output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ActionEncoder.__init__">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionEncoder.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize encoder with config.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ActionEncoder.encode_action">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionEncoder.encode_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Encode single action to feature vector.&quot;&quot;&quot;</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">ActionFeatures</span><span class="o">.</span><span class="n">from_action_dict</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">features</span><span class="o">.</span><span class="n">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ActionEncoder.encode_actions">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionEncoder.encode_actions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Encode multiple actions.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">encode_action</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="ActionEncoder.encode_idle_data">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionEncoder.encode_idle_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_idle_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idle_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode all action options from MSG_IDLE data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idle_data: Parsed idle message with activatable, summonable, etc.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict mapping action type to encoded action lists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">action_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;activatable&quot;</span><span class="p">,</span> <span class="s2">&quot;summonable&quot;</span><span class="p">,</span> <span class="s2">&quot;spsummon&quot;</span><span class="p">,</span> <span class="s2">&quot;mset&quot;</span><span class="p">,</span> <span class="s2">&quot;sset&quot;</span><span class="p">]:</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="n">idle_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action_type</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">if</span> <span class="n">actions</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">action_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_actions</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+        <span class="c1"># Special actions</span>
+        <span class="k">if</span> <span class="n">idle_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;to_bp&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;to_bp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">ActionFeatures</span><span class="p">(</span>
+                <span class="n">action_type</span><span class="o">=</span><span class="n">ActionType</span><span class="o">.</span><span class="n">TO_BATTLE_PHASE</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">to_vector</span><span class="p">()]</span>
+
+        <span class="k">if</span> <span class="n">idle_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;to_ep&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;to_ep&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">ActionFeatures</span><span class="p">(</span>
+                <span class="n">action_type</span><span class="o">=</span><span class="n">ActionType</span><span class="o">.</span><span class="n">TO_END_PHASE</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">to_vector</span><span class="p">()]</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="ActionEncoder.encode_history">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ActionEncoder.encode_history">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_history</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">action_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode action history (circular buffer style).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action_history: List of recent actions.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Padded/truncated list of encoded actions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Take last N actions</span>
+        <span class="n">recent</span> <span class="o">=</span> <span class="n">action_history</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">history_length</span><span class="p">:]</span>
+
+        <span class="c1"># Encode</span>
+        <span class="n">encoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_actions</span><span class="p">(</span><span class="n">recent</span><span class="p">)</span>
+
+        <span class="c1"># Pad if needed</span>
+        <span class="n">padding_needed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">history_length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">padding_needed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">empty</span> <span class="o">=</span> <span class="n">ActionFeatures</span><span class="p">()</span><span class="o">.</span><span class="n">to_vector</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">padding_needed</span><span class="p">):</span>
+                <span class="n">encoded</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">empty</span><span class="p">)</span>  <span class="c1"># Pad at start (oldest positions)</span>
+
+        <span class="k">return</span> <span class="n">encoded</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># HISTORY BUFFER</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="HistoryBuffer">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.HistoryBuffer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HistoryBuffer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Circular buffer for action history (ygo-agent style).</span>
+
+<span class="sd">    Maintains fixed-size history of recent actions for temporal context.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HistoryBuffer.__init__">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.HistoryBuffer.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize buffer.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ActionFeatures</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">ActionEncoder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HistoryBuffer.add_action">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.HistoryBuffer.add_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add action to history.&quot;&quot;&quot;</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">ActionFeatures</span><span class="o">.</span><span class="n">from_action_dict</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+
+        <span class="c1"># Trim to max length</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">history_length</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">history_length</span><span class="p">:]</span></div>
+
+
+<div class="viewcode-block" id="HistoryBuffer.clear">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.HistoryBuffer.clear">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear history.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="HistoryBuffer.to_features">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.HistoryBuffer.to_features">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get feature vectors for all actions in history.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of feature vectors, padded to history_length.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">]</span>
+
+        <span class="c1"># Pad if needed</span>
+        <span class="n">padding_needed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">history_length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">padding_needed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">empty</span> <span class="o">=</span> <span class="n">ActionFeatures</span><span class="p">()</span><span class="o">.</span><span class="n">to_vector</span><span class="p">()</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="n">empty</span><span class="p">]</span> <span class="o">*</span> <span class="n">padding_needed</span> <span class="o">+</span> <span class="n">features</span>
+
+        <span class="k">return</span> <span class="n">features</span></div>
+
+
+<div class="viewcode-block" id="HistoryBuffer.__len__">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.HistoryBuffer.__len__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return number of actions in buffer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># COMPLETE OBSERVATION ENCODER</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="ObservationEncoder">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ObservationEncoder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ObservationEncoder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Complete observation encoder combining all features.</span>
+
+<span class="sd">    Produces ygo-agent compatible observation tensors:</span>
+<span class="sd">    - Card features: (max_cards, card_feature_dim)</span>
+<span class="sd">    - Global features: (global_feature_dim,)</span>
+<span class="sd">    - History features: (history_length, action_feature_dim)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ObservationEncoder.__init__">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ObservationEncoder.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize encoder components.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_encoder</span> <span class="o">=</span> <span class="n">StateEncoder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_encoder</span> <span class="o">=</span> <span class="n">ActionEncoder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_buffer</span> <span class="o">=</span> <span class="n">HistoryBuffer</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservationEncoder.encode">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ObservationEncoder.encode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">game_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">cards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode complete observation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            game_state: Global state dict.</span>
+<span class="sd">            cards: List of card data dicts.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict with all feature arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># State features</span>
+        <span class="n">state_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_encoder</span><span class="o">.</span><span class="n">encode_state</span><span class="p">(</span><span class="n">game_state</span><span class="p">,</span> <span class="n">cards</span><span class="p">)</span>
+
+        <span class="c1"># History features (flattened)</span>
+        <span class="n">history_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_buffer</span><span class="o">.</span><span class="n">to_features</span><span class="p">()</span>
+        <span class="n">history_flat</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">action_vec</span> <span class="ow">in</span> <span class="n">history_features</span><span class="p">:</span>
+            <span class="n">history_flat</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">action_vec</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;card_features&quot;</span><span class="p">:</span> <span class="n">state_features</span><span class="p">[</span><span class="s2">&quot;card_features&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;global_features&quot;</span><span class="p">:</span> <span class="n">state_features</span><span class="p">[</span><span class="s2">&quot;global_features&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;history_features&quot;</span><span class="p">:</span> <span class="n">history_flat</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="ObservationEncoder.record_action">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ObservationEncoder.record_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record action to history buffer.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_buffer</span><span class="o">.</span><span class="n">add_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservationEncoder.reset">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ObservationEncoder.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset encoder state (for new game).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ObservationEncoder.get_observation_space">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.ObservationEncoder.get_observation_space">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return observation space dimensions.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;card_features&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_cards</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">card_feature_dim</span><span class="p">),</span>
+            <span class="s2">&quot;global_features&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">global_feature_dim</span><span class="p">,),</span>
+            <span class="s2">&quot;history_features&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">history_length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">action_feature_dim</span><span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># BATCH UTILITIES</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="encode_combo_path">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.encode_combo_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">encode_combo_path</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encode a complete combo path for training data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: List of (state, action) pairs in combo sequence.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of encoded observations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">ObservationEncoder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">observations</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">cards</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cards&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="c1"># Encode observation before action</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">cards</span><span class="p">)</span>
+        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">action_encoder</span><span class="o">.</span><span class="n">encode_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+
+        <span class="c1"># Record action for next observation&#39;s history</span>
+        <span class="n">encoder</span><span class="o">.</span><span class="n">record_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">observations</span></div>
+
+
+
+<div class="viewcode-block" id="create_training_batch">
+<a class="viewcode-back" href="../../../../modules/encoding.html#src.ygo_combo.encoding.ml.create_training_batch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_training_batch</span><span class="p">(</span>
+    <span class="n">combo_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">EncodingConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create training batch from multiple combo paths.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        combo_paths: List of combo paths.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Batched training data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+
+    <span class="n">all_observations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_actions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">path_indices</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">path_idx</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">combo_paths</span><span class="p">):</span>
+        <span class="n">encoded</span> <span class="o">=</span> <span class="n">encode_combo_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">encoded</span><span class="p">:</span>
+            <span class="n">all_observations</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;card_features&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;card_features&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;global_features&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;global_features&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;history_features&quot;</span><span class="p">:</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;history_features&quot;</span><span class="p">],</span>
+            <span class="p">})</span>
+            <span class="n">all_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">])</span>
+            <span class="n">path_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path_idx</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;observations&quot;</span><span class="p">:</span> <span class="n">all_observations</span><span class="p">,</span>
+        <span class="s2">&quot;actions&quot;</span><span class="p">:</span> <span class="n">all_actions</span><span class="p">,</span>
+        <span class="s2">&quot;path_indices&quot;</span><span class="p">:</span> <span class="n">path_indices</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># TESTS</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ML Encoding Tests&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="c1"># Test 1: EncodingConfig</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">1. EncodingConfig:&quot;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">EncodingConfig</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   max_cards: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">max_cards</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   card_feature_dim: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">card_feature_dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   global_feature_dim: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">global_feature_dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">max_cards</span> <span class="o">==</span> <span class="mi">160</span>
+    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">card_feature_dim</span> <span class="o">==</span> <span class="mi">41</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 2: CardFeatures</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">2. CardFeatures:&quot;</span><span class="p">)</span>
+    <span class="n">card</span> <span class="o">=</span> <span class="n">CardFeatures</span><span class="p">(</span>
+        <span class="n">card_id</span><span class="o">=</span><span class="mi">60764609</span><span class="p">,</span>
+        <span class="n">location</span><span class="o">=</span><span class="n">CardLocation</span><span class="o">.</span><span class="n">HAND</span><span class="p">,</span>
+        <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">atk</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">defense</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">vec</span> <span class="o">=</span> <span class="n">card</span><span class="o">.</span><span class="n">to_vector</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">==</span> <span class="mi">41</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Vector length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   First few values: </span><span class="si">{</span><span class="n">vec</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 3: GlobalFeatures</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">3. GlobalFeatures:&quot;</span><span class="p">)</span>
+    <span class="n">global_f</span> <span class="o">=</span> <span class="n">GlobalFeatures</span><span class="p">(</span>
+        <span class="n">turn_count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">phase</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">lp_p0</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">vec</span> <span class="o">=</span> <span class="n">global_f</span><span class="o">.</span><span class="n">to_vector</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">==</span> <span class="mi">23</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Vector length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 4: ActionFeatures</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">4. ActionFeatures:&quot;</span><span class="p">)</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="n">ActionFeatures</span><span class="p">(</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="n">ActionType</span><span class="o">.</span><span class="n">ACTIVATE</span><span class="p">,</span>
+        <span class="n">card_id</span><span class="o">=</span><span class="mi">60764609</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">vec</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">to_vector</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">==</span> <span class="mi">14</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Vector length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 5: StateEncoder</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">5. StateEncoder:&quot;</span><span class="p">)</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">StateEncoder</span><span class="p">()</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;turn&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;phase&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;lp_p0&quot;</span><span class="p">:</span> <span class="mi">8000</span><span class="p">,</span>
+        <span class="s2">&quot;lp_p1&quot;</span><span class="p">:</span> <span class="mi">8000</span><span class="p">,</span>
+        <span class="s2">&quot;cards&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">60764609</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x02</span><span class="p">,</span> <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">49867899</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x02</span><span class="p">,</span> <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">encoded</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+    <span class="n">expected_card_len</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">max_cards</span> <span class="o">*</span> <span class="n">config</span><span class="o">.</span><span class="n">card_feature_dim</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="s2">&quot;card_features&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="n">expected_card_len</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="s2">&quot;global_features&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="n">config</span><span class="o">.</span><span class="n">global_feature_dim</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Card features length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="s1">&#39;card_features&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Global features length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="s1">&#39;global_features&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 6: ActionEncoder</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">6. ActionEncoder:&quot;</span><span class="p">)</span>
+    <span class="n">action_enc</span> <span class="o">=</span> <span class="n">ActionEncoder</span><span class="p">()</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;activate&quot;</span><span class="p">,</span> <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">60764609</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;spsummon&quot;</span><span class="p">,</span> <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">2463794</span><span class="p">},</span>
+    <span class="p">]</span>
+    <span class="n">encoded</span> <span class="o">=</span> <span class="n">action_enc</span><span class="o">.</span><span class="n">encode_actions</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">14</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Encoded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span><span class="si">}</span><span class="s2"> actions&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 7: HistoryBuffer</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">7. HistoryBuffer:&quot;</span><span class="p">)</span>
+    <span class="n">buffer</span> <span class="o">=</span> <span class="n">HistoryBuffer</span><span class="p">()</span>
+    <span class="n">buffer</span><span class="o">.</span><span class="n">add_action</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;activate&quot;</span><span class="p">,</span> <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">60764609</span><span class="p">})</span>
+    <span class="n">buffer</span><span class="o">.</span><span class="n">add_action</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;spsummon&quot;</span><span class="p">,</span> <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">2463794</span><span class="p">})</span>
+
+    <span class="n">features</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">to_features</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span> <span class="o">==</span> <span class="n">config</span><span class="o">.</span><span class="n">history_length</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Buffer length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Features length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 8: ObservationEncoder</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">8. ObservationEncoder:&quot;</span><span class="p">)</span>
+    <span class="n">obs_enc</span> <span class="o">=</span> <span class="n">ObservationEncoder</span><span class="p">()</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">obs_enc</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;cards&quot;</span><span class="p">])</span>
+
+    <span class="k">assert</span> <span class="s2">&quot;card_features&quot;</span> <span class="ow">in</span> <span class="n">obs</span>
+    <span class="k">assert</span> <span class="s2">&quot;global_features&quot;</span> <span class="ow">in</span> <span class="n">obs</span>
+    <span class="k">assert</span> <span class="s2">&quot;history_features&quot;</span> <span class="ow">in</span> <span class="n">obs</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Observation keys: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 9: CardFeatures.from_card_data</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">9. CardFeatures.from_card_data:&quot;</span><span class="p">)</span>
+    <span class="n">card_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="mi">60764609</span><span class="p">,</span>
+        <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="mh">0x02</span><span class="p">,</span>  <span class="c1"># HAND</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;atk&quot;</span><span class="p">:</span> <span class="mi">2000</span><span class="p">,</span>
+        <span class="s2">&quot;def&quot;</span><span class="p">:</span> <span class="mi">1500</span><span class="p">,</span>
+        <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">card</span> <span class="o">=</span> <span class="n">CardFeatures</span><span class="o">.</span><span class="n">from_card_data</span><span class="p">(</span><span class="n">card_data</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">card</span><span class="o">.</span><span class="n">card_id</span> <span class="o">==</span> <span class="mi">60764609</span>
+    <span class="k">assert</span> <span class="n">card</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="n">CardLocation</span><span class="o">.</span><span class="n">HAND</span>
+    <span class="k">assert</span> <span class="n">card</span><span class="o">.</span><span class="n">atk</span> <span class="o">==</span> <span class="mi">2000</span> <span class="o">/</span> <span class="mi">10000</span>  <span class="c1"># Normalized</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Card ID: </span><span class="si">{</span><span class="n">card</span><span class="o">.</span><span class="n">card_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Location: </span><span class="si">{</span><span class="n">card</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   ATK (normalized): </span><span class="si">{</span><span class="n">card</span><span class="o">.</span><span class="n">atk</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 10: Output shapes</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">10. Output shapes:&quot;</span><span class="p">)</span>
+    <span class="n">shapes</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">get_output_shapes</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Card features: </span><span class="si">{</span><span class="n">shapes</span><span class="p">[</span><span class="s1">&#39;card_features&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Global features: </span><span class="si">{</span><span class="n">shapes</span><span class="p">[</span><span class="s1">&#39;global_features&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">shapes</span><span class="p">[</span><span class="s2">&quot;card_features&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">160</span> <span class="o">*</span> <span class="mi">41</span><span class="p">,)</span>
+    <span class="k">assert</span> <span class="n">shapes</span><span class="p">[</span><span class="s2">&quot;global_features&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">23</span><span class="p">,)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   OK&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All tests passed!&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

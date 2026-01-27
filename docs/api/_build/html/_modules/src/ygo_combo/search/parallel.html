@@ -1,0 +1,668 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.search.parallel &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.search.parallel</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.search.parallel</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Parallel combo enumeration across starting hands.</span>
+
+<span class="sd">Distributes work across multiple processes for near-linear speedup.</span>
+<span class="sd">Each worker independently enumerates combos from a subset of starting hands.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    from parallel_search import parallel_enumerate, ParallelConfig</span>
+
+<span class="sd">    config = ParallelConfig(</span>
+<span class="sd">        deck=deck_list,</span>
+<span class="sd">        hand_size=5,</span>
+<span class="sd">        num_workers=8,</span>
+<span class="sd">        max_depth=25,</span>
+<span class="sd">    )</span>
+<span class="sd">    results = parallel_enumerate(config)</span>
+
+<span class="sd">Architecture:</span>
+<span class="sd">    Main Process:</span>
+<span class="sd">        - Generates all C(n,k) starting hands</span>
+<span class="sd">        - Distributes hands to worker pool</span>
+<span class="sd">        - Merges results from all workers</span>
+
+<span class="sd">    Worker Process:</span>
+<span class="sd">        - Receives batch of starting hands</span>
+<span class="sd">        - For each hand: run DFS enumeration</span>
+<span class="sd">        - Returns list of discovered combos</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Manager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="c1"># Configure logging for main process</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> [</span><span class="si">%(processName)s</span><span class="s1">] </span><span class="si">%(levelname)s</span><span class="s1">: </span><span class="si">%(message)s</span><span class="s1">&#39;</span>
+<span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CONFIGURATION</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="ParallelConfig">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.ParallelConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParallelConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for parallel combo enumeration.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        deck: List of card passcodes in the deck (main + extra).</span>
+<span class="sd">        hand_size: Number of cards to draw (default 5).</span>
+<span class="sd">        num_workers: Number of parallel processes (default: CPU count).</span>
+<span class="sd">        max_depth: Maximum search depth per hand.</span>
+<span class="sd">        max_paths_per_hand: Maximum combo paths to find per hand (0 = unlimited).</span>
+<span class="sd">        output_dir: Directory for worker result files (optional).</span>
+<span class="sd">        batch_size: Hands per worker batch (default: auto-calculated).</span>
+<span class="sd">        progress_interval: Seconds between progress updates (default: 10).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">deck</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">hand_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">num_workers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span>
+    <span class="n">max_paths_per_hand</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">progress_interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Auto-calculate: aim for ~100 batches per worker for good load balancing</span>
+            <span class="n">total_hands</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_total_hands</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_hands</span> <span class="o">//</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_total_hands</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate total number of unique starting hands.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">comb</span>
+        <span class="k">return</span> <span class="n">comb</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deck</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">hand_size</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParallelConfig.total_hands">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.ParallelConfig.total_hands">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_hands</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return total number of unique starting hands.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_total_hands</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ComboResult">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.ComboResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComboResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result from enumerating a single starting hand.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        hand: The starting hand (tuple of passcodes).</span>
+<span class="sd">        terminal_boards: List of unique terminal board hashes reached.</span>
+<span class="sd">        best_score: Highest board evaluation score found.</span>
+<span class="sd">        paths_explored: Number of action paths explored.</span>
+<span class="sd">        depth_reached: Maximum depth reached during search.</span>
+<span class="sd">        duration_ms: Time spent on this hand in milliseconds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hand</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">terminal_boards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">best_score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">paths_explored</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">depth_reached</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">duration_ms</span><span class="p">:</span> <span class="nb">float</span></div>
+
+
+
+<div class="viewcode-block" id="ParallelResult">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.ParallelResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParallelResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregated results from parallel enumeration.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        total_hands: Number of starting hands processed.</span>
+<span class="sd">        total_terminals: Number of unique terminal boards found.</span>
+<span class="sd">        total_paths: Total action paths explored across all hands.</span>
+<span class="sd">        best_hand: Hand that produced the highest-scoring board.</span>
+<span class="sd">        best_score: Highest board evaluation score.</span>
+<span class="sd">        duration_seconds: Total wall-clock time.</span>
+<span class="sd">        worker_stats: Per-worker statistics.</span>
+<span class="sd">        terminal_distribution: Count of terminals per hand (histogram).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total_hands</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_terminals</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_paths</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">best_hand</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+    <span class="n">best_score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">duration_seconds</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">worker_stats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+    <span class="n">terminal_distribution</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># WORKER FUNCTION</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="c1"># Global worker state (initialized per-process)</span>
+<span class="n">_worker_deck</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">_worker_max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="n">_worker_max_paths</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">_worker_engine_initialized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">_worker_lib</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_worker_ffi</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_worker_card_db_initialized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_worker_init</span><span class="p">(</span><span class="n">deck</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_paths</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize worker process with shared configuration.</span>
+
+<span class="sd">    Called once per worker at pool creation time.</span>
+<span class="sd">    Stores configuration in global variables accessible to worker function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_worker_deck</span><span class="p">,</span> <span class="n">_worker_max_depth</span><span class="p">,</span> <span class="n">_worker_max_paths</span>
+    <span class="k">global</span> <span class="n">_worker_engine_initialized</span>
+
+    <span class="n">_worker_deck</span> <span class="o">=</span> <span class="n">deck</span>
+    <span class="n">_worker_max_depth</span> <span class="o">=</span> <span class="n">max_depth</span>
+    <span class="n">_worker_max_paths</span> <span class="o">=</span> <span class="n">max_paths</span>
+    <span class="n">_worker_engine_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_worker_engine</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lazily initialize the engine in worker process.</span>
+
+<span class="sd">    Called on first enumeration task to avoid import overhead at pool creation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_worker_engine_initialized</span><span class="p">,</span> <span class="n">_worker_lib</span><span class="p">,</span> <span class="n">_worker_ffi</span>
+    <span class="k">global</span> <span class="n">_worker_card_db_initialized</span>
+
+    <span class="k">if</span> <span class="n">_worker_engine_initialized</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Import engine components</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..engine.interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_card_database</span><span class="p">,</span> <span class="n">load_library</span><span class="p">,</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">set_lib</span>
+
+    <span class="c1"># Initialize card database (read-only, shared via copy-on-write)</span>
+    <span class="n">_worker_card_db_initialized</span> <span class="o">=</span> <span class="n">init_card_database</span><span class="p">()</span>
+
+    <span class="c1"># Load library</span>
+    <span class="n">_worker_lib</span> <span class="o">=</span> <span class="n">load_library</span><span class="p">()</span>
+    <span class="n">_worker_ffi</span> <span class="o">=</span> <span class="n">ffi</span>
+    <span class="n">set_lib</span><span class="p">(</span><span class="n">_worker_lib</span><span class="p">)</span>
+
+    <span class="n">_worker_engine_initialized</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_enumerate_hand</span><span class="p">(</span><span class="n">hand</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ComboResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enumerate all combos from a single starting hand.</span>
+
+<span class="sd">    This is the core worker function. It initializes the engine if needed,</span>
+<span class="sd">    then runs DFS enumeration from the given hand.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        hand: Tuple of card passcodes representing the starting hand.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ComboResult with discovered terminals and statistics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+    <span class="c1"># Lazy engine initialization</span>
+    <span class="n">_init_worker_engine</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Import enumeration logic</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">combo_enumeration</span><span class="w"> </span><span class="kn">import</span> <span class="n">enumerate_from_hand</span>
+
+        <span class="c1"># Run enumeration</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">enumerate_from_hand</span><span class="p">(</span>
+            <span class="n">hand</span><span class="o">=</span><span class="n">hand</span><span class="p">,</span>
+            <span class="n">deck</span><span class="o">=</span><span class="n">_worker_deck</span><span class="p">,</span>
+            <span class="n">max_depth</span><span class="o">=</span><span class="n">_worker_max_depth</span><span class="p">,</span>
+            <span class="n">max_paths</span><span class="o">=</span><span class="n">_worker_max_paths</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">duration_ms</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+        <span class="k">return</span> <span class="n">ComboResult</span><span class="p">(</span>
+            <span class="n">hand</span><span class="o">=</span><span class="n">hand</span><span class="p">,</span>
+            <span class="n">terminal_boards</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;terminal_hashes&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="n">best_score</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;best_score&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+            <span class="n">paths_explored</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;paths_explored&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">depth_reached</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_depth_reached&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">duration_ms</span><span class="o">=</span><span class="n">duration_ms</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">duration_ms</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error enumerating hand </span><span class="si">{</span><span class="n">hand</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ComboResult</span><span class="p">(</span>
+            <span class="n">hand</span><span class="o">=</span><span class="n">hand</span><span class="p">,</span>
+            <span class="n">terminal_boards</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">best_score</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">paths_explored</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">depth_reached</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">duration_ms</span><span class="o">=</span><span class="n">duration_ms</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_worker_batch</span><span class="p">(</span><span class="n">hands</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ComboResult</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process a batch of hands in a single worker.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        hands: List of starting hands to enumerate.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of ComboResult for each hand.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_enumerate_hand</span><span class="p">(</span><span class="n">hand</span><span class="p">)</span> <span class="k">for</span> <span class="n">hand</span> <span class="ow">in</span> <span class="n">hands</span><span class="p">]</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># MAIN PARALLEL ENUMERATION</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="generate_all_hands">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.generate_all_hands">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_all_hands</span><span class="p">(</span><span class="n">deck</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">hand_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate all unique starting hands from deck.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        deck: List of card passcodes.</span>
+<span class="sd">        hand_size: Number of cards per hand.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of all C(n,k) unique hands as tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Sort deck for consistent ordering</span>
+    <span class="n">sorted_deck</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">deck</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">sorted_deck</span><span class="p">,</span> <span class="n">hand_size</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="parallel_enumerate">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.parallel_enumerate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parallel_enumerate</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParallelResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run parallel combo enumeration across all starting hands.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: ParallelConfig with deck, workers, depth settings.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ParallelResult with aggregated statistics and discoveries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+    <span class="c1"># Generate all starting hands</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating starting hands (deck size: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">deck</span><span class="p">)</span><span class="si">}</span><span class="s2">, hand size: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">hand_size</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">all_hands</span> <span class="o">=</span> <span class="n">generate_all_hands</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">deck</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">hand_size</span><span class="p">)</span>
+    <span class="n">total_hands</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_hands</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total hands to process: </span><span class="si">{</span><span class="n">total_hands</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Split into batches</span>
+    <span class="n">batches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total_hands</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="n">batches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">all_hands</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Split into </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> batches of ~</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="si">}</span><span class="s2"> hands&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create process pool with initializer</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span><span class="si">}</span><span class="s2"> worker processes&quot;</span><span class="p">)</span>
+
+    <span class="n">all_results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ComboResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">worker_stats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">with</span> <span class="n">Pool</span><span class="p">(</span>
+        <span class="n">processes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="n">_worker_init</span><span class="p">,</span>
+        <span class="n">initargs</span><span class="o">=</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">deck</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">max_paths_per_hand</span><span class="p">),</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+
+        <span class="c1"># Submit all batches</span>
+        <span class="n">async_results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">:</span>
+            <span class="n">async_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">_worker_batch</span><span class="p">,</span> <span class="p">(</span><span class="n">batch</span><span class="p">,)))</span>
+
+        <span class="c1"># Collect results with progress tracking</span>
+        <span class="n">completed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">last_progress</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">async_result</span> <span class="ow">in</span> <span class="n">async_results</span><span class="p">:</span>
+            <span class="n">batch_results</span> <span class="o">=</span> <span class="n">async_result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>  <span class="c1"># Blocks until batch complete</span>
+            <span class="n">all_results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">batch_results</span><span class="p">)</span>
+            <span class="n">completed</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_results</span><span class="p">)</span>
+
+            <span class="c1"># Progress update</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">now</span> <span class="o">-</span> <span class="n">last_progress</span> <span class="o">&gt;=</span> <span class="n">config</span><span class="o">.</span><span class="n">progress_interval</span><span class="p">:</span>
+                <span class="n">elapsed</span> <span class="o">=</span> <span class="n">now</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="n">rate</span> <span class="o">=</span> <span class="n">completed</span> <span class="o">/</span> <span class="n">elapsed</span>
+                <span class="n">eta</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_hands</span> <span class="o">-</span> <span class="n">completed</span><span class="p">)</span> <span class="o">/</span> <span class="n">rate</span> <span class="k">if</span> <span class="n">rate</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Progress: </span><span class="si">{</span><span class="n">completed</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_hands</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> hands &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">completed</span><span class="o">/</span><span class="n">total_hands</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%) - &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Rate: </span><span class="si">{</span><span class="n">rate</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hands/sec - &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;ETA: </span><span class="si">{</span><span class="n">eta</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s&quot;</span>
+                <span class="p">)</span>
+                <span class="n">last_progress</span> <span class="o">=</span> <span class="n">now</span>
+
+    <span class="c1"># Aggregate results</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+    <span class="c1"># Find unique terminals across all hands</span>
+    <span class="n">all_terminals</span><span class="p">:</span> <span class="nb">set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">total_paths</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">best_hand</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">terminal_counts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">all_results</span><span class="p">:</span>
+        <span class="n">all_terminals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">terminal_boards</span><span class="p">)</span>
+        <span class="n">total_paths</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">paths_explored</span>
+
+        <span class="c1"># Track best hand</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">best_score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+            <span class="n">best_score</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">best_score</span>
+            <span class="n">best_hand</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">hand</span>
+
+        <span class="c1"># Histogram of terminals per hand</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">terminal_boards</span><span class="p">)</span>
+        <span class="n">terminal_counts</span><span class="p">[</span><span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="n">terminal_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Completed </span><span class="si">{</span><span class="n">total_hands</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> hands in </span><span class="si">{</span><span class="n">duration</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unique terminals: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_terminals</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total paths explored: </span><span class="si">{</span><span class="n">total_paths</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best score: </span><span class="si">{</span><span class="n">best_score</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ParallelResult</span><span class="p">(</span>
+        <span class="n">total_hands</span><span class="o">=</span><span class="n">total_hands</span><span class="p">,</span>
+        <span class="n">total_terminals</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">all_terminals</span><span class="p">),</span>
+        <span class="n">total_paths</span><span class="o">=</span><span class="n">total_paths</span><span class="p">,</span>
+        <span class="n">best_hand</span><span class="o">=</span><span class="n">best_hand</span><span class="p">,</span>
+        <span class="n">best_score</span><span class="o">=</span><span class="n">best_score</span><span class="p">,</span>
+        <span class="n">duration_seconds</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+        <span class="n">worker_stats</span><span class="o">=</span><span class="n">worker_stats</span><span class="p">,</span>
+        <span class="n">terminal_distribution</span><span class="o">=</span><span class="n">terminal_counts</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CONVENIENCE FUNCTIONS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="enumerate_deck_parallel">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.enumerate_deck_parallel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">enumerate_deck_parallel</span><span class="p">(</span>
+    <span class="n">deck</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">num_workers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+    <span class="n">hand_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParallelResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience function for parallel enumeration with sensible defaults.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        deck: List of card passcodes.</span>
+<span class="sd">        num_workers: Number of workers (default: CPU count).</span>
+<span class="sd">        max_depth: Maximum search depth.</span>
+<span class="sd">        hand_size: Cards per starting hand.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ParallelResult with all discoveries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span>
+        <span class="n">deck</span><span class="o">=</span><span class="n">deck</span><span class="p">,</span>
+        <span class="n">hand_size</span><span class="o">=</span><span class="n">hand_size</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+        <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">parallel_enumerate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="estimate_runtime">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.estimate_runtime">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">estimate_runtime</span><span class="p">(</span>
+    <span class="n">deck_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">hand_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="n">ms_per_hand</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Estimate runtime for parallel enumeration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        deck_size: Number of cards in deck.</span>
+<span class="sd">        hand_size: Cards per starting hand.</span>
+<span class="sd">        num_workers: Number of parallel workers.</span>
+<span class="sd">        ms_per_hand: Estimated milliseconds per hand (varies by deck).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict with total_hands, estimated_seconds, estimated_hours.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">comb</span>
+
+    <span class="n">total_hands</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="n">deck_size</span><span class="p">,</span> <span class="n">hand_size</span><span class="p">)</span>
+    <span class="n">total_ms</span> <span class="o">=</span> <span class="n">total_hands</span> <span class="o">*</span> <span class="n">ms_per_hand</span>
+    <span class="n">parallel_ms</span> <span class="o">=</span> <span class="n">total_ms</span> <span class="o">/</span> <span class="n">num_workers</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="n">parallel_ms</span> <span class="o">/</span> <span class="mi">1000</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">/</span> <span class="mi">3600</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;total_hands&quot;</span><span class="p">:</span> <span class="n">total_hands</span><span class="p">,</span>
+        <span class="s2">&quot;estimated_seconds&quot;</span><span class="p">:</span> <span class="n">seconds</span><span class="p">,</span>
+        <span class="s2">&quot;estimated_minutes&quot;</span><span class="p">:</span> <span class="n">seconds</span> <span class="o">/</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="s2">&quot;estimated_hours&quot;</span><span class="p">:</span> <span class="n">hours</span><span class="p">,</span>
+        <span class="s2">&quot;hands_per_second&quot;</span><span class="p">:</span> <span class="n">num_workers</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="n">ms_per_hand</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CLI INTERFACE</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.parallel.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Command-line interface for parallel enumeration.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..engine.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">LOCKED_LIBRARY_PATH</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Parallel combo enumeration across starting hands&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--workers&quot;</span><span class="p">,</span> <span class="s2">&quot;-w&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of worker processes (default: CPU count)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--max-depth&quot;</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Maximum search depth (default: 25)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--hand-size&quot;</span><span class="p">,</span> <span class="s2">&quot;-k&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Cards per starting hand (default: 5)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--estimate&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Only estimate runtime, don&#39;t run enumeration&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--deck-file&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">LOCKED_LIBRARY_PATH</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to deck JSON file&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="c1"># Load deck</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">deck_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">deck_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">deck</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">code</span> <span class="ow">in</span> <span class="n">deck_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cards&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded deck with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">deck</span><span class="p">)</span><span class="si">}</span><span class="s2"> cards&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">estimate</span><span class="p">:</span>
+        <span class="c1"># Just estimate</span>
+        <span class="n">estimate</span> <span class="o">=</span> <span class="n">estimate_runtime</span><span class="p">(</span>
+            <span class="n">deck_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">deck</span><span class="p">),</span>
+            <span class="n">hand_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">hand_size</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">workers</span> <span class="ow">or</span> <span class="n">mp</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Runtime Estimate:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Total hands: </span><span class="si">{</span><span class="n">estimate</span><span class="p">[</span><span class="s1">&#39;total_hands&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Workers: </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">workers</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">mp</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Estimated time: </span><span class="si">{</span><span class="n">estimate</span><span class="p">[</span><span class="s1">&#39;estimated_minutes&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> minutes&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Hands/second: </span><span class="si">{</span><span class="n">estimate</span><span class="p">[</span><span class="s1">&#39;hands_per_second&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Run enumeration</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">enumerate_deck_parallel</span><span class="p">(</span>
+        <span class="n">deck</span><span class="o">=</span><span class="n">deck</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span>
+        <span class="n">max_depth</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+        <span class="n">hand_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">hand_size</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Print summary</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PARALLEL ENUMERATION COMPLETE&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hands processed:    </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">total_hands</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unique terminals:   </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">total_terminals</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total paths:        </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">total_paths</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best score:         </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_score</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duration:           </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">duration_seconds</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rate:               </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">total_hands</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">duration_seconds</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hands/sec&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">best_hand</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Best hand: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_hand</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

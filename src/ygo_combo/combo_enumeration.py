@@ -30,6 +30,13 @@ from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional, Tuple, Union, BinaryIO
 from datetime import datetime
 
+# Import shared types to avoid circular imports
+# These are re-exported for backwards compatibility
+try:
+    from .types import Action, TerminalState
+except ImportError:
+    from types import Action, TerminalState
+
 # Configure module logger
 logger = logging.getLogger(__name__)
 
@@ -224,46 +231,13 @@ MAX_PATHS = 100000      # Maximum paths to explore (safety limit)
 MAX_ITERATIONS = 1000   # Maximum engine iterations per action
 
 # =============================================================================
-# DATA STRUCTURES
+# DATA STRUCTURES - Now imported from types.py
 # =============================================================================
-
-@dataclass
-class Action:
-    """A single action in a combo sequence."""
-    action_type: str
-    message_type: int
-    response_value: Any       # The value before packing
-    response_bytes: bytes     # Raw bytes sent to engine
-    description: str
-    card_code: int = None
-    card_name: str = None
-    context_hash: int = None  # For SELECT_CARD: hash of the prompt context
-
-    def to_dict(self):
-        d = asdict(self)
-        d['response_bytes'] = self.response_bytes.hex()
-        return d
-
-
-@dataclass
-class TerminalState:
-    """A terminal state reached by PASS."""
-    action_sequence: List[Action]
-    board_state: Dict
-    depth: int
-    state_hash: str
-    termination_reason: str   # "PASS", "NO_ACTIONS", "MAX_DEPTH"
-    board_hash: Optional[str] = None  # BoardSignature hash for grouping
-
-    def to_dict(self):
-        return {
-            "action_sequence": [a.to_dict() for a in self.action_sequence],
-            "board_state": self.board_state,
-            "depth": self.depth,
-            "state_hash": self.state_hash,
-            "termination_reason": self.termination_reason,
-            "board_hash": self.board_hash,
-        }
+# Action and TerminalState are now defined in src/ygo_combo/types.py
+# to avoid circular import issues. They are imported at the top of this file
+# and re-exported for backwards compatibility.
+#
+# See: src/ygo_combo/types.py
 
 
 # =============================================================================

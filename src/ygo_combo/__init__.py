@@ -43,10 +43,15 @@ from .engine.bindings import (
     DUEL_FLAGS_MR5,
 )
 
+# Shared types
+from .types import Action, TerminalState
+
 __all__ = [
+    # Bindings
     "ffi",
     "load_library",
     "get_lib",
+    # Location constants
     "LOCATION_DECK",
     "LOCATION_HAND",
     "LOCATION_MZONE",
@@ -56,6 +61,7 @@ __all__ = [
     "LOCATION_EXTRA",
     "LOCATION_OVERLAY",
     "LOCATION_ONFIELD",
+    # Position constants
     "POS_FACEUP_ATTACK",
     "POS_FACEDOWN_ATTACK",
     "POS_FACEUP_DEFENSE",
@@ -63,4 +69,7 @@ __all__ = [
     "POS_FACEUP",
     "POS_FACEDOWN",
     "DUEL_FLAGS_MR5",
+    # Shared types
+    "Action",
+    "TerminalState",
 ]

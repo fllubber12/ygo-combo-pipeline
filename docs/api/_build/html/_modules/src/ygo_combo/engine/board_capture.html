@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.engine.board_capture &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.engine.board_capture</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.engine.board_capture</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Board state capture utilities.</span>
+
+<span class="sd">Functions for querying and capturing the current duel board state,</span>
+<span class="sd">computing board signatures for deduplication, and parsing query responses.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="c1"># Support both relative imports (package) and absolute imports (sys.path)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.bindings</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ffi</span><span class="p">,</span>
+        <span class="n">LOCATION_HAND</span><span class="p">,</span> <span class="n">LOCATION_MZONE</span><span class="p">,</span> <span class="n">LOCATION_SZONE</span><span class="p">,</span>
+        <span class="n">LOCATION_GRAVE</span><span class="p">,</span> <span class="n">LOCATION_REMOVED</span><span class="p">,</span> <span class="n">LOCATION_EXTRA</span><span class="p">,</span>
+        <span class="n">QUERY_CODE</span><span class="p">,</span> <span class="n">QUERY_POSITION</span><span class="p">,</span> <span class="n">QUERY_ATTACK</span><span class="p">,</span> <span class="n">QUERY_DEFENSE</span><span class="p">,</span> <span class="n">QUERY_END</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_card_name</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoardSignature</span><span class="p">,</span> <span class="n">IntermediateState</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..enumeration.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_u32</span><span class="p">,</span> <span class="n">read_i32</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">engine.bindings</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ffi</span><span class="p">,</span>
+        <span class="n">LOCATION_HAND</span><span class="p">,</span> <span class="n">LOCATION_MZONE</span><span class="p">,</span> <span class="n">LOCATION_SZONE</span><span class="p">,</span>
+        <span class="n">LOCATION_GRAVE</span><span class="p">,</span> <span class="n">LOCATION_REMOVED</span><span class="p">,</span> <span class="n">LOCATION_EXTRA</span><span class="p">,</span>
+        <span class="n">QUERY_CODE</span><span class="p">,</span> <span class="n">QUERY_POSITION</span><span class="p">,</span> <span class="n">QUERY_ATTACK</span><span class="p">,</span> <span class="n">QUERY_DEFENSE</span><span class="p">,</span> <span class="n">QUERY_END</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">engine.interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_card_name</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">engine.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoardSignature</span><span class="p">,</span> <span class="n">IntermediateState</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">enumeration.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_u32</span><span class="p">,</span> <span class="n">read_i32</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="parse_query_response">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.board_capture.parse_query_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_query_response</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse OCG_DuelQueryLocation response to extract card codes.</span>
+
+<span class="sd">    Format:</span>
+<span class="sd">    - Total size (u32)</span>
+<span class="sd">    - Per card: either int16(0) for empty slot, or field blocks ending with QUERY_END</span>
+<span class="sd">    - Field block: [size(u16)][flag(u32)][value(varies)]</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data: Raw bytes from OCG_DuelQueryLocation</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of card info dicts (or None for empty slots)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;parse_query_response: data too short (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes), expected at least 4&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">total_size</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="n">cards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="n">start_pos</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+
+        <span class="c1"># Read first u16 - if 0, empty slot</span>
+        <span class="k">if</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="n">first_u16</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;H&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">first_u16</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Empty slot</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Non-empty slot: first_u16 is the size of the first field block</span>
+        <span class="c1"># Parse field blocks</span>
+        <span class="n">card_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">buf</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">start_pos</span><span class="p">)</span>  <span class="c1"># Rewind to read properly</span>
+
+        <span class="k">while</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="n">block_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;H&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">block_size</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">block_size</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">break</span>
+
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="n">QUERY_END</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="n">flag</span> <span class="o">==</span> <span class="n">QUERY_CODE</span><span class="p">:</span>
+                <span class="n">card_info</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">flag</span> <span class="o">==</span> <span class="n">QUERY_POSITION</span><span class="p">:</span>
+                <span class="n">card_info</span><span class="p">[</span><span class="s2">&quot;position&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">flag</span> <span class="o">==</span> <span class="n">QUERY_ATTACK</span><span class="p">:</span>
+                <span class="n">card_info</span><span class="p">[</span><span class="s2">&quot;attack&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_i32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">flag</span> <span class="o">==</span> <span class="n">QUERY_DEFENSE</span><span class="p">:</span>
+                <span class="n">card_info</span><span class="p">[</span><span class="s2">&quot;defense&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_i32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Skip unknown field</span>
+                <span class="n">remaining</span> <span class="o">=</span> <span class="n">block_size</span> <span class="o">-</span> <span class="mi">4</span>
+                <span class="k">if</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">remaining</span><span class="p">)</span>
+
+        <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card_info</span> <span class="k">if</span> <span class="n">card_info</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cards</span></div>
+
+
+
+<div class="viewcode-block" id="compute_board_signature">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.board_capture.compute_board_signature">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_board_signature</span><span class="p">(</span><span class="n">board_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute a unique signature for a board state.</span>
+
+<span class="sd">    Used to detect duplicate board states reached via different paths.</span>
+<span class="sd">    Only considers player0&#39;s board (we&#39;re doing solitaire combo evaluation).</span>
+
+<span class="sd">    Uses BoardSignature from state_representation for structured representation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        board_state: Dict with player0/player1 zones</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MD5 hash string of the board state</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">BoardSignature</span><span class="o">.</span><span class="n">from_board_state</span><span class="p">(</span><span class="n">board_state</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sig</span><span class="o">.</span><span class="n">hash</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="compute_idle_state_hash">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.board_capture.compute_idle_state_hash">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_idle_state_hash</span><span class="p">(</span><span class="n">idle_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">board_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute a unique hash for an intermediate game state at MSG_IDLE.</span>
+
+<span class="sd">    This hash captures:</span>
+<span class="sd">    - Board state (cards in each zone)</span>
+<span class="sd">    - Available actions (which encodes OPT usage implicitly)</span>
+
+<span class="sd">    Two states with identical hash will have identical future action spaces,</span>
+<span class="sd">    so we only need to explore one of them.</span>
+
+<span class="sd">    Uses IntermediateState from state_representation for structured representation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        idle_data: Parsed MSG_IDLE data with available actions</span>
+<span class="sd">        board_state: Current board state dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MD5 hash string of the intermediate state</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">IntermediateState</span><span class="o">.</span><span class="n">from_idle_data</span><span class="p">(</span><span class="n">idle_data</span><span class="p">,</span> <span class="n">board_state</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">hash</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="capture_board_state">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.board_capture.capture_board_state">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">capture_board_state</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span> <span class="n">duel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Capture complete board state at current duel position.</span>
+
+<span class="sd">    Queries all relevant zones for both players and extracts card information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lib: CFFI library handle</span>
+<span class="sd">        duel: Duel handle from OCG_CreateDuel</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict with player0/player1 keys, each containing zone lists</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;player0&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;hand&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;monsters&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;spells&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;graveyard&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;banished&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;extra&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;player1&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;hand&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;monsters&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;spells&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;graveyard&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;banished&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;extra&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">locations</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;hand&quot;</span><span class="p">,</span> <span class="n">LOCATION_HAND</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;monsters&quot;</span><span class="p">,</span> <span class="n">LOCATION_MZONE</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;spells&quot;</span><span class="p">,</span> <span class="n">LOCATION_SZONE</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;graveyard&quot;</span><span class="p">,</span> <span class="n">LOCATION_GRAVE</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;banished&quot;</span><span class="p">,</span> <span class="n">LOCATION_REMOVED</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;extra&quot;</span><span class="p">,</span> <span class="n">LOCATION_EXTRA</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+        <span class="n">player_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;player</span><span class="si">{</span><span class="n">player</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">for</span> <span class="n">loc_name</span><span class="p">,</span> <span class="n">loc_value</span> <span class="ow">in</span> <span class="n">locations</span><span class="p">:</span>
+            <span class="c1"># Query this location</span>
+            <span class="n">query_info</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;OCG_QueryInfo*&quot;</span><span class="p">)</span>
+            <span class="n">query_info</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">QUERY_CODE</span> <span class="o">|</span> <span class="n">QUERY_POSITION</span> <span class="o">|</span> <span class="n">QUERY_ATTACK</span> <span class="o">|</span> <span class="n">QUERY_DEFENSE</span>
+            <span class="n">query_info</span><span class="o">.</span><span class="n">con</span> <span class="o">=</span> <span class="n">player</span>
+            <span class="n">query_info</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">loc_value</span>
+            <span class="n">query_info</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">query_info</span><span class="o">.</span><span class="n">overlay_seq</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">length</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;uint32_t*&quot;</span><span class="p">)</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">OCG_DuelQueryLocation</span><span class="p">(</span><span class="n">duel</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">query_info</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">length</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">ffi</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">length</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="n">cards</span> <span class="o">=</span> <span class="n">parse_query_response</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">cards</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">card</span> <span class="ow">and</span> <span class="s2">&quot;code&quot;</span> <span class="ow">in</span> <span class="n">card</span><span class="p">:</span>
+                        <span class="n">code</span> <span class="o">=</span> <span class="n">card</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">]</span>
+                        <span class="n">name</span> <span class="o">=</span> <span class="n">get_card_name</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+                        <span class="n">card_entry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                        <span class="p">}</span>
+                        <span class="k">if</span> <span class="s2">&quot;attack&quot;</span> <span class="ow">in</span> <span class="n">card</span><span class="p">:</span>
+                            <span class="n">card_entry</span><span class="p">[</span><span class="s2">&quot;atk&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">card</span><span class="p">[</span><span class="s2">&quot;attack&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s2">&quot;defense&quot;</span> <span class="ow">in</span> <span class="n">card</span><span class="p">:</span>
+                            <span class="n">card_entry</span><span class="p">[</span><span class="s2">&quot;def&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">card</span><span class="p">[</span><span class="s2">&quot;defense&quot;</span><span class="p">]</span>
+                        <span class="n">state</span><span class="p">[</span><span class="n">player_key</span><span class="p">][</span><span class="n">loc_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card_entry</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">state</span></div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;parse_query_response&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;compute_board_signature&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;compute_idle_state_hash&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;capture_board_state&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

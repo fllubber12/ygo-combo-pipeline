@@ -1,0 +1,510 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.cards.validator &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.cards.validator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.cards.validator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">card_validator.py - Verified card data validation module.</span>
+
+<span class="sd">This module provides validation of card data against a human-verified reference</span>
+<span class="sd">to prevent hallucinated or incorrect card information from propagating through</span>
+<span class="sd">the combo pipeline.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    from card_validator import CardValidator, get_verified_card</span>
+
+<span class="sd">    validator = CardValidator()</span>
+
+<span class="sd">    # Get verified card data</span>
+<span class="sd">    card = validator.get_card(60764609)</span>
+<span class="sd">    print(card[&#39;level&#39;])  # 6</span>
+
+<span class="sd">    # Validate engine data</span>
+<span class="sd">    validator.validate_card(60764609, &#39;level&#39;, 6)  # OK</span>
+<span class="sd">    validator.validate_card(60764609, &#39;level&#39;, 1)  # Raises warning</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Path to verified cards JSON</span>
+<span class="n">VERIFIED_CARDS_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;config&quot;</span> <span class="o">/</span> <span class="s2">&quot;verified_cards.json&quot;</span>
+<span class="n">CDB_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;cards.cdb&quot;</span>
+
+
+<div class="viewcode-block" id="CardNotVerifiedError">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardNotVerifiedError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardNotVerifiedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when accessing a card that hasn&#39;t been verified.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="CardValidationError">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidationError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when card data doesn&#39;t match verified data.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="CardValidator">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CardValidator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validates card data against verified reference.</span>
+
+<span class="sd">    This class loads human-verified card data and provides methods to:</span>
+<span class="sd">    - Look up verified card attributes</span>
+<span class="sd">    - Validate engine/CDB data against verified data</span>
+<span class="sd">    - Log warnings when discrepancies are found</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CardValidator.__init__">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verified_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the validator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            verified_path: Path to verified_cards.json. Uses default if None.</span>
+<span class="sd">            strict: If True, raise exceptions on validation failures.</span>
+<span class="sd">                    If False, log warnings instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verified_path</span> <span class="o">=</span> <span class="n">verified_path</span> <span class="ow">or</span> <span class="n">VERIFIED_CARDS_PATH</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strict</span> <span class="o">=</span> <span class="n">strict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cards</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loaded</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load verified cards data if not already loaded.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">verified_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Verified cards file not found: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">verified_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Create config/verified_cards.json with human-verified card data.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verified_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cards</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cards&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loaded</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cards</span><span class="p">)</span><span class="si">}</span><span class="s2"> verified cards from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">verified_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CardValidator.get_card">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.get_card">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get verified card data by ID.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            card_id: Card passcode (int or str)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict with verified card attributes</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CardNotVerifiedError: If card is not in verified database</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+
+        <span class="n">card_id_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">card_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">card_id_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cards</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CardNotVerifiedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Card </span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> is not in verified database.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Add it to config/verified_cards.json after verifying data from official sources.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cards</span><span class="p">[</span><span class="n">card_id_str</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CardValidator.get_attribute">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.get_attribute">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">attribute</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a specific verified attribute for a card.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            card_id: Card passcode</span>
+<span class="sd">            attribute: Attribute name (e.g., &#39;level&#39;, &#39;atk&#39;, &#39;type&#39;)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The verified attribute value</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CardNotVerifiedError: If card not verified</span>
+<span class="sd">            KeyError: If attribute not present for this card</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">card</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_card</span><span class="p">(</span><span class="n">card_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">attribute</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">card</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Attribute &#39;</span><span class="si">{</span><span class="n">attribute</span><span class="si">}</span><span class="s2">&#39; not found for card </span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">).</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Available attributes: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">card</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CardValidator.validate">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.validate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">attribute</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">actual_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate a card attribute against verified data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            card_id: Card passcode</span>
+<span class="sd">            attribute: Attribute to validate (e.g., &#39;level&#39;)</span>
+<span class="sd">            actual_value: The value to check</span>
+<span class="sd">            source: Description of where actual_value came from (for logging)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if valid, False if mismatch (or raises if strict mode)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CardValidationError: In strict mode, if validation fails</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">expected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">card_id</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CardNotVerifiedError</span><span class="p">:</span>
+            <span class="c1"># Card not verified - can&#39;t validate</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot validate </span><span class="si">{</span><span class="n">attribute</span><span class="si">}</span><span class="s2"> for unverified card </span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Don&#39;t fail on unverified cards</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># Attribute not tracked for this card</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">actual_value</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
+            <span class="n">card_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cards</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">card_id</span><span class="p">),</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;unknown&#39;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Card data mismatch for </span><span class="si">{</span><span class="n">card_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">attribute</span><span class="si">}</span><span class="s2">: expected=</span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2">, actual=</span><span class="si">{</span><span class="n">actual_value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;  Source: </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strict</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CardValidationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="CardValidator.validate_card_dict">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.validate_card_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_card_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">card_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+                          <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate all attributes in a card dictionary.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            card_id: Card passcode</span>
+<span class="sd">            card_data: Dict with card attributes to validate</span>
+<span class="sd">            source: Description of data source</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of validation error messages (empty if all valid)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Map of common attribute variations</span>
+        <span class="n">attr_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="s1">&#39;rank&#39;</span><span class="p">,</span> <span class="s1">&#39;link_rating&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;atk&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;atk&#39;</span><span class="p">,</span> <span class="s1">&#39;attack&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;def&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;def&#39;</span><span class="p">,</span> <span class="s1">&#39;defense&#39;</span><span class="p">],</span>
+        <span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">verified</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_card</span><span class="p">(</span><span class="n">card_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CardNotVerifiedError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># Can&#39;t validate unverified cards</span>
+
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">card_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">card_id</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">: expected=</span><span class="si">{</span><span class="n">verified</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span><span class="si">}</span><span class="s2">, actual=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">errors</span></div>
+
+
+<div class="viewcode-block" id="CardValidator.is_verified">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.is_verified">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_verified</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if a card is in the verified database.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">card_id</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cards</span></div>
+
+
+<div class="viewcode-block" id="CardValidator.get_all_verified_ids">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.get_all_verified_ids">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_verified_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get list of all verified card IDs.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cards</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="CardValidator.get_level_6_fiends">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.CardValidator.get_level_6_fiends">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_level_6_fiends</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all verified Level 6 Fiend monsters (for Caesar materials).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">card_id</span><span class="p">,</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cards</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;level&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span> <span class="ow">and</span> <span class="s1">&#39;Fiend&#39;</span> <span class="ow">in</span> <span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">card_id</span><span class="p">,</span> <span class="o">**</span><span class="n">card</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="get_verified_card">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.get_verified_card">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_verified_card</span><span class="p">(</span><span class="n">card_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience function to get verified card data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        card_id: Card passcode</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict with verified card attributes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">CardValidator</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">validator</span><span class="o">.</span><span class="n">get_card</span><span class="p">(</span><span class="n">card_id</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_engine_card">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.validate_engine_card">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_engine_card</span><span class="p">(</span><span class="n">card_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ygopro-core&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate a card&#39;s level from the engine against verified data.</span>
+
+<span class="sd">    This is specifically for diagnosing the SELECT_SUM level parsing issue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        card_id: Card passcode</span>
+<span class="sd">        level: Level value from engine</span>
+<span class="sd">        source: Description of source</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if level matches verified data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">CardValidator</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">validator</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">card_id</span><span class="p">,</span> <span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compare_cdb_to_verified">
+<a class="viewcode-back" href="../../../../modules/cards.html#src.ygo_combo.cards.validator.compare_cdb_to_verified">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_cdb_to_verified</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare cards.cdb data against verified data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict with &#39;matches&#39; and &#39;mismatches&#39; lists</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">CardValidator</span><span class="p">()</span>
+    <span class="n">validator</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;matches&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;mismatches&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;missing_from_cdb&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">CDB_PATH</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cards.cdb not found at </span><span class="si">{</span><span class="n">CDB_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">CDB_PATH</span><span class="p">)</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">card_id</span><span class="p">,</span> <span class="n">verified</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">_cards</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;SELECT level, atk, def FROM datas WHERE id = ?&quot;</span><span class="p">,</span>
+            <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">card_id</span><span class="p">),)</span>
+        <span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">[</span><span class="s1">&#39;missing_from_cdb&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">verified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">cdb_level</span><span class="p">,</span> <span class="n">cdb_atk</span><span class="p">,</span> <span class="n">cdb_def</span> <span class="o">=</span> <span class="n">row</span>
+
+        <span class="c1"># Check level (handle Xyz rank and Link rating)</span>
+        <span class="n">expected_level</span> <span class="o">=</span> <span class="n">verified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;level&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">verified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rank&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">verified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;link_rating&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">expected_level</span> <span class="ow">and</span> <span class="n">cdb_level</span> <span class="o">!=</span> <span class="n">expected_level</span><span class="p">:</span>
+            <span class="c1"># Note: CDB stores rank/link in level field with special encoding</span>
+            <span class="c1"># Xyz: level &amp; 0xff = rank, Link: level &amp; 0xff = link rating</span>
+            <span class="n">actual_level</span> <span class="o">=</span> <span class="n">cdb_level</span> <span class="o">&amp;</span> <span class="mh">0xff</span>
+            <span class="k">if</span> <span class="n">actual_level</span> <span class="o">!=</span> <span class="n">expected_level</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s1">&#39;mismatches&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">verified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">): &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;level CDB=</span><span class="si">{</span><span class="n">cdb_level</span><span class="si">}</span><span class="s2"> (extracted=</span><span class="si">{</span><span class="n">actual_level</span><span class="si">}</span><span class="s2">), verified=</span><span class="si">{</span><span class="n">expected_level</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s1">&#39;matches&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> level OK&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">[</span><span class="s1">&#39;matches&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> level OK&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check ATK</span>
+        <span class="k">if</span> <span class="s1">&#39;atk&#39;</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cdb_atk</span> <span class="o">!=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;atk&#39;</span><span class="p">]:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s1">&#39;mismatches&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">verified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">): &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;ATK CDB=</span><span class="si">{</span><span class="n">cdb_atk</span><span class="si">}</span><span class="s2">, verified=</span><span class="si">{</span><span class="n">verified</span><span class="p">[</span><span class="s1">&#39;atk&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Check DEF (not applicable for Link monsters)</span>
+        <span class="k">if</span> <span class="s1">&#39;def&#39;</span> <span class="ow">in</span> <span class="n">verified</span> <span class="ow">and</span> <span class="s1">&#39;link_rating&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cdb_def</span> <span class="o">!=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;def&#39;</span><span class="p">]:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s1">&#39;mismatches&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">card_id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">verified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">): &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;DEF CDB=</span><span class="si">{</span><span class="n">cdb_def</span><span class="si">}</span><span class="s2">, verified=</span><span class="si">{</span><span class="n">verified</span><span class="p">[</span><span class="s1">&#39;def&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Run validation check</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CARD VALIDATOR - CDB vs Verified Data&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">compare_cdb_to_verified</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Matches: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;matches&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mismatches: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;mismatches&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing from CDB: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;missing_from_cdb&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;mismatches&#39;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- MISMATCHES ---&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;mismatches&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;missing_from_cdb&#39;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- MISSING FROM CDB ---&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;missing_from_cdb&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test specific card</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- Level 6 Fiends (Caesar Materials) ---&quot;</span><span class="p">)</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">CardValidator</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">get_level_6_fiends</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">card</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">card</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (Level </span><span class="si">{</span><span class="n">card</span><span class="p">[</span><span class="s1">&#39;level&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

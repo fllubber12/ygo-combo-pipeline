@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.engine.paths &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.engine.paths</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.engine.paths</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Centralized path definitions for ygo-combo-pipeline.</span>
+
+<span class="sd">All file paths should be imported from this module to ensure consistency</span>
+<span class="sd">across the codebase.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># PROJECT ROOT</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="c1"># Project root is three directories up from src/ygo_combo/engine/</span>
+<span class="n">PROJECT_ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CONFIGURATION FILES</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="n">CONFIG_DIR</span> <span class="o">=</span> <span class="n">PROJECT_ROOT</span> <span class="o">/</span> <span class="s2">&quot;config&quot;</span>
+<span class="n">LOCKED_LIBRARY_PATH</span> <span class="o">=</span> <span class="n">CONFIG_DIR</span> <span class="o">/</span> <span class="s2">&quot;locked_library.json&quot;</span>
+<span class="n">EVALUATION_CONFIG_PATH</span> <span class="o">=</span> <span class="n">CONFIG_DIR</span> <span class="o">/</span> <span class="s2">&quot;evaluation_config.json&quot;</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># DATA FILES</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="c1"># Card database (sqlite)</span>
+<span class="n">CDB_PATH</span> <span class="o">=</span> <span class="n">PROJECT_ROOT</span> <span class="o">/</span> <span class="s2">&quot;cards.cdb&quot;</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># BUILD ARTIFACTS</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="c1"># Build directory is at src/ygo_combo/build/ (one level up from engine/)</span>
+<span class="n">BUILD_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;build&quot;</span>
+
+
+<div class="viewcode-block" id="get_lib_extension">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.paths.get_lib_extension">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_lib_extension</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get platform-appropriate shared library extension.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Library extension including the dot (.dylib, .dll, or .so).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;Darwin&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;.dylib&quot;</span>
+    <span class="k">elif</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;.dll&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;.so&quot;</span>  <span class="c1"># Linux and others</span></div>
+
+
+
+<div class="viewcode-block" id="get_library_path">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.paths.get_library_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_library_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get platform-appropriate path to libygo shared library.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">BUILD_DIR</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;libygo</span><span class="si">{</span><span class="n">get_lib_extension</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># SCRIPT PATHS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="get_scripts_path">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.paths.get_scripts_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_scripts_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get ygopro-core scripts directory from environment.</span>
+
+<span class="sd">    Requires YGOPRO_SCRIPTS_PATH environment variable to be set.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        EnvironmentError: If YGOPRO_SCRIPTS_PATH is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">env_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;YGOPRO_SCRIPTS_PATH&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">env_path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">env_path</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span>
+        <span class="s2">&quot;YGOPRO_SCRIPTS_PATH environment variable must be set.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;Example: export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-core/script</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="s2">&quot;This should point to the directory containing utility.lua and card scripts.&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="verify_scripts_path">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.paths.verify_scripts_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_scripts_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if scripts directory exists and contains expected files.</span>
+
+<span class="sd">    Returns True if valid, raises FileNotFoundError with helpful message if not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scripts_path</span> <span class="o">=</span> <span class="n">get_scripts_path</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scripts_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;ygopro-core scripts directory not found: </span><span class="si">{</span><span class="n">scripts_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Set YGOPRO_SCRIPTS_PATH environment variable to the correct location.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Example: export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-core/script&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check for expected utility files</span>
+    <span class="n">utility_lua</span> <span class="o">=</span> <span class="n">scripts_path</span> <span class="o">/</span> <span class="s2">&quot;utility.lua&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">utility_lua</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;utility.lua not found in scripts directory: </span><span class="si">{</span><span class="n">scripts_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Ensure YGOPRO_SCRIPTS_PATH points to a valid ygopro-core script directory.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># OUTPUT PATHS</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="n">REPORTS_DIR</span> <span class="o">=</span> <span class="n">PROJECT_ROOT</span> <span class="o">/</span> <span class="s2">&quot;reports&quot;</span>
+<span class="n">HANDOFFS_DIR</span> <span class="o">=</span> <span class="n">PROJECT_ROOT</span> <span class="o">/</span> <span class="s2">&quot;handoffs&quot;</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Quick test of path resolution</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PROJECT_ROOT: </span><span class="si">{</span><span class="n">PROJECT_ROOT</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CDB_PATH: </span><span class="si">{</span><span class="n">CDB_PATH</span><span class="si">}</span><span class="s2"> (exists: </span><span class="si">{</span><span class="n">CDB_PATH</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LOCKED_LIBRARY_PATH: </span><span class="si">{</span><span class="n">LOCKED_LIBRARY_PATH</span><span class="si">}</span><span class="s2"> (exists: </span><span class="si">{</span><span class="n">LOCKED_LIBRARY_PATH</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Library path: </span><span class="si">{</span><span class="n">get_library_path</span><span class="p">()</span><span class="si">}</span><span class="s2"> (exists: </span><span class="si">{</span><span class="n">get_library_path</span><span class="p">()</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scripts path: </span><span class="si">{</span><span class="n">get_scripts_path</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

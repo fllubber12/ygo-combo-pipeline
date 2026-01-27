@@ -1,0 +1,922 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cards Module &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Encoding Module" href="encoding.html" />
+    <link rel="prev" title="Search Module" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search.html">Search Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cards Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.cards.roles">Card Roles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole"><code class="docutils literal notranslate"><span class="pre">CardRole</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole.STARTER"><code class="docutils literal notranslate"><span class="pre">CardRole.STARTER</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole.EXTENDER"><code class="docutils literal notranslate"><span class="pre">CardRole.EXTENDER</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole.PAYOFF"><code class="docutils literal notranslate"><span class="pre">CardRole.PAYOFF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole.UTILITY"><code class="docutils literal notranslate"><span class="pre">CardRole.UTILITY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole.GARNET"><code class="docutils literal notranslate"><span class="pre">CardRole.GARNET</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole.UNKNOWN"><code class="docutils literal notranslate"><span class="pre">CardRole.UNKNOWN</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification"><code class="docutils literal notranslate"><span class="pre">CardClassification</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification.passcode"><code class="docutils literal notranslate"><span class="pre">CardClassification.passcode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification.role"><code class="docutils literal notranslate"><span class="pre">CardClassification.role</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification.tags"><code class="docutils literal notranslate"><span class="pre">CardClassification.tags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification.priority_boost"><code class="docutils literal notranslate"><span class="pre">CardClassification.priority_boost</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification.notes"><code class="docutils literal notranslate"><span class="pre">CardClassification.notes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">CardClassification.passcode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">CardClassification.role</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">CardClassification.tags</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">CardClassification.priority_boost</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">CardClassification.notes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification.effective_priority"><code class="docutils literal notranslate"><span class="pre">CardClassification.effective_priority()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification.__init__"><code class="docutils literal notranslate"><span class="pre">CardClassification.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.roles.ActionWithRole"><code class="docutils literal notranslate"><span class="pre">ActionWithRole</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.ActionWithRole.action"><code class="docutils literal notranslate"><span class="pre">ActionWithRole.action</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.ActionWithRole.role"><code class="docutils literal notranslate"><span class="pre">ActionWithRole.role</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.ActionWithRole.priority"><code class="docutils literal notranslate"><span class="pre">ActionWithRole.priority</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.ActionWithRole.card_code"><code class="docutils literal notranslate"><span class="pre">ActionWithRole.card_code</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.ActionWithRole.__init__"><code class="docutils literal notranslate"><span class="pre">ActionWithRole.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.from_config"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.from_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.from_locked_library"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.from_locked_library()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.add_classification"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.add_classification()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_role"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.get_role()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_classification"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.get_classification()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_priority"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.get_priority()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_cards_by_role"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.get_cards_by_role()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_actions"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.prioritize_actions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_idle_actions"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.prioritize_idle_actions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.should_prune_extenders"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.should_prune_extenders()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.filter_by_role"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.filter_by_role()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.stats"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.to_config"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.to_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier.save_config"><code class="docutils literal notranslate"><span class="pre">CardRoleClassifier.save_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.roles.get_fiendsmith_classifications"><code class="docutils literal notranslate"><span class="pre">get_fiendsmith_classifications()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.roles.create_fiendsmith_classifier"><code class="docutils literal notranslate"><span class="pre">create_fiendsmith_classifier()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.cards.validator">Card Validator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardNotVerifiedError"><code class="docutils literal notranslate"><span class="pre">CardNotVerifiedError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidationError"><code class="docutils literal notranslate"><span class="pre">CardValidationError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator"><code class="docutils literal notranslate"><span class="pre">CardValidator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.__init__"><code class="docutils literal notranslate"><span class="pre">CardValidator.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.get_card"><code class="docutils literal notranslate"><span class="pre">CardValidator.get_card()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.get_attribute"><code class="docutils literal notranslate"><span class="pre">CardValidator.get_attribute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.validate"><code class="docutils literal notranslate"><span class="pre">CardValidator.validate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.validate_card_dict"><code class="docutils literal notranslate"><span class="pre">CardValidator.validate_card_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.is_verified"><code class="docutils literal notranslate"><span class="pre">CardValidator.is_verified()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.get_all_verified_ids"><code class="docutils literal notranslate"><span class="pre">CardValidator.get_all_verified_ids()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidator.get_level_6_fiends"><code class="docutils literal notranslate"><span class="pre">CardValidator.get_level_6_fiends()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.validator.get_verified_card"><code class="docutils literal notranslate"><span class="pre">get_verified_card()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.validator.validate_engine_card"><code class="docutils literal notranslate"><span class="pre">validate_engine_card()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.cards.validator.compare_cdb_to_verified"><code class="docutils literal notranslate"><span class="pre">compare_cdb_to_verified()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#card-verification">Card Verification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Cards Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/cards.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cards-module">
+<h1>Cards Module<a class="headerlink" href="#cards-module" title="Link to this heading"></a></h1>
+<p>Card validation and role classification.</p>
+<section id="module-src.ygo_combo.cards.roles">
+<span id="card-roles"></span><h2>Card Roles<a class="headerlink" href="#module-src.ygo_combo.cards.roles" title="Link to this heading"></a></h2>
+<p>Card role classification for move ordering and pruning.</p>
+<p>Classifies cards into roles (Starter, Extender, Payoff, etc.) to enable:
+1. Better move ordering (starters first, then extenders, then payoffs)
+2. Pruning (skip extenders if no starter has been activated)
+3. Combo pattern recognition</p>
+<p>Roles are determined by card effects and deck context. This module supports
+both heuristic classification and manual overrides via config.</p>
+<dl>
+<dt>Usage:</dt><dd><p>from card_roles import CardRoleClassifier, CardRole</p>
+<p>classifier = CardRoleClassifier.from_config(“config/card_roles.json”)
+role = classifier.get_role(60764609)  # Engraver -&gt; STARTER</p>
+<p># Prioritize actions
+ordered = classifier.prioritize_actions(actions)</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRole">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.roles.</span></span><span class="sig-name descname"><span class="pre">CardRole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRole" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.IntEnum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></a></p>
+<p>Card role classification for combo sequencing.</p>
+<p>Lower values = higher priority in move ordering.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRole.STARTER">
+<span class="sig-name descname"><span class="pre">STARTER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRole.STARTER" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRole.EXTENDER">
+<span class="sig-name descname"><span class="pre">EXTENDER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRole.EXTENDER" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRole.PAYOFF">
+<span class="sig-name descname"><span class="pre">PAYOFF</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRole.PAYOFF" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRole.UTILITY">
+<span class="sig-name descname"><span class="pre">UTILITY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRole.UTILITY" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRole.GARNET">
+<span class="sig-name descname"><span class="pre">GARNET</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRole.GARNET" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRole.UNKNOWN">
+<span class="sig-name descname"><span class="pre">UNKNOWN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">99</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRole.UNKNOWN" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.roles.</span></span><span class="sig-name descname"><span class="pre">CardClassification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">passcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardClassification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Complete classification info for a single card.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification.passcode">
+<span class="sig-name descname"><span class="pre">passcode</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification.passcode" title="Link to this definition"></a></dt>
+<dd><p>Card passcode (unique identifier)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification.role">
+<span class="sig-name descname"><span class="pre">role</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification.role" title="Link to this definition"></a></dt>
+<dd><p>Primary role classification</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification.tags">
+<span class="sig-name descname"><span class="pre">tags</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification.tags" title="Link to this definition"></a></dt>
+<dd><p>Additional descriptive tags (e.g., “tuner”, “link_material”)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification.priority_boost">
+<span class="sig-name descname"><span class="pre">priority_boost</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification.priority_boost" title="Link to this definition"></a></dt>
+<dd><p>Adjustment to default role priority (negative = higher)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification.notes">
+<span class="sig-name descname"><span class="pre">notes</span></span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification.notes" title="Link to this definition"></a></dt>
+<dd><p>Human-readable notes about the card</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>passcode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>role</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRole</span></code></a></span>)</p></li>
+<li><p><strong>tags</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>)</p></li>
+<li><p><strong>priority_boost</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>notes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">passcode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">role</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><span class="pre">CardRole</span></a></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">tags</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">priority_boost</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">notes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification.effective_priority">
+<span class="sig-name descname"><span class="pre">effective_priority</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardClassification.effective_priority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification.effective_priority" title="Link to this definition"></a></dt>
+<dd><p>Get effective priority (role value + boost).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardClassification.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">passcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ygo_combo.cards.roles.CardClassification.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>passcode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>role</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRole</span></code></a></span>)</p></li>
+<li><p><strong>tags</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>)</p></li>
+<li><p><strong>priority_boost</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>notes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.ActionWithRole">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.roles.</span></span><span class="sig-name descname"><span class="pre">ActionWithRole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">card_code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#ActionWithRole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.ActionWithRole" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Action paired with its card’s role for sorting.</p>
+<p>Used internally by prioritize_actions().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>action</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p></li>
+<li><p><strong>role</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRole</span></code></a></span>)</p></li>
+<li><p><strong>priority</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>card_code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.ActionWithRole.action">
+<span class="sig-name descname"><span class="pre">action</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span><a class="headerlink" href="#src.ygo_combo.cards.roles.ActionWithRole.action" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.ActionWithRole.role">
+<span class="sig-name descname"><span class="pre">role</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><span class="pre">CardRole</span></a></span><a class="headerlink" href="#src.ygo_combo.cards.roles.ActionWithRole.role" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.ActionWithRole.priority">
+<span class="sig-name descname"><span class="pre">priority</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#src.ygo_combo.cards.roles.ActionWithRole.priority" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.ActionWithRole.card_code">
+<span class="sig-name descname"><span class="pre">card_code</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#src.ygo_combo.cards.roles.ActionWithRole.card_code" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.ActionWithRole.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">card_code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ygo_combo.cards.roles.ActionWithRole.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>action</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p></li>
+<li><p><strong>role</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRole</span></code></a></span>)</p></li>
+<li><p><strong>priority</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>card_code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.roles.</span></span><span class="sig-name descname"><span class="pre">CardRoleClassifier</span></span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Classifies cards into roles for move ordering.</p>
+<p>Supports:
+- Manual classification via config file
+- Heuristic classification based on card properties
+- Runtime classification updates</p>
+<p>Thread-safe after initialization (read-only lookups).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize empty classifier.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.from_config">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.from_config" title="Link to this definition"></a></dt>
+<dd><p>Load classifier from JSON config file.</p>
+<p>Config format:
+{</p>
+<blockquote>
+<div><dl class="simple">
+<dt>“cards”: {</dt><dd><dl class="simple">
+<dt>“60764609”: {</dt><dd><p>“role”: “STARTER”,
+“tags”: [“fiendsmith”, “hand_activatable”],
+“priority_boost”: 0,
+“notes”: “Fiendsmith Engraver - 1-card starter”</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>},
+“default_role”: “UNKNOWN”</p>
+</div></blockquote>
+<p>}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier" title="src.ygo_combo.cards.roles.CardRoleClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRoleClassifier</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.from_locked_library">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_locked_library</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">library_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.from_locked_library"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.from_locked_library" title="Link to this definition"></a></dt>
+<dd><p>Create classifier from locked library with heuristic classification.</p>
+<p>Uses card properties from locked_library.json to guess roles:
+- Cards with “hand” activation -&gt; likely STARTER
+- Extra deck monsters -&gt; likely PAYOFF or EXTENDER
+- High-level main deck monsters -&gt; likely GARNET</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>library_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier" title="src.ygo_combo.cards.roles.CardRoleClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRoleClassifier</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.add_classification">
+<span class="sig-name descname"><span class="pre">add_classification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classification</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.add_classification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.add_classification" title="Link to this definition"></a></dt>
+<dd><p>Add or update a card classification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>classification</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification" title="src.ygo_combo.cards.roles.CardClassification"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardClassification</span></code></a></span>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.get_role">
+<span class="sig-name descname"><span class="pre">get_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">passcode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.get_role"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_role" title="Link to this definition"></a></dt>
+<dd><p>Get role for a card (UNKNOWN if not classified).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>passcode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRole</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.get_classification">
+<span class="sig-name descname"><span class="pre">get_classification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">passcode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.get_classification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_classification" title="Link to this definition"></a></dt>
+<dd><p>Get full classification for a card.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>passcode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification" title="src.ygo_combo.cards.roles.CardClassification"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardClassification</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.get_priority">
+<span class="sig-name descname"><span class="pre">get_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">passcode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.get_priority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_priority" title="Link to this definition"></a></dt>
+<dd><p>Get effective priority for a card (lower = higher priority).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>passcode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.get_cards_by_role">
+<span class="sig-name descname"><span class="pre">get_cards_by_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">role</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.get_cards_by_role"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.get_cards_by_role" title="Link to this definition"></a></dt>
+<dd><p>Get all passcodes with a given role.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>role</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRole</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Set" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_actions">
+<span class="sig-name descname"><span class="pre">prioritize_actions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'code'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.prioritize_actions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_actions" title="Link to this definition"></a></dt>
+<dd><p>Sort actions by card role priority.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actions</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span>) – List of action dicts (from idle_data parsing)</p></li>
+<li><p><strong>code_key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Key name for card passcode in action dict</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Actions sorted by priority (starters first, then extenders, etc.)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_idle_actions">
+<span class="sig-name descname"><span class="pre">prioritize_idle_actions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idle_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.prioritize_idle_actions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.prioritize_idle_actions" title="Link to this definition"></a></dt>
+<dd><p>Sort all action lists in idle_data by card role priority.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>idle_data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>) – Parsed MSG_IDLE data with activatable, spsummon, etc.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>New idle_data dict with sorted action lists</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.should_prune_extenders">
+<span class="sig-name descname"><span class="pre">should_prune_extenders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_taken</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'code'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.should_prune_extenders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.should_prune_extenders" title="Link to this definition"></a></dt>
+<dd><p>Check if extender actions should be pruned.</p>
+<p>Heuristic: If no starter has been activated yet, extenders are
+unlikely to lead to good boards. This enables early pruning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actions_taken</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span>) – List of actions already taken this path</p></li>
+<li><p><strong>code_key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Key name for card passcode in action dict</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if extenders should be skipped (no starter activated)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.filter_by_role">
+<span class="sig-name descname"><span class="pre">filter_by_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_roles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'code'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.filter_by_role"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.filter_by_role" title="Link to this definition"></a></dt>
+<dd><p>Filter actions to only include cards with allowed roles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actions</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span>) – List of action dicts</p></li>
+<li><p><strong>allowed_roles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Set" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>[<a class="reference internal" href="#src.ygo_combo.cards.roles.CardRole" title="src.ygo_combo.cards.roles.CardRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRole</span></code></a>]</span>) – Set of CardRole values to allow</p></li>
+<li><p><strong>code_key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Key name for card passcode in action dict</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Filtered list of actions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.stats">
+<span class="sig-name descname"><span class="pre">stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.stats" title="Link to this definition"></a></dt>
+<dd><p>Return classification statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.to_config">
+<span class="sig-name descname"><span class="pre">to_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.to_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.to_config" title="Link to this definition"></a></dt>
+<dd><p>Export classifications to config format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.CardRoleClassifier.save_config">
+<span class="sig-name descname"><span class="pre">save_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#CardRoleClassifier.save_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.CardRoleClassifier.save_config" title="Link to this definition"></a></dt>
+<dd><p>Save classifications to JSON config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.get_fiendsmith_classifications">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.roles.</span></span><span class="sig-name descname"><span class="pre">get_fiendsmith_classifications</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#get_fiendsmith_classifications"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.get_fiendsmith_classifications" title="Link to this definition"></a></dt>
+<dd><p>Pre-defined classifications for the Fiendsmith library.</p>
+<p>These are manually verified role assignments for optimal move ordering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference internal" href="#src.ygo_combo.cards.roles.CardClassification" title="src.ygo_combo.cards.roles.CardClassification"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardClassification</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.roles.create_fiendsmith_classifier">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.roles.</span></span><span class="sig-name descname"><span class="pre">create_fiendsmith_classifier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/roles.html#create_fiendsmith_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.roles.create_fiendsmith_classifier" title="Link to this definition"></a></dt>
+<dd><p>Create a classifier pre-loaded with Fiendsmith classifications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.cards.roles.CardRoleClassifier" title="src.ygo_combo.cards.roles.CardRoleClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">CardRoleClassifier</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.cards.validator">
+<span id="card-validator"></span><h2>Card Validator<a class="headerlink" href="#module-src.ygo_combo.cards.validator" title="Link to this heading"></a></h2>
+<p>card_validator.py - Verified card data validation module.</p>
+<p>This module provides validation of card data against a human-verified reference
+to prevent hallucinated or incorrect card information from propagating through
+the combo pipeline.</p>
+<dl>
+<dt>Usage:</dt><dd><p>from card_validator import CardValidator, get_verified_card</p>
+<p>validator = CardValidator()</p>
+<p># Get verified card data
+card = validator.get_card(60764609)
+print(card[‘level’])  # 6</p>
+<p># Validate engine data
+validator.validate_card(60764609, ‘level’, 6)  # OK
+validator.validate_card(60764609, ‘level’, 1)  # Raises warning</p>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardNotVerifiedError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.validator.</span></span><span class="sig-name descname"><span class="pre">CardNotVerifiedError</span></span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardNotVerifiedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardNotVerifiedError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Raised when accessing a card that hasn’t been verified.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidationError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.validator.</span></span><span class="sig-name descname"><span class="pre">CardValidationError</span></span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidationError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Raised when card data doesn’t match verified data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.validator.</span></span><span class="sig-name descname"><span class="pre">CardValidator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verified_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Validates card data against verified reference.</p>
+<p>This class loads human-verified card data and provides methods to:
+- Look up verified card attributes
+- Validate engine/CDB data against verified data
+- Log warnings when discrepancies are found</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>verified_path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>)</p></li>
+<li><p><strong>strict</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verified_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the validator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>verified_path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – Path to verified_cards.json. Uses default if None.</p></li>
+<li><p><strong>strict</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If True, raise exceptions on validation failures.
+If False, log warnings instead.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.get_card">
+<span class="sig-name descname"><span class="pre">get_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.get_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.get_card" title="Link to this definition"></a></dt>
+<dd><p>Get verified card data by ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>card_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Card passcode (int or str)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict with verified card attributes</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#src.ygo_combo.cards.validator.CardNotVerifiedError" title="src.ygo_combo.cards.validator.CardNotVerifiedError"><strong>CardNotVerifiedError</strong></a> – If card is not in verified database</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.get_attribute">
+<span class="sig-name descname"><span class="pre">get_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.get_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.get_attribute" title="Link to this definition"></a></dt>
+<dd><p>Get a specific verified attribute for a card.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>card_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Card passcode</p></li>
+<li><p><strong>attribute</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Attribute name (e.g., ‘level’, ‘atk’, ‘type’)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The verified attribute value</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#src.ygo_combo.cards.validator.CardNotVerifiedError" title="src.ygo_combo.cards.validator.CardNotVerifiedError"><strong>CardNotVerifiedError</strong></a> – If card not verified</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.14)"><strong>KeyError</strong></a> – If attribute not present for this card</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actual_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'unknown'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.validate" title="Link to this definition"></a></dt>
+<dd><p>Validate a card attribute against verified data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>card_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Card passcode</p></li>
+<li><p><strong>attribute</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Attribute to validate (e.g., ‘level’)</p></li>
+<li><p><strong>actual_value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – The value to check</p></li>
+<li><p><strong>source</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Description of where actual_value came from (for logging)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if valid, False if mismatch (or raises if strict mode)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#src.ygo_combo.cards.validator.CardValidationError" title="src.ygo_combo.cards.validator.CardValidationError"><strong>CardValidationError</strong></a> – In strict mode, if validation fails</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.validate_card_dict">
+<span class="sig-name descname"><span class="pre">validate_card_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">card_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'unknown'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.validate_card_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.validate_card_dict" title="Link to this definition"></a></dt>
+<dd><p>Validate all attributes in a card dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>card_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Card passcode</p></li>
+<li><p><strong>card_data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a></span>) – Dict with card attributes to validate</p></li>
+<li><p><strong>source</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Description of data source</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of validation error messages (empty if all valid)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.is_verified">
+<span class="sig-name descname"><span class="pre">is_verified</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.is_verified"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.is_verified" title="Link to this definition"></a></dt>
+<dd><p>Check if a card is in the verified database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>card_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.get_all_verified_ids">
+<span class="sig-name descname"><span class="pre">get_all_verified_ids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.get_all_verified_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.get_all_verified_ids" title="Link to this definition"></a></dt>
+<dd><p>Get list of all verified card IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.CardValidator.get_level_6_fiends">
+<span class="sig-name descname"><span class="pre">get_level_6_fiends</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#CardValidator.get_level_6_fiends"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.CardValidator.get_level_6_fiends" title="Link to this definition"></a></dt>
+<dd><p>Get all verified Level 6 Fiend monsters (for Caesar materials).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.get_verified_card">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.validator.</span></span><span class="sig-name descname"><span class="pre">get_verified_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#get_verified_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.get_verified_card" title="Link to this definition"></a></dt>
+<dd><p>Convenience function to get verified card data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>card_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Card passcode</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict with verified card attributes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.validate_engine_card">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.validator.</span></span><span class="sig-name descname"><span class="pre">validate_engine_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ygopro-core'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#validate_engine_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.validate_engine_card" title="Link to this definition"></a></dt>
+<dd><p>Validate a card’s level from the engine against verified data.</p>
+<p>This is specifically for diagnosing the SELECT_SUM level parsing issue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>card_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Card passcode</p></li>
+<li><p><strong>level</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Level value from engine</p></li>
+<li><p><strong>source</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Description of source</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if level matches verified data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.cards.validator.compare_cdb_to_verified">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.cards.validator.</span></span><span class="sig-name descname"><span class="pre">compare_cdb_to_verified</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/cards/validator.html#compare_cdb_to_verified"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.cards.validator.compare_cdb_to_verified" title="Link to this definition"></a></dt>
+<dd><p>Compare cards.cdb data against verified data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict with ‘matches’ and ‘mismatches’ lists</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="card-verification">
+<h2>Card Verification<a class="headerlink" href="#card-verification" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="search.html" class="btn btn-neutral float-left" title="Search Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="encoding.html" class="btn btn-neutral float-right" title="Encoding Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

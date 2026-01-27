@@ -1,0 +1,876 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.engine.interface &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.engine.interface</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.engine.interface</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Engine interface module for ygopro-core CFFI bindings.</span>
+
+<span class="sd">This module provides the production interface to ygopro-core, including:</span>
+<span class="sd">- Card database initialization and lookup</span>
+<span class="sd">- CFFI callback implementations</span>
+<span class="sd">- Message parsing utilities</span>
+<span class="sd">- Buffer reading utilities</span>
+
+<span class="sd">All code previously imported from test_fiendsmith_duel.py should now</span>
+<span class="sd">be imported from this module instead.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.bindings</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ffi</span><span class="p">,</span> <span class="n">load_library</span><span class="p">,</span>
+    <span class="n">LOCATION_DECK</span><span class="p">,</span> <span class="n">LOCATION_HAND</span><span class="p">,</span> <span class="n">LOCATION_EXTRA</span><span class="p">,</span> <span class="n">LOCATION_MZONE</span><span class="p">,</span>
+    <span class="n">LOCATION_SZONE</span><span class="p">,</span> <span class="n">LOCATION_GRAVE</span><span class="p">,</span> <span class="n">LOCATION_REMOVED</span><span class="p">,</span> <span class="n">LOCATION_OVERLAY</span><span class="p">,</span>
+    <span class="n">POS_FACEDOWN_DEFENSE</span><span class="p">,</span> <span class="n">POS_FACEUP_ATTACK</span><span class="p">,</span>
+    <span class="n">MSG_RETRY</span><span class="p">,</span> <span class="n">MSG_HINT</span><span class="p">,</span> <span class="n">MSG_START</span><span class="p">,</span> <span class="n">MSG_WIN</span><span class="p">,</span> <span class="n">MSG_SELECT_BATTLECMD</span><span class="p">,</span>
+    <span class="n">MSG_IDLE</span><span class="p">,</span> <span class="n">MSG_SELECT_CARD</span><span class="p">,</span> <span class="n">MSG_SELECT_CHAIN</span><span class="p">,</span> <span class="n">MSG_SELECT_PLACE</span><span class="p">,</span>
+    <span class="n">MSG_SELECT_POSITION</span><span class="p">,</span> <span class="n">MSG_SELECT_EFFECTYN</span><span class="p">,</span> <span class="n">MSG_SELECT_YESNO</span><span class="p">,</span>
+    <span class="n">MSG_SHUFFLE_DECK</span><span class="p">,</span> <span class="n">MSG_NEW_TURN</span><span class="p">,</span> <span class="n">MSG_NEW_PHASE</span><span class="p">,</span> <span class="n">MSG_DRAW</span><span class="p">,</span>
+    <span class="n">TYPE_LINK</span><span class="p">,</span> <span class="n">TYPE_SYNCHRO</span><span class="p">,</span> <span class="n">TYPE_XYZ</span><span class="p">,</span> <span class="n">TYPE_FUSION</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">CDB_PATH</span><span class="p">,</span> <span class="n">get_scripts_path</span><span class="p">,</span> <span class="n">verify_scripts_path</span>
+
+
+<span class="c1"># Re-export commonly used items from ocg_bindings for convenience</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># From this module</span>
+    <span class="s1">&#39;EngineContext&#39;</span><span class="p">,</span>  <span class="c1"># Context manager for safe state management</span>
+    <span class="s1">&#39;init_card_database&#39;</span><span class="p">,</span> <span class="s1">&#39;close_card_database&#39;</span><span class="p">,</span> <span class="s1">&#39;get_card_name&#39;</span><span class="p">,</span> <span class="s1">&#39;location_name&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;set_lib&#39;</span><span class="p">,</span> <span class="s1">&#39;get_lib&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;preload_utility_scripts&#39;</span><span class="p">,</span> <span class="s1">&#39;process_messages&#39;</span><span class="p">,</span> <span class="s1">&#39;parse_msg_idle&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;read_u8&#39;</span><span class="p">,</span> <span class="s1">&#39;read_u16&#39;</span><span class="p">,</span> <span class="s1">&#39;read_u32&#39;</span><span class="p">,</span> <span class="s1">&#39;read_u64&#39;</span><span class="p">,</span> <span class="s1">&#39;read_i32&#39;</span><span class="p">,</span> <span class="s1">&#39;read_cardlist&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;get_setcodes&#39;</span><span class="p">,</span> <span class="s1">&#39;get_setcode_array&#39;</span><span class="p">,</span> <span class="s1">&#39;clear_setcode_cache&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;py_card_reader&#39;</span><span class="p">,</span> <span class="s1">&#39;py_card_reader_done&#39;</span><span class="p">,</span> <span class="s1">&#39;py_script_reader&#39;</span><span class="p">,</span> <span class="s1">&#39;py_log_handler&#39;</span><span class="p">,</span>
+    <span class="c1"># Re-exported from ocg_bindings</span>
+    <span class="s1">&#39;ffi&#39;</span><span class="p">,</span> <span class="s1">&#39;load_library&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LOCATION_DECK&#39;</span><span class="p">,</span> <span class="s1">&#39;LOCATION_HAND&#39;</span><span class="p">,</span> <span class="s1">&#39;LOCATION_EXTRA&#39;</span><span class="p">,</span> <span class="s1">&#39;LOCATION_MZONE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LOCATION_SZONE&#39;</span><span class="p">,</span> <span class="s1">&#39;LOCATION_GRAVE&#39;</span><span class="p">,</span> <span class="s1">&#39;LOCATION_REMOVED&#39;</span><span class="p">,</span> <span class="s1">&#39;LOCATION_OVERLAY&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;POS_FACEDOWN_DEFENSE&#39;</span><span class="p">,</span> <span class="s1">&#39;POS_FACEUP_ATTACK&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Global State</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="n">_card_db</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Connection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_lib</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Library reference for callbacks</span>
+<span class="n">_setcode_cache</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_setcode_arrays</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_card_db</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Connection</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current card database connection.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_card_db</span>
+
+
+<div class="viewcode-block" id="set_lib">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.set_lib">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_lib</span><span class="p">(</span><span class="n">lib</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the library reference for callbacks.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_lib</span>
+    <span class="n">_lib</span> <span class="o">=</span> <span class="n">lib</span></div>
+
+
+
+<div class="viewcode-block" id="get_lib">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.get_lib">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_lib</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current library reference.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_lib</span></div>
+
+
+
+<div class="viewcode-block" id="EngineContext">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.EngineContext">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EngineContext</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for safe engine state management.</span>
+
+<span class="sd">    Ensures library and database are properly initialized and cleaned up.</span>
+
+<span class="sd">    Usage:</span>
+<span class="sd">        with EngineContext() as ctx:</span>
+<span class="sd">            duel = ctx.create_duel(options)</span>
+<span class="sd">            # ... use duel ...</span>
+<span class="sd">        # Library and database automatically cleaned up</span>
+
+<span class="sd">    Or for manual control:</span>
+<span class="sd">        with EngineContext(auto_init_db=False) as ctx:</span>
+<span class="sd">            ctx.init_database(custom_path)</span>
+<span class="sd">            # ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EngineContext.__init__">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.EngineContext.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auto_init_db</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cdb_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the engine context.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            auto_init_db: If True, automatically initialize the card database.</span>
+<span class="sd">            cdb_path: Optional custom path to cards.cdb.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_auto_init_db</span> <span class="o">=</span> <span class="n">auto_init_db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cdb_path</span> <span class="o">=</span> <span class="n">cdb_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lib</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="EngineContext.__enter__">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.EngineContext.__enter__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;EngineContext&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enter the context, loading library and optionally database.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lib</span> <span class="o">=</span> <span class="n">load_library</span><span class="p">()</span>
+        <span class="n">set_lib</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lib</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_init_db</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">init_card_database</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cdb_path</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Card database not found at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cdb_path</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">CDB_PATH</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="EngineContext.__exit__">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.EngineContext.__exit__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exit the context, cleaning up all resources.&quot;&quot;&quot;</span>
+        <span class="c1"># Destroy any active duels</span>
+        <span class="k">for</span> <span class="n">duel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duels</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lib</span><span class="o">.</span><span class="n">OCG_DestroyDuel</span><span class="p">(</span><span class="n">duel</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duels</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="c1"># Close database</span>
+        <span class="n">close_card_database</span><span class="p">()</span>
+
+        <span class="c1"># Clear library reference</span>
+        <span class="n">set_lib</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lib</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Don&#39;t suppress exceptions</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lib</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the library handle.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lib</span>
+
+<div class="viewcode-block" id="EngineContext.create_duel">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.EngineContext.create_duel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_duel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a duel and track it for cleanup.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            options: OCG_DuelOptions structure.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Duel handle.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If duel creation fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">duel_ptr</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;OCG_Duel*&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lib</span><span class="o">.</span><span class="n">OCG_CreateDuel</span><span class="p">(</span><span class="n">duel_ptr</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">error_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="s2">&quot;NO_OUTPUT&quot;</span><span class="p">,</span> <span class="s2">&quot;NOT_CREATED&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;NULL_DATA_READER&quot;</span><span class="p">,</span> <span class="s2">&quot;NULL_SCRIPT_READER&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;INCOMPATIBLE_LUA_API&quot;</span><span class="p">,</span> <span class="s2">&quot;NULL_RNG_SEED&quot;</span>
+            <span class="p">]</span>
+            <span class="n">error_name</span> <span class="o">=</span> <span class="n">error_names</span><span class="p">[</span><span class="n">result</span><span class="p">]</span> <span class="k">if</span> <span class="n">result</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">error_names</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;UNKNOWN&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to create duel: </span><span class="si">{</span><span class="n">error_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="n">duel</span> <span class="o">=</span> <span class="n">duel_ptr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">duel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">duel</span></div>
+
+
+<div class="viewcode-block" id="EngineContext.destroy_duel">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.EngineContext.destroy_duel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">destroy_duel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Destroy a duel and remove from tracking.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">duel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duels</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lib</span><span class="o">.</span><span class="n">OCG_DestroyDuel</span><span class="p">(</span><span class="n">duel</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_duels</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">duel</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EngineContext.init_database">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.EngineContext.init_database">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cdb_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Manually initialize the card database.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">init_card_database</span><span class="p">(</span><span class="n">cdb_path</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Card Database Functions</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="init_card_database">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.init_card_database">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_card_database</span><span class="p">(</span><span class="n">cdb_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the card database connection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cdb_path: Optional path to cards.cdb. Defaults to CDB_PATH from paths module.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if database loaded successfully, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_card_db</span>
+
+    <span class="k">if</span> <span class="n">cdb_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cdb_path</span> <span class="o">=</span> <span class="n">CDB_PATH</span>
+
+    <span class="k">if</span> <span class="n">cdb_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">_card_db</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cdb_path</span><span class="p">))</span>
+        <span class="n">_card_db</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Row</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="close_card_database">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.close_card_database">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">close_card_database</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Close the card database connection.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_card_db</span>
+    <span class="k">if</span> <span class="n">_card_db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_card_db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">_card_db</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="get_card_name">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.get_card_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_card_name</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look up card name from database.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_card_db</span>
+    <span class="k">if</span> <span class="n">_card_db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Card#</span><span class="si">{</span><span class="n">code</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">_card_db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;SELECT name FROM texts WHERE id = ?&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">code</span><span class="p">,)</span>
+        <span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">Error</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Card#</span><span class="si">{</span><span class="n">code</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="location_name">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.location_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">location_name</span><span class="p">(</span><span class="n">loc</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert location constant to human-readable name.&quot;&quot;&quot;</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mh">0x01</span><span class="p">:</span> <span class="s2">&quot;Deck&quot;</span><span class="p">,</span>
+        <span class="mh">0x02</span><span class="p">:</span> <span class="s2">&quot;Hand&quot;</span><span class="p">,</span>
+        <span class="mh">0x04</span><span class="p">:</span> <span class="s2">&quot;MZone&quot;</span><span class="p">,</span>
+        <span class="mh">0x08</span><span class="p">:</span> <span class="s2">&quot;SZone&quot;</span><span class="p">,</span>
+        <span class="mh">0x10</span><span class="p">:</span> <span class="s2">&quot;Grave&quot;</span><span class="p">,</span>
+        <span class="mh">0x20</span><span class="p">:</span> <span class="s2">&quot;Banished&quot;</span><span class="p">,</span>
+        <span class="mh">0x40</span><span class="p">:</span> <span class="s2">&quot;Extra&quot;</span><span class="p">,</span>
+        <span class="mh">0x80</span><span class="p">:</span> <span class="s2">&quot;Overlay&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">names</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Loc</span><span class="si">{</span><span class="n">loc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Setcode Handling</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="get_setcodes">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.get_setcodes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_setcodes</span><span class="p">(</span><span class="n">setcode_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse setcode value into array of setcodes.</span>
+
+<span class="sd">    Setcodes are packed as multiple 16-bit values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">setcode_value</span> <span class="ow">in</span> <span class="n">_setcode_cache</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_setcode_cache</span><span class="p">[</span><span class="n">setcode_value</span><span class="p">]</span>
+
+    <span class="n">setcodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">setcode_value</span>
+    <span class="k">while</span> <span class="n">val</span><span class="p">:</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">val</span> <span class="o">&amp;</span> <span class="mh">0xFFFF</span>
+        <span class="k">if</span> <span class="n">code</span><span class="p">:</span>
+            <span class="n">setcodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">&gt;&gt;=</span> <span class="mi">16</span>
+
+    <span class="n">_setcode_cache</span><span class="p">[</span><span class="n">setcode_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">setcodes</span>
+    <span class="k">return</span> <span class="n">setcodes</span></div>
+
+
+
+<div class="viewcode-block" id="get_setcode_array">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.get_setcode_array">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_setcode_array</span><span class="p">(</span><span class="n">setcodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get or create a persistent setcode array for CFFI.</span>
+
+<span class="sd">    Pre-allocates setcode arrays to avoid GC issues during duel.</span>
+<span class="sd">    Note: These persist for the process lifetime to prevent use-after-free.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">setcodes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_setcode_arrays</span><span class="p">:</span>
+        <span class="c1"># Create null-terminated array</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;uint16_t[]&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">setcodes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">code</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">setcodes</span><span class="p">):</span>
+            <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="n">arr</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">setcodes</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">_setcode_arrays</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span>
+    <span class="k">return</span> <span class="n">_setcode_arrays</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="clear_setcode_cache">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.clear_setcode_cache">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_setcode_cache</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear the setcode arrays cache.</span>
+
+<span class="sd">    Call this between duels if memory is a concern, but only after</span>
+<span class="sd">    ensuring no duel is referencing the arrays.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_setcode_arrays</span>
+    <span class="n">_setcode_arrays</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CFFI Callbacks</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="nd">@ffi</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;void(void*, uint32_t, OCG_CardData*)&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">py_card_reader</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Callback to provide card data to the engine.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_card_db</span>
+
+    <span class="c1"># Set defaults</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">alias</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">setcodes</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">NULL</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">attribute</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">race</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">attack</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">defense</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">lscale</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">rscale</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">link_marker</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">_card_db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">_card_db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;SELECT * FROM datas WHERE id = ?&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">code</span><span class="p">,)</span>
+        <span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">:</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">alias</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;alias&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+
+            <span class="c1"># Parse level field (contains level, lscale, rscale)</span>
+            <span class="n">level_raw</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;level&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level_raw</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">lscale</span> <span class="o">=</span> <span class="p">(</span><span class="n">level_raw</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">rscale</span> <span class="o">=</span> <span class="p">(</span><span class="n">level_raw</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+
+            <span class="n">data</span><span class="o">.</span><span class="n">attribute</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;attribute&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">race</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;race&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">attack</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;atk&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;atk&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">defense</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;def&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;def&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
+
+            <span class="c1"># Handle Link monsters</span>
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">type</span> <span class="o">&amp;</span> <span class="n">TYPE_LINK</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">link_marker</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">defense</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">defense</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Parse setcodes</span>
+            <span class="n">setcode_raw</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;setcode&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">setcode_raw</span><span class="p">:</span>
+                <span class="n">setcodes</span> <span class="o">=</span> <span class="n">get_setcodes</span><span class="p">(</span><span class="n">setcode_raw</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">setcodes</span><span class="p">:</span>
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">get_setcode_array</span><span class="p">(</span><span class="n">setcodes</span><span class="p">)</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">setcodes</span> <span class="o">=</span> <span class="n">arr</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Card reader error for code </span><span class="si">{</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@ffi</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;void(void*, OCG_CardData*)&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">py_card_reader_done</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Callback when card reading is complete.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+
+<span class="nd">@ffi</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;int(void*, OCG_Duel, const char*)&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">py_script_reader</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">duel</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Callback to load Lua scripts for cards.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_lib</span>
+
+    <span class="k">if</span> <span class="n">_lib</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">script_name</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="n">script_path</span> <span class="o">=</span> <span class="n">get_scripts_path</span><span class="p">()</span>
+
+    <span class="c1"># Search paths in order</span>
+    <span class="n">search_paths</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">script_path</span> <span class="o">/</span> <span class="s2">&quot;official&quot;</span> <span class="o">/</span> <span class="n">script_name</span><span class="p">,</span>
+        <span class="n">script_path</span> <span class="o">/</span> <span class="s2">&quot;official&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s2">.lua&quot;</span><span class="p">,</span>
+        <span class="n">script_path</span> <span class="o">/</span> <span class="n">script_name</span><span class="p">,</span>
+        <span class="n">script_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s2">.lua&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Also try utility scripts</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">script_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;c&quot;</span><span class="p">):</span>
+        <span class="n">search_paths</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+            <span class="n">script_path</span> <span class="o">/</span> <span class="n">script_name</span><span class="p">,</span>
+            <span class="n">script_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s2">.lua&quot;</span><span class="p">,</span>
+        <span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">script_file</span> <span class="ow">in</span> <span class="n">search_paths</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">script_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">script_content</span> <span class="o">=</span> <span class="n">script_file</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">_lib</span><span class="o">.</span><span class="n">OCG_LoadScript</span><span class="p">(</span>
+                    <span class="n">duel</span><span class="p">,</span>
+                    <span class="n">script_content</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">script_content</span><span class="p">),</span>
+                    <span class="n">name</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Script load error for </span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="c1"># Script not found - this is normal for many cards</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="nd">@ffi</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="s2">&quot;void(void*, const char*, int)&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">py_log_handler</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">log_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Callback for log messages from the engine.&quot;&quot;&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">string</span> <span class="o">!=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">NULL</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">log_types</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;SCRIPT&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;UNDEFINED&quot;</span><span class="p">}</span>
+    <span class="n">type_name</span> <span class="o">=</span> <span class="n">log_types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">log_type</span><span class="p">,</span> <span class="s2">&quot;UNKNOWN&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">log_type</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># ERROR</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OCG </span><span class="si">{</span><span class="n">type_name</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">log_type</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># DEBUG</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OCG </span><span class="si">{</span><span class="n">type_name</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Buffer Reading Utilities</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="read_u8">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.read_u8">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read unsigned 8-bit integer from buffer.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;B&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_u16">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.read_u16">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u16</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read unsigned 16-bit integer from buffer.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;H&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_u32">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.read_u32">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read unsigned 32-bit integer from buffer.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_i32">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.read_i32">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_i32</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read signed 32-bit integer from buffer.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;i&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_u64">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.read_u64">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u64</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read unsigned 64-bit integer from buffer.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;Q&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_cardlist">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.read_cardlist">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_cardlist</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">seq_u8</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a list of cards from message buffer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        buf: BytesIO buffer</span>
+<span class="sd">        extra: If True, read extra uint64 + uint8 (for activatable effects)</span>
+<span class="sd">        seq_u8: If True, sequence is uint8 (for repos), else uint32</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of tuples: (code, controller, location, sequence, [effect_desc, client_mode])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cards</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">controller</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">seq_u8</span><span class="p">:</span>
+            <span class="n">sequence</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sequence</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="n">effect_desc</span> <span class="o">=</span> <span class="n">read_u64</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">client_mode</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">code</span><span class="p">,</span> <span class="n">controller</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">effect_desc</span><span class="p">,</span> <span class="n">client_mode</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">code</span><span class="p">,</span> <span class="n">controller</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">sequence</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">cards</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Message Parsing</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="parse_msg_idle">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.parse_msg_idle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_msg_idle</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_IDLE message to extract legal actions.</span>
+
+<span class="sd">    edo9300 format (from playerop.cpp):</span>
+<span class="sd">    - player (u8)</span>
+<span class="sd">    - summonable: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]...</span>
+<span class="sd">    - spsummon: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]...</span>
+<span class="sd">    - repos: count(u32), [code(u32), con(u8), loc(u8), seq(u8)]...  # Note: seq is u8!</span>
+<span class="sd">    - mset: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]...</span>
+<span class="sd">    - sset: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]...</span>
+<span class="sd">    - activate: count(u32), [code(u32), con(u8), loc(u8), seq(u32), desc(u64), mode(u8)]...</span>
+<span class="sd">    - to_bp (u8)</span>
+<span class="sd">    - to_ep (u8)</span>
+<span class="sd">    - can_shuffle (u8)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">summonable</span> <span class="o">=</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">spsummon</span> <span class="o">=</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">repos</span> <span class="o">=</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">seq_u8</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># repos uses u8 for sequence</span>
+    <span class="n">mset</span> <span class="o">=</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">sset</span> <span class="o">=</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">activatable</span> <span class="o">=</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">to_bp</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">to_ep</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">can_shuffle</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s2">&quot;summonable&quot;</span><span class="p">:</span> <span class="n">summonable</span><span class="p">,</span>
+        <span class="s2">&quot;spsummon&quot;</span><span class="p">:</span> <span class="n">spsummon</span><span class="p">,</span>
+        <span class="s2">&quot;repos&quot;</span><span class="p">:</span> <span class="n">repos</span><span class="p">,</span>
+        <span class="s2">&quot;mset&quot;</span><span class="p">:</span> <span class="n">mset</span><span class="p">,</span>
+        <span class="s2">&quot;sset&quot;</span><span class="p">:</span> <span class="n">sset</span><span class="p">,</span>
+        <span class="s2">&quot;activatable&quot;</span><span class="p">:</span> <span class="n">activatable</span><span class="p">,</span>
+        <span class="s2">&quot;to_bp&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">to_bp</span><span class="p">),</span>
+        <span class="s2">&quot;to_ep&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">to_ep</span><span class="p">),</span>
+        <span class="s2">&quot;can_shuffle&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">can_shuffle</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="process_messages">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.process_messages">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_messages</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span> <span class="n">duel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process all pending messages from the duel.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of (message_type_name, parsed_data) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msg_len</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;uint32_t*&quot;</span><span class="p">)</span>
+    <span class="n">msg_ptr</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">OCG_DuelGetMessage</span><span class="p">(</span><span class="n">duel</span><span class="p">,</span> <span class="n">msg_len</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">msg_len</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># Copy message data</span>
+    <span class="n">msg_data</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">msg_ptr</span><span class="p">,</span> <span class="n">msg_len</span><span class="p">[</span><span class="mi">0</span><span class="p">])[:]</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">msg_data</span><span class="p">)</span>
+
+    <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># edo9300 format: messages are length-prefixed</span>
+    <span class="c1"># Each message: [4 bytes length][1 byte type][data...]</span>
+    <span class="k">while</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">msg_data</span><span class="p">):</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">msg_data</span><span class="p">)</span> <span class="o">-</span> <span class="n">buf</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">remaining</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="c1"># Read message length (includes type byte)</span>
+        <span class="n">msg_length</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">msg_length</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">msg_length</span> <span class="o">&gt;</span> <span class="n">remaining</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="c1"># Read message type</span>
+        <span class="n">msg_type</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">data_length</span> <span class="o">=</span> <span class="n">msg_length</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># Subtract type byte</span>
+
+        <span class="c1"># Read message data</span>
+        <span class="n">msg_body</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">data_length</span><span class="p">)</span>
+        <span class="n">msg_buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">msg_body</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">MSG_IDLE</span><span class="p">:</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;IDLE&quot;</span><span class="p">,</span> <span class="n">parse_msg_idle</span><span class="p">(</span><span class="n">msg_body</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">MSG_START</span><span class="p">:</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;START&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">MSG_DRAW</span><span class="p">:</span>
+                <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">cards</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+                    <span class="c1"># Card code may have position info in high bits</span>
+                    <span class="n">code_raw</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                    <span class="n">code</span> <span class="o">=</span> <span class="n">code_raw</span> <span class="o">&amp;</span> <span class="mh">0x7FFFFFFF</span>  <span class="c1"># Mask to get card code</span>
+                    <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;DRAW&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span> <span class="s2">&quot;cards&quot;</span><span class="p">:</span> <span class="n">cards</span><span class="p">}))</span>
+            <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">MSG_NEW_TURN</span><span class="p">:</span>
+                <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;NEW_TURN&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">}))</span>
+            <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">MSG_NEW_PHASE</span><span class="p">:</span>
+                <span class="n">phase</span> <span class="o">=</span> <span class="n">read_u16</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;NEW_PHASE&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;phase&quot;</span><span class="p">:</span> <span class="n">phase</span><span class="p">}))</span>
+            <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">MSG_SHUFFLE_DECK</span><span class="p">:</span>
+                <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;SHUFFLE_DECK&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">}))</span>
+            <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">MSG_HINT</span><span class="p">:</span>
+                <span class="n">hint_type</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">read_u64</span><span class="p">(</span><span class="n">msg_buf</span><span class="p">)</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;HINT&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">hint_type</span><span class="p">,</span> <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">}))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;MSG_</span><span class="si">{</span><span class="n">msg_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;MSG_</span><span class="si">{</span><span class="n">msg_type</span><span class="si">}</span><span class="s2">_ERROR&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">messages</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Duel Setup Utilities</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="preload_utility_scripts">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.interface.preload_utility_scripts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">preload_utility_scripts</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span> <span class="n">duel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load all required utility scripts before card scripts.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if at least one utility script was loaded.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Verify scripts directory exists before attempting to load</span>
+    <span class="n">verify_scripts_path</span><span class="p">()</span>
+    <span class="n">script_path</span> <span class="o">=</span> <span class="n">get_scripts_path</span><span class="p">()</span>
+
+    <span class="c1"># Order matters - load in dependency order</span>
+    <span class="n">utility_scripts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;constant.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;utility.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;archetype_setcode_constants.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_fusion.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_link.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_synchro.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_xyz.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_ritual.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_pendulum.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_normal.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_equip.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_gemini.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_spirit.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;proc_union.lua&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cards_specific_functions.lua&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">loaded</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">script_name</span> <span class="ow">in</span> <span class="n">utility_scripts</span><span class="p">:</span>
+        <span class="n">full_path</span> <span class="o">=</span> <span class="n">script_path</span> <span class="o">/</span> <span class="n">script_name</span>
+        <span class="k">if</span> <span class="n">full_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">script_content</span> <span class="o">=</span> <span class="n">full_path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+                <span class="n">script_name_bytes</span> <span class="o">=</span> <span class="n">script_name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">OCG_LoadScript</span><span class="p">(</span>
+                    <span class="n">duel</span><span class="p">,</span>
+                    <span class="n">script_content</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">script_content</span><span class="p">),</span>
+                    <span class="n">script_name_bytes</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">loaded</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading </span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">loaded</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Module Initialization</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Quick self-test</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Testing engine_interface module...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test database initialization</span>
+    <span class="k">if</span> <span class="n">init_card_database</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Card database loaded from </span><span class="si">{</span><span class="n">CDB_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">get_card_name</span><span class="p">(</span><span class="mi">60764609</span><span class="p">)</span>  <span class="c1"># Fiendsmith Engraver</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Card lookup test: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Card database not found at </span><span class="si">{</span><span class="n">CDB_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test library loading</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">lib</span> <span class="o">=</span> <span class="n">load_library</span><span class="p">()</span>
+        <span class="n">major</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;int*&quot;</span><span class="p">)</span>
+        <span class="n">minor</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;int*&quot;</span><span class="p">)</span>
+        <span class="n">lib</span><span class="o">.</span><span class="n">OCG_GetVersion</span><span class="p">(</span><span class="n">major</span><span class="p">,</span> <span class="n">minor</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  OCG Core version: </span><span class="si">{</span><span class="n">major</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">minor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Library not found: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;engine_interface module OK&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

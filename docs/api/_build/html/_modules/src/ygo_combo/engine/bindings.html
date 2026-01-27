@@ -1,0 +1,468 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.engine.bindings &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.engine.bindings</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.engine.bindings</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CFFI bindings for edo9300 ygopro-core (OCG API v11.0).</span>
+
+<span class="sd">Based on ocgapi.h and ocgapi_types.h from:</span>
+<span class="sd">https://github.com/edo9300/ygopro-core</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    from src.cffi.ocg_bindings import ffi, lib</span>
+
+<span class="sd">    # Get version</span>
+<span class="sd">    major, minor = ffi.new(&quot;int*&quot;), ffi.new(&quot;int*&quot;)</span>
+<span class="sd">    lib.OCG_GetVersion(major, minor)</span>
+<span class="sd">    print(f&quot;OCG Core version: {major[0]}.{minor[0]}&quot;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cffi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FFI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">ffi</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
+
+<span class="c1"># Define the C API based on ocgapi.h and ocgapi_types.h</span>
+<span class="n">ffi</span><span class="o">.</span><span class="n">cdef</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    /*** ENUMS ***/</span>
+
+<span class="s2">    typedef enum OCG_LogTypes {</span>
+<span class="s2">        OCG_LOG_TYPE_ERROR,</span>
+<span class="s2">        OCG_LOG_TYPE_FROM_SCRIPT,</span>
+<span class="s2">        OCG_LOG_TYPE_FOR_DEBUG,</span>
+<span class="s2">        OCG_LOG_TYPE_UNDEFINED</span>
+<span class="s2">    } OCG_LogTypes;</span>
+
+<span class="s2">    typedef enum OCG_DuelCreationStatus {</span>
+<span class="s2">        OCG_DUEL_CREATION_SUCCESS,</span>
+<span class="s2">        OCG_DUEL_CREATION_NO_OUTPUT,</span>
+<span class="s2">        OCG_DUEL_CREATION_NOT_CREATED,</span>
+<span class="s2">        OCG_DUEL_CREATION_NULL_DATA_READER,</span>
+<span class="s2">        OCG_DUEL_CREATION_NULL_SCRIPT_READER,</span>
+<span class="s2">        OCG_DUEL_CREATION_INCOMPATIBLE_LUA_API,</span>
+<span class="s2">        OCG_DUEL_CREATION_NULL_RNG_SEED</span>
+<span class="s2">    } OCG_DuelCreationStatus;</span>
+
+<span class="s2">    typedef enum OCG_DuelStatus {</span>
+<span class="s2">        OCG_DUEL_STATUS_END,</span>
+<span class="s2">        OCG_DUEL_STATUS_AWAITING,</span>
+<span class="s2">        OCG_DUEL_STATUS_CONTINUE</span>
+<span class="s2">    } OCG_DuelStatus;</span>
+
+<span class="s2">    /*** TYPES ***/</span>
+
+<span class="s2">    typedef void* OCG_Duel;</span>
+
+<span class="s2">    typedef struct OCG_CardData {</span>
+<span class="s2">        uint32_t code;</span>
+<span class="s2">        uint32_t alias;</span>
+<span class="s2">        uint16_t* setcodes;</span>
+<span class="s2">        uint32_t type;</span>
+<span class="s2">        uint32_t level;</span>
+<span class="s2">        uint32_t attribute;</span>
+<span class="s2">        uint64_t race;</span>
+<span class="s2">        int32_t attack;</span>
+<span class="s2">        int32_t defense;</span>
+<span class="s2">        uint32_t lscale;</span>
+<span class="s2">        uint32_t rscale;</span>
+<span class="s2">        uint32_t link_marker;</span>
+<span class="s2">    } OCG_CardData;</span>
+
+<span class="s2">    typedef struct OCG_Player {</span>
+<span class="s2">        uint32_t startingLP;</span>
+<span class="s2">        uint32_t startingDrawCount;</span>
+<span class="s2">        uint32_t drawCountPerTurn;</span>
+<span class="s2">    } OCG_Player;</span>
+
+<span class="s2">    // Callback types (we&#39;ll use extern &quot;Python&quot; for these)</span>
+<span class="s2">    typedef void (*OCG_DataReader)(void* payload, uint32_t code, OCG_CardData* data);</span>
+<span class="s2">    typedef void (*OCG_DataReaderDone)(void* payload, OCG_CardData* data);</span>
+<span class="s2">    typedef int (*OCG_ScriptReader)(void* payload, OCG_Duel duel, const char* name);</span>
+<span class="s2">    typedef void (*OCG_LogHandler)(void* payload, const char* string, int type);</span>
+
+<span class="s2">    typedef struct OCG_DuelOptions {</span>
+<span class="s2">        uint64_t seed[4];</span>
+<span class="s2">        uint64_t flags;</span>
+<span class="s2">        OCG_Player team1;</span>
+<span class="s2">        OCG_Player team2;</span>
+<span class="s2">        OCG_DataReader cardReader;</span>
+<span class="s2">        void* payload1;</span>
+<span class="s2">        OCG_ScriptReader scriptReader;</span>
+<span class="s2">        void* payload2;</span>
+<span class="s2">        OCG_LogHandler logHandler;</span>
+<span class="s2">        void* payload3;</span>
+<span class="s2">        OCG_DataReaderDone cardReaderDone;</span>
+<span class="s2">        void* payload4;</span>
+<span class="s2">        uint8_t enableUnsafeLibraries;</span>
+<span class="s2">    } OCG_DuelOptions;</span>
+
+<span class="s2">    typedef struct OCG_NewCardInfo {</span>
+<span class="s2">        uint8_t team;</span>
+<span class="s2">        uint8_t duelist;</span>
+<span class="s2">        uint32_t code;</span>
+<span class="s2">        uint8_t con;</span>
+<span class="s2">        uint32_t loc;</span>
+<span class="s2">        uint32_t seq;</span>
+<span class="s2">        uint32_t pos;</span>
+<span class="s2">    } OCG_NewCardInfo;</span>
+
+<span class="s2">    typedef struct OCG_QueryInfo {</span>
+<span class="s2">        uint32_t flags;</span>
+<span class="s2">        uint8_t con;</span>
+<span class="s2">        uint32_t loc;</span>
+<span class="s2">        uint32_t seq;</span>
+<span class="s2">        uint32_t overlay_seq;</span>
+<span class="s2">    } OCG_QueryInfo;</span>
+
+<span class="s2">    /*** API FUNCTIONS ***/</span>
+
+<span class="s2">    // Core information</span>
+<span class="s2">    void OCG_GetVersion(int* major, int* minor);</span>
+
+<span class="s2">    // Duel creation and destruction</span>
+<span class="s2">    int OCG_CreateDuel(OCG_Duel* out_ocg_duel, const OCG_DuelOptions* options_ptr);</span>
+<span class="s2">    void OCG_DestroyDuel(OCG_Duel ocg_duel);</span>
+<span class="s2">    void OCG_DuelNewCard(OCG_Duel ocg_duel, const OCG_NewCardInfo* info_ptr);</span>
+<span class="s2">    void OCG_StartDuel(OCG_Duel ocg_duel);</span>
+
+<span class="s2">    // Duel processing and querying</span>
+<span class="s2">    int OCG_DuelProcess(OCG_Duel ocg_duel);</span>
+<span class="s2">    void* OCG_DuelGetMessage(OCG_Duel ocg_duel, uint32_t* length);</span>
+<span class="s2">    void OCG_DuelSetResponse(OCG_Duel ocg_duel, const void* buffer, uint32_t length);</span>
+<span class="s2">    int OCG_LoadScript(OCG_Duel ocg_duel, const char* buffer, uint32_t length, const char* name);</span>
+
+<span class="s2">    // Query functions</span>
+<span class="s2">    uint32_t OCG_DuelQueryCount(OCG_Duel ocg_duel, uint8_t team, uint32_t loc);</span>
+<span class="s2">    void* OCG_DuelQuery(OCG_Duel ocg_duel, uint32_t* length, const OCG_QueryInfo* info_ptr);</span>
+<span class="s2">    void* OCG_DuelQueryLocation(OCG_Duel ocg_duel, uint32_t* length, const OCG_QueryInfo* info_ptr);</span>
+<span class="s2">    void* OCG_DuelQueryField(OCG_Duel ocg_duel, uint32_t* length);</span>
+
+<span class="s2">    /*** Python callbacks ***/</span>
+<span class="s2">    extern &quot;Python&quot; void py_card_reader(void* payload, uint32_t code, OCG_CardData* data);</span>
+<span class="s2">    extern &quot;Python&quot; void py_card_reader_done(void* payload, OCG_CardData* data);</span>
+<span class="s2">    extern &quot;Python&quot; int py_script_reader(void* payload, OCG_Duel duel, const char* name);</span>
+<span class="s2">    extern &quot;Python&quot; void py_log_handler(void* payload, const char* string, int type);</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="load_library">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.bindings.load_library">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_library</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the libygo shared library.</span>
+
+<span class="sd">    Uses paths.get_library_path() for platform detection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_library_path</span><span class="p">,</span> <span class="n">get_lib_extension</span>
+    <span class="n">lib_path</span> <span class="o">=</span> <span class="n">get_library_path</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">lib_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">get_lib_extension</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;libygo</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2"> not found at </span><span class="si">{</span><span class="n">lib_path</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Please build the library first.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ffi</span><span class="o">.</span><span class="n">dlopen</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">lib_path</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># Module-level library instance (lazy loaded)</span>
+<span class="n">_lib</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="get_lib">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.bindings.get_lib">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_lib</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the library instance, loading it if necessary.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_lib</span>
+    <span class="k">if</span> <span class="n">_lib</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_lib</span> <span class="o">=</span> <span class="n">load_library</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_lib</span></div>
+
+
+
+<div class="viewcode-block" id="__getattr__">
+<a class="viewcode-back" href="../../../../modules/engine.html#src.ygo_combo.engine.bindings.__getattr__">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Module-level lazy loading for &#39;lib&#39; attribute.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;lib&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_lib</span><span class="p">()</span>
+    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;module </span><span class="si">{</span><span class="vm">__name__</span><span class="si">!r}</span><span class="s2"> has no attribute </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Location constants (from common.h)</span>
+<span class="n">LOCATION_DECK</span> <span class="o">=</span> <span class="mh">0x01</span>
+<span class="n">LOCATION_HAND</span> <span class="o">=</span> <span class="mh">0x02</span>
+<span class="n">LOCATION_MZONE</span> <span class="o">=</span> <span class="mh">0x04</span>
+<span class="n">LOCATION_SZONE</span> <span class="o">=</span> <span class="mh">0x08</span>
+<span class="n">LOCATION_GRAVE</span> <span class="o">=</span> <span class="mh">0x10</span>
+<span class="n">LOCATION_REMOVED</span> <span class="o">=</span> <span class="mh">0x20</span>
+<span class="n">LOCATION_EXTRA</span> <span class="o">=</span> <span class="mh">0x40</span>
+<span class="n">LOCATION_OVERLAY</span> <span class="o">=</span> <span class="mh">0x80</span>
+<span class="n">LOCATION_ONFIELD</span> <span class="o">=</span> <span class="n">LOCATION_MZONE</span> <span class="o">|</span> <span class="n">LOCATION_SZONE</span>
+
+<span class="c1"># Position constants</span>
+<span class="n">POS_FACEUP_ATTACK</span> <span class="o">=</span> <span class="mh">0x1</span>
+<span class="n">POS_FACEDOWN_ATTACK</span> <span class="o">=</span> <span class="mh">0x2</span>
+<span class="n">POS_FACEUP_DEFENSE</span> <span class="o">=</span> <span class="mh">0x4</span>
+<span class="n">POS_FACEDOWN_DEFENSE</span> <span class="o">=</span> <span class="mh">0x8</span>
+<span class="n">POS_FACEUP</span> <span class="o">=</span> <span class="n">POS_FACEUP_ATTACK</span> <span class="o">|</span> <span class="n">POS_FACEUP_DEFENSE</span>
+<span class="n">POS_FACEDOWN</span> <span class="o">=</span> <span class="n">POS_FACEDOWN_ATTACK</span> <span class="o">|</span> <span class="n">POS_FACEDOWN_DEFENSE</span>
+
+<span class="c1"># Query flags (for OCG_DuelQueryLocation)</span>
+<span class="n">QUERY_CODE</span> <span class="o">=</span> <span class="mh">0x1</span>
+<span class="n">QUERY_POSITION</span> <span class="o">=</span> <span class="mh">0x2</span>
+<span class="n">QUERY_EQUIP_CARD</span> <span class="o">=</span> <span class="mh">0x10</span>
+<span class="n">QUERY_ATTACK</span> <span class="o">=</span> <span class="mh">0x100</span>
+<span class="n">QUERY_DEFENSE</span> <span class="o">=</span> <span class="mh">0x200</span>
+<span class="n">QUERY_END</span> <span class="o">=</span> <span class="mh">0x80000000</span>
+
+<span class="c1"># Duel flags (MR5 = Master Rule 5)</span>
+<span class="n">DUEL_FLAGS_MR5</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Message Types (from ygopro-core/common.h)</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Reference: https://github.com/edo9300/ygopro-core/blob/master/common.h</span>
+
+<span class="c1"># Core messages</span>
+<span class="n">MSG_RETRY</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">MSG_HINT</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">MSG_WAITING</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">MSG_START</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">MSG_WIN</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">MSG_UPDATE_DATA</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">MSG_UPDATE_CARD</span> <span class="o">=</span> <span class="mi">7</span>
+
+<span class="c1"># Selection messages (require player response)</span>
+<span class="n">MSG_SELECT_BATTLECMD</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">MSG_IDLE</span> <span class="o">=</span> <span class="mi">11</span>  <span class="c1"># MSG_SELECT_IDLECMD</span>
+<span class="n">MSG_SELECT_CARD</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="n">MSG_SELECT_CHAIN</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">MSG_SELECT_PLACE</span> <span class="o">=</span> <span class="mi">18</span>
+<span class="n">MSG_SELECT_POSITION</span> <span class="o">=</span> <span class="mi">19</span>
+<span class="n">MSG_SELECT_TRIBUTE</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">MSG_SELECT_EFFECTYN</span> <span class="o">=</span> <span class="mi">21</span>
+<span class="n">MSG_SELECT_YESNO</span> <span class="o">=</span> <span class="mi">22</span>
+<span class="n">MSG_SELECT_OPTION</span> <span class="o">=</span> <span class="mi">23</span>
+<span class="n">MSG_SELECT_COUNTER</span> <span class="o">=</span> <span class="mi">24</span>
+<span class="n">MSG_SELECT_UNSELECT_CARD</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="n">MSG_SELECT_SUM</span> <span class="o">=</span> <span class="mi">26</span>
+<span class="n">MSG_SORT_CARD</span> <span class="o">=</span> <span class="mi">27</span>
+<span class="n">MSG_SELECT_DISFIELD</span> <span class="o">=</span> <span class="mi">28</span>
+
+<span class="c1"># Deck/hand operations</span>
+<span class="n">MSG_CONFIRM_DECKTOP</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">MSG_CONFIRM_CARDS</span> <span class="o">=</span> <span class="mi">31</span>
+<span class="n">MSG_SHUFFLE_DECK</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">MSG_SHUFFLE_HAND</span> <span class="o">=</span> <span class="mi">33</span>
+<span class="n">MSG_REFRESH_DECK</span> <span class="o">=</span> <span class="mi">34</span>
+<span class="n">MSG_SWAP_GRAVE_DECK</span> <span class="o">=</span> <span class="mi">35</span>
+<span class="n">MSG_SHUFFLE_SET_CARD</span> <span class="o">=</span> <span class="mi">36</span>
+<span class="n">MSG_REVERSE_DECK</span> <span class="o">=</span> <span class="mi">37</span>
+<span class="n">MSG_DECK_TOP</span> <span class="o">=</span> <span class="mi">38</span>
+<span class="n">MSG_SHUFFLE_EXTRA</span> <span class="o">=</span> <span class="mi">39</span>
+
+<span class="c1"># Turn/phase messages</span>
+<span class="n">MSG_NEW_TURN</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">MSG_NEW_PHASE</span> <span class="o">=</span> <span class="mi">41</span>
+<span class="n">MSG_CONFIRM_EXTRATOP</span> <span class="o">=</span> <span class="mi">42</span>
+
+<span class="c1"># Card movement</span>
+<span class="n">MSG_MOVE</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">MSG_POS_CHANGE</span> <span class="o">=</span> <span class="mi">53</span>
+<span class="n">MSG_SET</span> <span class="o">=</span> <span class="mi">54</span>
+<span class="n">MSG_SWAP</span> <span class="o">=</span> <span class="mi">55</span>
+<span class="n">MSG_FIELD_DISABLED</span> <span class="o">=</span> <span class="mi">56</span>
+
+<span class="c1"># Summoning messages</span>
+<span class="n">MSG_SUMMONING</span> <span class="o">=</span> <span class="mi">60</span>
+<span class="n">MSG_SUMMONED</span> <span class="o">=</span> <span class="mi">61</span>
+<span class="n">MSG_SPSUMMONING</span> <span class="o">=</span> <span class="mi">62</span>
+<span class="n">MSG_SPSUMMONED</span> <span class="o">=</span> <span class="mi">63</span>
+<span class="n">MSG_FLIPSUMMONING</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">MSG_FLIPSUMMONED</span> <span class="o">=</span> <span class="mi">65</span>
+
+<span class="c1"># Chain messages</span>
+<span class="n">MSG_CHAINING</span> <span class="o">=</span> <span class="mi">70</span>
+<span class="n">MSG_CHAINED</span> <span class="o">=</span> <span class="mi">71</span>
+<span class="n">MSG_CHAIN_SOLVING</span> <span class="o">=</span> <span class="mi">72</span>
+<span class="n">MSG_CHAIN_SOLVED</span> <span class="o">=</span> <span class="mi">73</span>
+<span class="n">MSG_CHAIN_END</span> <span class="o">=</span> <span class="mi">74</span>
+<span class="n">MSG_CHAIN_NEGATED</span> <span class="o">=</span> <span class="mi">75</span>
+<span class="n">MSG_CHAIN_DISABLED</span> <span class="o">=</span> <span class="mi">76</span>
+
+<span class="c1"># Selection feedback</span>
+<span class="n">MSG_CARD_SELECTED</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="n">MSG_RANDOM_SELECTED</span> <span class="o">=</span> <span class="mi">81</span>
+<span class="n">MSG_BECOME_TARGET</span> <span class="o">=</span> <span class="mi">83</span>
+
+<span class="c1"># LP and damage</span>
+<span class="n">MSG_DRAW</span> <span class="o">=</span> <span class="mi">90</span>
+<span class="n">MSG_DAMAGE</span> <span class="o">=</span> <span class="mi">91</span>
+<span class="n">MSG_RECOVER</span> <span class="o">=</span> <span class="mi">92</span>
+<span class="n">MSG_EQUIP</span> <span class="o">=</span> <span class="mi">93</span>
+<span class="n">MSG_LPUPDATE</span> <span class="o">=</span> <span class="mi">94</span>
+<span class="n">MSG_UNEQUIP</span> <span class="o">=</span> <span class="mi">95</span>
+<span class="n">MSG_CARD_TARGET</span> <span class="o">=</span> <span class="mi">96</span>
+<span class="n">MSG_CANCEL_TARGET</span> <span class="o">=</span> <span class="mi">97</span>
+<span class="n">MSG_PAY_LPCOST</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">MSG_ADD_COUNTER</span> <span class="o">=</span> <span class="mi">101</span>
+<span class="n">MSG_REMOVE_COUNTER</span> <span class="o">=</span> <span class="mi">102</span>
+
+<span class="c1"># Battle</span>
+<span class="n">MSG_ATTACK</span> <span class="o">=</span> <span class="mi">110</span>
+<span class="n">MSG_BATTLE</span> <span class="o">=</span> <span class="mi">111</span>
+<span class="n">MSG_ATTACK_DISABLED</span> <span class="o">=</span> <span class="mi">112</span>
+<span class="n">MSG_DAMAGE_STEP_START</span> <span class="o">=</span> <span class="mi">113</span>
+<span class="n">MSG_DAMAGE_STEP_END</span> <span class="o">=</span> <span class="mi">114</span>
+
+<span class="c1"># Effect messages</span>
+<span class="n">MSG_MISSED_EFFECT</span> <span class="o">=</span> <span class="mi">120</span>
+<span class="n">MSG_BE_CHAIN_TARGET</span> <span class="o">=</span> <span class="mi">121</span>
+<span class="n">MSG_CREATE_RELATION</span> <span class="o">=</span> <span class="mi">122</span>
+<span class="n">MSG_RELEASE_RELATION</span> <span class="o">=</span> <span class="mi">123</span>
+
+<span class="c1"># Random events</span>
+<span class="n">MSG_TOSS_COIN</span> <span class="o">=</span> <span class="mi">130</span>
+<span class="n">MSG_TOSS_DICE</span> <span class="o">=</span> <span class="mi">131</span>
+<span class="n">MSG_ROCK_PAPER_SCISSORS</span> <span class="o">=</span> <span class="mi">132</span>
+<span class="n">MSG_HAND_RES</span> <span class="o">=</span> <span class="mi">133</span>
+
+<span class="c1"># Announcements</span>
+<span class="n">MSG_ANNOUNCE_RACE</span> <span class="o">=</span> <span class="mi">140</span>
+<span class="n">MSG_ANNOUNCE_ATTRIB</span> <span class="o">=</span> <span class="mi">141</span>
+<span class="n">MSG_ANNOUNCE_CARD</span> <span class="o">=</span> <span class="mi">142</span>
+<span class="n">MSG_ANNOUNCE_NUMBER</span> <span class="o">=</span> <span class="mi">143</span>
+
+<span class="c1"># Hints and UI</span>
+<span class="n">MSG_CARD_HINT</span> <span class="o">=</span> <span class="mi">160</span>
+<span class="n">MSG_TAG_SWAP</span> <span class="o">=</span> <span class="mi">161</span>
+<span class="n">MSG_RELOAD_FIELD</span> <span class="o">=</span> <span class="mi">162</span>
+<span class="n">MSG_AI_NAME</span> <span class="o">=</span> <span class="mi">163</span>
+<span class="n">MSG_SHOW_HINT</span> <span class="o">=</span> <span class="mi">164</span>
+<span class="n">MSG_PLAYER_HINT</span> <span class="o">=</span> <span class="mi">165</span>
+<span class="n">MSG_MATCH_KILL</span> <span class="o">=</span> <span class="mi">170</span>
+<span class="n">MSG_CUSTOM_MSG</span> <span class="o">=</span> <span class="mi">180</span>
+<span class="n">MSG_REMOVE_CARDS</span> <span class="o">=</span> <span class="mi">190</span>
+
+<span class="c1"># Card type flags</span>
+<span class="n">TYPE_MONSTER</span> <span class="o">=</span> <span class="mh">0x1</span>
+<span class="n">TYPE_SPELL</span> <span class="o">=</span> <span class="mh">0x2</span>
+<span class="n">TYPE_TRAP</span> <span class="o">=</span> <span class="mh">0x4</span>
+<span class="n">TYPE_FUSION</span> <span class="o">=</span> <span class="mh">0x40</span>
+<span class="n">TYPE_SYNCHRO</span> <span class="o">=</span> <span class="mh">0x2000</span>
+<span class="n">TYPE_XYZ</span> <span class="o">=</span> <span class="mh">0x800000</span>
+<span class="n">TYPE_LINK</span> <span class="o">=</span> <span class="mh">0x4000000</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Quick test</span>
+    <span class="n">lib</span> <span class="o">=</span> <span class="n">load_library</span><span class="p">()</span>
+    <span class="n">major</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;int*&quot;</span><span class="p">)</span>
+    <span class="n">minor</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;int*&quot;</span><span class="p">)</span>
+    <span class="n">lib</span><span class="o">.</span><span class="n">OCG_GetVersion</span><span class="p">(</span><span class="n">major</span><span class="p">,</span> <span class="n">minor</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OCG Core version: </span><span class="si">{</span><span class="n">major</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">minor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CFFI bindings loaded successfully!&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

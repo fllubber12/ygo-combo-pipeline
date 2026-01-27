@@ -1,0 +1,1509 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Engine Module &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Search Module" href="search.html" />
+    <link rel="prev" title="Shared Types" href="types.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="types.html">Shared Types</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Engine Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.engine.bindings">Bindings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.bindings.load_library"><code class="docutils literal notranslate"><span class="pre">load_library()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.bindings.get_lib"><code class="docutils literal notranslate"><span class="pre">get_lib()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.bindings.__getattr__"><code class="docutils literal notranslate"><span class="pre">__getattr__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.engine.interface">Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext"><code class="docutils literal notranslate"><span class="pre">EngineContext</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext.__init__"><code class="docutils literal notranslate"><span class="pre">EngineContext.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext.__enter__"><code class="docutils literal notranslate"><span class="pre">EngineContext.__enter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext.__exit__"><code class="docutils literal notranslate"><span class="pre">EngineContext.__exit__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext.lib"><code class="docutils literal notranslate"><span class="pre">EngineContext.lib</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext.create_duel"><code class="docutils literal notranslate"><span class="pre">EngineContext.create_duel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext.destroy_duel"><code class="docutils literal notranslate"><span class="pre">EngineContext.destroy_duel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext.init_database"><code class="docutils literal notranslate"><span class="pre">EngineContext.init_database()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.init_card_database"><code class="docutils literal notranslate"><span class="pre">init_card_database()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.close_card_database"><code class="docutils literal notranslate"><span class="pre">close_card_database()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.get_card_name"><code class="docutils literal notranslate"><span class="pre">get_card_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.location_name"><code class="docutils literal notranslate"><span class="pre">location_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.set_lib"><code class="docutils literal notranslate"><span class="pre">set_lib()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.get_lib"><code class="docutils literal notranslate"><span class="pre">get_lib()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.preload_utility_scripts"><code class="docutils literal notranslate"><span class="pre">preload_utility_scripts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.process_messages"><code class="docutils literal notranslate"><span class="pre">process_messages()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.parse_msg_idle"><code class="docutils literal notranslate"><span class="pre">parse_msg_idle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.read_u8"><code class="docutils literal notranslate"><span class="pre">read_u8()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.read_u16"><code class="docutils literal notranslate"><span class="pre">read_u16()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.read_u32"><code class="docutils literal notranslate"><span class="pre">read_u32()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.read_u64"><code class="docutils literal notranslate"><span class="pre">read_u64()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.read_i32"><code class="docutils literal notranslate"><span class="pre">read_i32()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.read_cardlist"><code class="docutils literal notranslate"><span class="pre">read_cardlist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.get_setcodes"><code class="docutils literal notranslate"><span class="pre">get_setcodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.get_setcode_array"><code class="docutils literal notranslate"><span class="pre">get_setcode_array()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.clear_setcode_cache"><code class="docutils literal notranslate"><span class="pre">clear_setcode_cache()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.interface.load_library"><code class="docutils literal notranslate"><span class="pre">load_library()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.engine.state">State</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature"><code class="docutils literal notranslate"><span class="pre">BoardSignature</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.monsters"><code class="docutils literal notranslate"><span class="pre">BoardSignature.monsters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.spells"><code class="docutils literal notranslate"><span class="pre">BoardSignature.spells</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.graveyard"><code class="docutils literal notranslate"><span class="pre">BoardSignature.graveyard</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.hand"><code class="docutils literal notranslate"><span class="pre">BoardSignature.hand</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.banished"><code class="docutils literal notranslate"><span class="pre">BoardSignature.banished</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.extra_deck"><code class="docutils literal notranslate"><span class="pre">BoardSignature.extra_deck</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.equips"><code class="docutils literal notranslate"><span class="pre">BoardSignature.equips</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.hash"><code class="docutils literal notranslate"><span class="pre">BoardSignature.hash()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.zobrist_hash"><code class="docutils literal notranslate"><span class="pre">BoardSignature.zobrist_hash()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.to_dict"><code class="docutils literal notranslate"><span class="pre">BoardSignature.to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.from_dict"><code class="docutils literal notranslate"><span class="pre">BoardSignature.from_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.from_board_state"><code class="docutils literal notranslate"><span class="pre">BoardSignature.from_board_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.from_engine"><code class="docutils literal notranslate"><span class="pre">BoardSignature.from_engine()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.monster_count"><code class="docutils literal notranslate"><span class="pre">BoardSignature.monster_count()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.total_cards_on_field"><code class="docutils literal notranslate"><span class="pre">BoardSignature.total_cards_on_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.has_boss"><code class="docutils literal notranslate"><span class="pre">BoardSignature.has_boss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature.__init__"><code class="docutils literal notranslate"><span class="pre">BoardSignature.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec"><code class="docutils literal notranslate"><span class="pre">ActionSpec</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.spec"><code class="docutils literal notranslate"><span class="pre">ActionSpec.spec</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.passcode"><code class="docutils literal notranslate"><span class="pre">ActionSpec.passcode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.action_type"><code class="docutils literal notranslate"><span class="pre">ActionSpec.action_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.effect_index"><code class="docutils literal notranslate"><span class="pre">ActionSpec.effect_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.location"><code class="docutils literal notranslate"><span class="pre">ActionSpec.location</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.activate"><code class="docutils literal notranslate"><span class="pre">ActionSpec.activate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.special_summon"><code class="docutils literal notranslate"><span class="pre">ActionSpec.special_summon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.normal_summon"><code class="docutils literal notranslate"><span class="pre">ActionSpec.normal_summon()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.monster_set"><code class="docutils literal notranslate"><span class="pre">ActionSpec.monster_set()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.spell_set"><code class="docutils literal notranslate"><span class="pre">ActionSpec.spell_set()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.pass_action"><code class="docutils literal notranslate"><span class="pre">ActionSpec.pass_action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec.__init__"><code class="docutils literal notranslate"><span class="pre">ActionSpec.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState"><code class="docutils literal notranslate"><span class="pre">IntermediateState</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.board"><code class="docutils literal notranslate"><span class="pre">IntermediateState.board</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.legal_actions"><code class="docutils literal notranslate"><span class="pre">IntermediateState.legal_actions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.hash"><code class="docutils literal notranslate"><span class="pre">IntermediateState.hash()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.zobrist_hash"><code class="docutils literal notranslate"><span class="pre">IntermediateState.zobrist_hash()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.to_dict"><code class="docutils literal notranslate"><span class="pre">IntermediateState.to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.from_idle_data"><code class="docutils literal notranslate"><span class="pre">IntermediateState.from_idle_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.from_engine"><code class="docutils literal notranslate"><span class="pre">IntermediateState.from_engine()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.num_actions"><code class="docutils literal notranslate"><span class="pre">IntermediateState.num_actions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.can_pass"><code class="docutils literal notranslate"><span class="pre">IntermediateState.can_pass()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState.__init__"><code class="docutils literal notranslate"><span class="pre">IntermediateState.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.get_boss_monsters"><code class="docutils literal notranslate"><span class="pre">get_boss_monsters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.get_interaction_pieces"><code class="docutils literal notranslate"><span class="pre">get_interaction_pieces()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.get_fiendsmith_gy_targets"><code class="docutils literal notranslate"><span class="pre">get_fiendsmith_gy_targets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.evaluate_board_quality"><code class="docutils literal notranslate"><span class="pre">evaluate_board_quality()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.evaluate_endboard"><code class="docutils literal notranslate"><span class="pre">evaluate_endboard()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.compare_boards"><code class="docutils literal notranslate"><span class="pre">compare_boards()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.board_from_legacy"><code class="docutils literal notranslate"><span class="pre">board_from_legacy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.state.intermediate_from_legacy"><code class="docutils literal notranslate"><span class="pre">intermediate_from_legacy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.engine.paths">Paths</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.paths.get_lib_extension"><code class="docutils literal notranslate"><span class="pre">get_lib_extension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.paths.get_library_path"><code class="docutils literal notranslate"><span class="pre">get_library_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.paths.get_scripts_path"><code class="docutils literal notranslate"><span class="pre">get_scripts_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.paths.verify_scripts_path"><code class="docutils literal notranslate"><span class="pre">verify_scripts_path()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.engine.board_capture">Board Capture</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.board_capture.parse_query_response"><code class="docutils literal notranslate"><span class="pre">parse_query_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.board_capture.compute_board_signature"><code class="docutils literal notranslate"><span class="pre">compute_board_signature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.board_capture.compute_idle_state_hash"><code class="docutils literal notranslate"><span class="pre">compute_idle_state_hash()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.board_capture.capture_board_state"><code class="docutils literal notranslate"><span class="pre">capture_board_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.engine.duel_factory">Duel Factory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.duel_factory.load_locked_library"><code class="docutils literal notranslate"><span class="pre">load_locked_library()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.duel_factory.get_deck_lists"><code class="docutils literal notranslate"><span class="pre">get_deck_lists()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.engine.duel_factory.create_duel"><code class="docutils literal notranslate"><span class="pre">create_duel()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Engine Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/engine.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="engine-module">
+<h1>Engine Module<a class="headerlink" href="#engine-module" title="Link to this heading"></a></h1>
+<p>Core OCG bindings, interface, and state representation.</p>
+<div class="toctree-wrapper compound">
+</div>
+<section id="module-src.ygo_combo.engine.bindings">
+<span id="bindings"></span><h2>Bindings<a class="headerlink" href="#module-src.ygo_combo.engine.bindings" title="Link to this heading"></a></h2>
+<p>CFFI bindings for edo9300 ygopro-core (OCG API v11.0).</p>
+<p>Based on ocgapi.h and ocgapi_types.h from:
+<a class="reference external" href="https://github.com/edo9300/ygopro-core">https://github.com/edo9300/ygopro-core</a></p>
+<dl>
+<dt>Usage:</dt><dd><p>from src.cffi.ocg_bindings import ffi, lib</p>
+<p># Get version
+major, minor = ffi.new(“int*”), ffi.new(“int*”)
+lib.OCG_GetVersion(major, minor)
+print(f”OCG Core version: {major[0]}.{minor[0]}”)</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.bindings.load_library">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.bindings.</span></span><span class="sig-name descname"><span class="pre">load_library</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/bindings.html#load_library"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.bindings.load_library" title="Link to this definition"></a></dt>
+<dd><p>Load the libygo shared library.</p>
+<p>Uses paths.get_library_path() for platform detection.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.bindings.get_lib">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.bindings.</span></span><span class="sig-name descname"><span class="pre">get_lib</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/bindings.html#get_lib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.bindings.get_lib" title="Link to this definition"></a></dt>
+<dd><p>Get the library instance, loading it if necessary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.bindings.__getattr__">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.bindings.</span></span><span class="sig-name descname"><span class="pre">__getattr__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/bindings.html#__getattr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.bindings.__getattr__" title="Link to this definition"></a></dt>
+<dd><p>Module-level lazy loading for ‘lib’ attribute.</p>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.engine.interface">
+<span id="interface"></span><h2>Interface<a class="headerlink" href="#module-src.ygo_combo.engine.interface" title="Link to this heading"></a></h2>
+<p>Engine interface module for ygopro-core CFFI bindings.</p>
+<p>This module provides the production interface to ygopro-core, including:
+- Card database initialization and lookup
+- CFFI callback implementations
+- Message parsing utilities
+- Buffer reading utilities</p>
+<p>All code previously imported from test_fiendsmith_duel.py should now
+be imported from this module instead.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">EngineContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">auto_init_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cdb_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#EngineContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Context manager for safe engine state management.</p>
+<p>Ensures library and database are properly initialized and cleaned up.</p>
+<dl>
+<dt>Usage:</dt><dd><dl class="simple">
+<dt>with EngineContext() as ctx:</dt><dd><p>duel = ctx.create_duel(options)
+# … use duel …</p>
+</dd>
+</dl>
+<p># Library and database automatically cleaned up</p>
+</dd>
+<dt>Or for manual control:</dt><dd><dl class="simple">
+<dt>with EngineContext(auto_init_db=False) as ctx:</dt><dd><p>ctx.init_database(custom_path)
+# …</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>auto_init_db</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>)</p></li>
+<li><p><strong>cdb_path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">auto_init_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cdb_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#EngineContext.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the engine context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>auto_init_db</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If True, automatically initialize the card database.</p></li>
+<li><p><strong>cdb_path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – Optional custom path to cards.cdb.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext.__enter__">
+<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#EngineContext.__enter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext.__enter__" title="Link to this definition"></a></dt>
+<dd><p>Enter the context, loading library and optionally database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.interface.EngineContext" title="src.ygo_combo.engine.interface.EngineContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">EngineContext</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext.__exit__">
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#EngineContext.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext.__exit__" title="Link to this definition"></a></dt>
+<dd><p>Exit the context, cleaning up all resources.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext.lib">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">lib</span></span><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext.lib" title="Link to this definition"></a></dt>
+<dd><p>Get the library handle.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext.create_duel">
+<span class="sig-name descname"><span class="pre">create_duel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#EngineContext.create_duel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext.create_duel" title="Link to this definition"></a></dt>
+<dd><p>Create a duel and track it for cleanup.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>options</strong> – OCG_DuelOptions structure.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Duel handle.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If duel creation fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext.destroy_duel">
+<span class="sig-name descname"><span class="pre">destroy_duel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#EngineContext.destroy_duel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext.destroy_duel" title="Link to this definition"></a></dt>
+<dd><p>Destroy a duel and remove from tracking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.EngineContext.init_database">
+<span class="sig-name descname"><span class="pre">init_database</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cdb_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#EngineContext.init_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.EngineContext.init_database" title="Link to this definition"></a></dt>
+<dd><p>Manually initialize the card database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cdb_path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.init_card_database">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">init_card_database</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cdb_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#init_card_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.init_card_database" title="Link to this definition"></a></dt>
+<dd><p>Initialize the card database connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cdb_path</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – Optional path to cards.cdb. Defaults to CDB_PATH from paths module.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if database loaded successfully, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.close_card_database">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">close_card_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#close_card_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.close_card_database" title="Link to this definition"></a></dt>
+<dd><p>Close the card database connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.get_card_name">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">get_card_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#get_card_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.get_card_name" title="Link to this definition"></a></dt>
+<dd><p>Look up card name from database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.location_name">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">location_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#location_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.location_name" title="Link to this definition"></a></dt>
+<dd><p>Convert location constant to human-readable name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>loc</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.set_lib">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">set_lib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#set_lib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.set_lib" title="Link to this definition"></a></dt>
+<dd><p>Set the library reference for callbacks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.get_lib">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">get_lib</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#get_lib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.get_lib" title="Link to this definition"></a></dt>
+<dd><p>Get the current library reference.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.preload_utility_scripts">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">preload_utility_scripts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#preload_utility_scripts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.preload_utility_scripts" title="Link to this definition"></a></dt>
+<dd><p>Load all required utility scripts before card scripts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if at least one utility script was loaded.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.process_messages">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">process_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#process_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.process_messages" title="Link to this definition"></a></dt>
+<dd><p>Process all pending messages from the duel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of (message_type_name, parsed_data) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.parse_msg_idle">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">parse_msg_idle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#parse_msg_idle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.parse_msg_idle" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_IDLE message to extract legal actions.</p>
+<p>edo9300 format (from playerop.cpp):
+- player (u8)
+- summonable: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]…
+- spsummon: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]…
+- repos: count(u32), [code(u32), con(u8), loc(u8), seq(u8)]…  # Note: seq is u8!
+- mset: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]…
+- sset: count(u32), [code(u32), con(u8), loc(u8), seq(u32)]…
+- activate: count(u32), [code(u32), con(u8), loc(u8), seq(u32), desc(u64), mode(u8)]…
+- to_bp (u8)
+- to_ep (u8)
+- can_shuffle (u8)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.read_u8">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">read_u8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#read_u8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.read_u8" title="Link to this definition"></a></dt>
+<dd><p>Read unsigned 8-bit integer from buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BytesIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BytesIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.read_u16">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">read_u16</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#read_u16"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.read_u16" title="Link to this definition"></a></dt>
+<dd><p>Read unsigned 16-bit integer from buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BytesIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BytesIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.read_u32">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">read_u32</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#read_u32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.read_u32" title="Link to this definition"></a></dt>
+<dd><p>Read unsigned 32-bit integer from buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BytesIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BytesIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.read_u64">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">read_u64</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#read_u64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.read_u64" title="Link to this definition"></a></dt>
+<dd><p>Read unsigned 64-bit integer from buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BytesIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BytesIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.read_i32">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">read_i32</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#read_i32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.read_i32" title="Link to this definition"></a></dt>
+<dd><p>Read signed 32-bit integer from buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BytesIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BytesIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.read_cardlist">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">read_cardlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_u8</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#read_cardlist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.read_cardlist" title="Link to this definition"></a></dt>
+<dd><p>Read a list of cards from message buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BytesIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BytesIO</span></code></a></span>) – BytesIO buffer</p></li>
+<li><p><strong>extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If True, read extra uint64 + uint8 (for activatable effects)</p></li>
+<li><p><strong>seq_u8</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If True, sequence is uint8 (for repos), else uint32</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(code, controller, location, sequence, [effect_desc, client_mode])</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of tuples</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.get_setcodes">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">get_setcodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setcode_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#get_setcodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.get_setcodes" title="Link to this definition"></a></dt>
+<dd><p>Parse setcode value into array of setcodes.</p>
+<p>Setcodes are packed as multiple 16-bit values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>setcode_value</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.get_setcode_array">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">get_setcode_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setcodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#get_setcode_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.get_setcode_array" title="Link to this definition"></a></dt>
+<dd><p>Get or create a persistent setcode array for CFFI.</p>
+<p>Pre-allocates setcode arrays to avoid GC issues during duel.
+Note: These persist for the process lifetime to prevent use-after-free.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>setcodes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.clear_setcode_cache">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">clear_setcode_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/interface.html#clear_setcode_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.clear_setcode_cache" title="Link to this definition"></a></dt>
+<dd><p>Clear the setcode arrays cache.</p>
+<p>Call this between duels if memory is a concern, but only after
+ensuring no duel is referencing the arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.interface.load_library">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.interface.</span></span><span class="sig-name descname"><span class="pre">load_library</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/bindings.html#load_library"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.interface.load_library" title="Link to this definition"></a></dt>
+<dd><p>Load the libygo shared library.</p>
+<p>Uses paths.get_library_path() for platform detection.</p>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.engine.state">
+<span id="state"></span><h2>State<a class="headerlink" href="#module-src.ygo_combo.engine.state" title="Link to this heading"></a></h2>
+<p>Canonical state representation for combo enumeration.</p>
+<p>Three abstraction levels:
+1. BoardSignature - For terminal board evaluation (zone-agnostic)
+2. IntermediateState - For path pruning (includes OPT via legal actions)
+3. ActionSpec - Standardized action representation (ygo-agent style)</p>
+<p>Design decisions (based on analysis):
+- Use passcodes, not instance IDs (copies are fungible)
+- Zone-agnostic for board quality evaluation
+- Include legal actions for OPT capture
+- Include equip relationships (important for Fiendsmith)</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">BoardSignature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monsters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spells</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graveyard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hand</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banished</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_deck</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equips</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Terminal board state for evaluation.
+Zone-agnostic: only cares WHAT cards are where, not exact positions.</p>
+<p>Used for:
+- Detecting duplicate terminal boards
+- Board quality scoring
+- Combo categorization</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>monsters</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>spells</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>graveyard</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>hand</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>banished</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>extra_deck</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>equips</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.monsters">
+<span class="sig-name descname"><span class="pre">monsters</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.monsters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.spells">
+<span class="sig-name descname"><span class="pre">spells</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.spells" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.graveyard">
+<span class="sig-name descname"><span class="pre">graveyard</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.graveyard" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.hand">
+<span class="sig-name descname"><span class="pre">hand</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.hand" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.banished">
+<span class="sig-name descname"><span class="pre">banished</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.banished" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.extra_deck">
+<span class="sig-name descname"><span class="pre">extra_deck</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.extra_deck" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.equips">
+<span class="sig-name descname"><span class="pre">equips</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.equips" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.hash">
+<span class="sig-name descname"><span class="pre">hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.hash" title="Link to this definition"></a></dt>
+<dd><p>Deterministic hash for board comparison.</p>
+<p>Note: For new code, prefer zobrist_hash() which returns int
+and supports O(1) incremental updates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.zobrist_hash">
+<span class="sig-name descname"><span class="pre">zobrist_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.zobrist_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.zobrist_hash" title="Link to this definition"></a></dt>
+<dd><p>Compute Zobrist hash for this board signature.</p>
+<p>Returns 64-bit integer hash. Use this instead of hash() for
+transposition table lookups - supports O(1) incremental updates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.to_dict" title="Link to this definition"></a></dt>
+<dd><p>Serializable representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.from_dict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.from_dict" title="Link to this definition"></a></dt>
+<dd><p>Reconstruct from serialized dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.from_board_state">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_board_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">board_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.from_board_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.from_board_state" title="Link to this definition"></a></dt>
+<dd><p>Convert existing board_state dict to BoardSignature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>board_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.from_engine">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_engine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capture_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.from_engine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.from_engine" title="Link to this definition"></a></dt>
+<dd><p>Capture board signature directly from engine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lib</strong> – OCG library handle</p></li>
+<li><p><strong>duel</strong> – Duel pointer</p></li>
+<li><p><strong>capture_func</strong> – Function to capture board state (lib, duel) -&gt; dict
+Required to avoid circular imports.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>BoardSignature for current board state</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If capture_func is None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.monster_count">
+<span class="sig-name descname"><span class="pre">monster_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.monster_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.monster_count" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.total_cards_on_field">
+<span class="sig-name descname"><span class="pre">total_cards_on_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.total_cards_on_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.total_cards_on_field" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.has_boss">
+<span class="sig-name descname"><span class="pre">has_boss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boss_codes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#BoardSignature.has_boss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.has_boss" title="Link to this definition"></a></dt>
+<dd><p>Check if any boss monster is on field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>boss_codes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.BoardSignature.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monsters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spells</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graveyard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hand</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banished</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_deck</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ygo_combo.engine.state.BoardSignature.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>monsters</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>spells</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>graveyard</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>hand</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>banished</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>extra_deck</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>)</p></li>
+<li><p><strong>equips</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">ActionSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#ActionSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Standardized action specification (inspired by ygo-agent).</p>
+<p>Spec string format:
+- “act:CODE:EFFECT” = Activate card with passcode CODE, effect index EFFECT
+- “ss:CODE”         = Special summon card CODE
+- “ns:CODE”         = Normal summon card CODE
+- “mset:CODE”       = Monster set CODE
+- “sset:CODE”       = Spell/trap set CODE
+- “pass”            = End phase / pass</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spec</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>)</p></li>
+<li><p><strong>passcode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>action_type</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>)</p></li>
+<li><p><strong>effect_index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>location</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.spec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.passcode">
+<span class="sig-name descname"><span class="pre">passcode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.passcode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.action_type">
+<span class="sig-name descname"><span class="pre">action_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.action_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.effect_index">
+<span class="sig-name descname"><span class="pre">effect_index</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.effect_index" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.location">
+<span class="sig-name descname"><span class="pre">location</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.activate">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">activate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#ActionSpec.activate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.activate" title="Link to this definition"></a></dt>
+<dd><p>Create an activate action spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>effect_idx</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>location</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec" title="src.ygo_combo.engine.state.ActionSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionSpec</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.special_summon">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">special_summon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#ActionSpec.special_summon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.special_summon" title="Link to this definition"></a></dt>
+<dd><p>Create a special summon action spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec" title="src.ygo_combo.engine.state.ActionSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionSpec</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.normal_summon">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">normal_summon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#ActionSpec.normal_summon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.normal_summon" title="Link to this definition"></a></dt>
+<dd><p>Create a normal summon action spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec" title="src.ygo_combo.engine.state.ActionSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionSpec</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.monster_set">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">monster_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#ActionSpec.monster_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.monster_set" title="Link to this definition"></a></dt>
+<dd><p>Create a monster set action spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec" title="src.ygo_combo.engine.state.ActionSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionSpec</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.spell_set">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">spell_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#ActionSpec.spell_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.spell_set" title="Link to this definition"></a></dt>
+<dd><p>Create a spell/trap set action spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>code</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec" title="src.ygo_combo.engine.state.ActionSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionSpec</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.pass_action">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pass_action</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#ActionSpec.pass_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.pass_action" title="Link to this definition"></a></dt>
+<dd><p>Create a pass/end phase action spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.ActionSpec" title="src.ygo_combo.engine.state.ActionSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionSpec</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.ActionSpec.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effect_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ygo_combo.engine.state.ActionSpec.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spec</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>)</p></li>
+<li><p><strong>passcode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>action_type</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>)</p></li>
+<li><p><strong>effect_index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>location</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">IntermediateState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">board</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legal_actions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Full intermediate state for path pruning.</p>
+<p>Includes board + legal actions, which captures:
+- Card positions
+- OPT usage (via what’s still activatable)
+- Summon restrictions
+- Any other hidden state the engine tracks</p>
+<p>Two states with identical IntermediateState.hash() will have
+identical future action spaces, so we only need to explore one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>board</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span>)</p></li>
+<li><p><strong>legal_actions</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.board">
+<span class="sig-name descname"><span class="pre">board</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><span class="pre">BoardSignature</span></a></span><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.board" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.legal_actions">
+<span class="sig-name descname"><span class="pre">legal_actions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><span class="pre">FrozenSet</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.legal_actions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.hash">
+<span class="sig-name descname"><span class="pre">hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState.hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.hash" title="Link to this definition"></a></dt>
+<dd><p>Deterministic hash including OPT state.</p>
+<p>Note: For new code, prefer zobrist_hash() which returns int
+and supports O(1) incremental updates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.zobrist_hash">
+<span class="sig-name descname"><span class="pre">zobrist_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState.zobrist_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.zobrist_hash" title="Link to this definition"></a></dt>
+<dd><p>Compute Zobrist hash including legal actions (OPT state).</p>
+<p>Returns 64-bit integer hash.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.to_dict" title="Link to this definition"></a></dt>
+<dd><p>Serializable representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.from_idle_data">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_idle_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">board_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState.from_idle_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.from_idle_data" title="Link to this definition"></a></dt>
+<dd><p>Extract intermediate state from engine idle data + board state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idle_data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>) – Parsed MSG_IDLE data</p></li>
+<li><p><strong>board_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>) – Current board state dict</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState" title="src.ygo_combo.engine.state.IntermediateState"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntermediateState</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.from_engine">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_engine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capture_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState.from_engine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.from_engine" title="Link to this definition"></a></dt>
+<dd><p>Extract intermediate state directly from engine.</p>
+<p>Convenience method that captures board state and creates IntermediateState.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lib</strong> – OCG library handle</p></li>
+<li><p><strong>duel</strong> – Duel pointer</p></li>
+<li><p><strong>idle_data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>) – Parsed MSG_IDLE data</p></li>
+<li><p><strong>capture_func</strong> – Function to capture board state (lib, duel) -&gt; dict
+Required to avoid circular imports.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState" title="src.ygo_combo.engine.state.IntermediateState"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntermediateState</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>IntermediateState with current board and legal actions</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If capture_func is None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.num_actions">
+<span class="sig-name descname"><span class="pre">num_actions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState.num_actions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.num_actions" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.can_pass">
+<span class="sig-name descname"><span class="pre">can_pass</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#IntermediateState.can_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.can_pass" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.IntermediateState.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">board</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legal_actions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ygo_combo.engine.state.IntermediateState.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>board</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span>)</p></li>
+<li><p><strong>legal_actions</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.FrozenSet" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenSet</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.get_boss_monsters">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">get_boss_monsters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#get_boss_monsters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.get_boss_monsters" title="Link to this definition"></a></dt>
+<dd><p>Get the set of boss monster passcodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.get_interaction_pieces">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">get_interaction_pieces</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#get_interaction_pieces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.get_interaction_pieces" title="Link to this definition"></a></dt>
+<dd><p>Get the set of interaction piece passcodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.get_fiendsmith_gy_targets">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">get_fiendsmith_gy_targets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#get_fiendsmith_gy_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.get_fiendsmith_gy_targets" title="Link to this definition"></a></dt>
+<dd><p>Get the set of Fiendsmith GY target passcodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.evaluate_board_quality">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">evaluate_board_quality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sig</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#evaluate_board_quality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.evaluate_board_quality" title="Link to this definition"></a></dt>
+<dd><p>Evaluate board quality for combo scoring.</p>
+<p>Configuration loaded from config/evaluation_config.json.</p>
+<p>Returns dict with:
+- tier: S/A/B/C/brick
+- score: numeric score
+- details: explanation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sig</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.evaluate_endboard">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">evaluate_endboard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">board_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#evaluate_endboard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.evaluate_endboard" title="Link to this definition"></a></dt>
+<dd><p>Simple additive scoring for terminal board evaluation.</p>
+<p>Works directly with board_state dict (legacy format).
+Higher score = better endboard.</p>
+<p>Scoring:
+- D/D/D Wave High King Caesar: 100 pts
+- Fiendsmith Desirae (equipped): 100 pts
+- Fiendsmith Desirae (no equip): 40 pts
+- Fiendsmith Sequence: 50 pts
+- Other Fiendsmith Link: 30 pts
+- Other monster: 10 pts
+- Fiendsmith in GY: 10 pts each
+- Card in hand: 5 pts each</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>board_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.compare_boards">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">compare_boards</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sig1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#compare_boards"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.compare_boards" title="Link to this definition"></a></dt>
+<dd><p>Compare two board signatures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sig1</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span>)</p></li>
+<li><p><strong>sig2</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.board_from_legacy">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">board_from_legacy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">board_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#board_from_legacy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.board_from_legacy" title="Link to this definition"></a></dt>
+<dd><p>Convert legacy board_state dict to BoardSignature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>board_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.BoardSignature" title="src.ygo_combo.engine.state.BoardSignature"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoardSignature</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.state.intermediate_from_legacy">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.state.</span></span><span class="sig-name descname"><span class="pre">intermediate_from_legacy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">board_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/state.html#intermediate_from_legacy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.state.intermediate_from_legacy" title="Link to this definition"></a></dt>
+<dd><p>Convert legacy data structures to IntermediateState.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idle_data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p></li>
+<li><p><strong>board_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.ygo_combo.engine.state.IntermediateState" title="src.ygo_combo.engine.state.IntermediateState"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntermediateState</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.engine.paths">
+<span id="paths"></span><h2>Paths<a class="headerlink" href="#module-src.ygo_combo.engine.paths" title="Link to this heading"></a></h2>
+<p>Centralized path definitions for ygo-combo-pipeline.</p>
+<p>All file paths should be imported from this module to ensure consistency
+across the codebase.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.paths.get_lib_extension">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.paths.</span></span><span class="sig-name descname"><span class="pre">get_lib_extension</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/paths.html#get_lib_extension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.paths.get_lib_extension" title="Link to this definition"></a></dt>
+<dd><p>Get platform-appropriate shared library extension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Library extension including the dot (.dylib, .dll, or .so).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.paths.get_library_path">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.paths.</span></span><span class="sig-name descname"><span class="pre">get_library_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/paths.html#get_library_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.paths.get_library_path" title="Link to this definition"></a></dt>
+<dd><p>Get platform-appropriate path to libygo shared library.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.paths.get_scripts_path">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.paths.</span></span><span class="sig-name descname"><span class="pre">get_scripts_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/paths.html#get_scripts_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.paths.get_scripts_path" title="Link to this definition"></a></dt>
+<dd><p>Get ygopro-core scripts directory from environment.</p>
+<p>Requires YGOPRO_SCRIPTS_PATH environment variable to be set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#EnvironmentError" title="(in Python v3.14)"><strong>EnvironmentError</strong></a> – If YGOPRO_SCRIPTS_PATH is not set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.paths.verify_scripts_path">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.paths.</span></span><span class="sig-name descname"><span class="pre">verify_scripts_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/paths.html#verify_scripts_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.paths.verify_scripts_path" title="Link to this definition"></a></dt>
+<dd><p>Check if scripts directory exists and contains expected files.</p>
+<p>Returns True if valid, raises FileNotFoundError with helpful message if not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.engine.board_capture">
+<span id="board-capture"></span><h2>Board Capture<a class="headerlink" href="#module-src.ygo_combo.engine.board_capture" title="Link to this heading"></a></h2>
+<p>Board state capture utilities.</p>
+<p>Functions for querying and capturing the current duel board state,
+computing board signatures for deduplication, and parsing query responses.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.board_capture.parse_query_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.board_capture.</span></span><span class="sig-name descname"><span class="pre">parse_query_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/board_capture.html#parse_query_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.board_capture.parse_query_response" title="Link to this definition"></a></dt>
+<dd><p>Parse OCG_DuelQueryLocation response to extract card codes.</p>
+<p>Format:
+- Total size (u32)
+- Per card: either int16(0) for empty slot, or field blocks ending with QUERY_END
+- Field block: [size(u16)][flag(u32)][value(varies)]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></span>) – Raw bytes from OCG_DuelQueryLocation</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of card info dicts (or None for empty slots)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.board_capture.compute_board_signature">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.board_capture.</span></span><span class="sig-name descname"><span class="pre">compute_board_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">board_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/board_capture.html#compute_board_signature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.board_capture.compute_board_signature" title="Link to this definition"></a></dt>
+<dd><p>Compute a unique signature for a board state.</p>
+<p>Used to detect duplicate board states reached via different paths.
+Only considers player0’s board (we’re doing solitaire combo evaluation).</p>
+<p>Uses BoardSignature from state_representation for structured representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>board_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – Dict with player0/player1 zones</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MD5 hash string of the board state</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.board_capture.compute_idle_state_hash">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.board_capture.</span></span><span class="sig-name descname"><span class="pre">compute_idle_state_hash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">board_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/board_capture.html#compute_idle_state_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.board_capture.compute_idle_state_hash" title="Link to this definition"></a></dt>
+<dd><p>Compute a unique hash for an intermediate game state at MSG_IDLE.</p>
+<p>This hash captures:
+- Board state (cards in each zone)
+- Available actions (which encodes OPT usage implicitly)</p>
+<p>Two states with identical hash will have identical future action spaces,
+so we only need to explore one of them.</p>
+<p>Uses IntermediateState from state_representation for structured representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idle_data</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – Parsed MSG_IDLE data with available actions</p></li>
+<li><p><strong>board_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – Current board state dict</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MD5 hash string of the intermediate state</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.board_capture.capture_board_state">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.board_capture.</span></span><span class="sig-name descname"><span class="pre">capture_board_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/board_capture.html#capture_board_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.board_capture.capture_board_state" title="Link to this definition"></a></dt>
+<dd><p>Capture complete board state at current duel position.</p>
+<p>Queries all relevant zones for both players and extracts card information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lib</strong> – CFFI library handle</p></li>
+<li><p><strong>duel</strong> – Duel handle from OCG_CreateDuel</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict with player0/player1 keys, each containing zone lists</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.engine.duel_factory">
+<span id="duel-factory"></span><h2>Duel Factory<a class="headerlink" href="#module-src.ygo_combo.engine.duel_factory" title="Link to this heading"></a></h2>
+<p>Duel creation and setup utilities.</p>
+<p>Functions for loading deck libraries and creating fresh duels with proper setup.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.duel_factory.load_locked_library">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.duel_factory.</span></span><span class="sig-name descname"><span class="pre">load_locked_library</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/duel_factory.html#load_locked_library"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.duel_factory.load_locked_library" title="Link to this definition"></a></dt>
+<dd><p>Load the verified locked library.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict containing card library with metadata</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.14)"><strong>FileNotFoundError</strong></a> – If locked library file doesn’t exist</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.duel_factory.get_deck_lists">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.duel_factory.</span></span><span class="sig-name descname"><span class="pre">get_deck_lists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">library</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/duel_factory.html#get_deck_lists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.duel_factory.get_deck_lists" title="Link to this definition"></a></dt>
+<dd><p>Extract main deck and extra deck card lists from library.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>library</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – Loaded library dict from load_locked_library()</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple of (main_deck_passcodes, extra_deck_passcodes)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.engine.duel_factory.create_duel">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.engine.duel_factory.</span></span><span class="sig-name descname"><span class="pre">create_duel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_deck_cards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_deck_cards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_hand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/engine/duel_factory.html#create_duel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.engine.duel_factory.create_duel" title="Link to this definition"></a></dt>
+<dd><p>Create a fresh duel with the starting state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lib</strong> – CFFI library handle</p></li>
+<li><p><strong>main_deck_cards</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – List of main deck passcodes</p></li>
+<li><p><strong>extra_deck_cards</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – List of extra deck passcodes</p></li>
+<li><p><strong>starting_hand</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span>) – Optional list of 5 passcodes for starting hand.
+If None, uses default [ENGRAVER, HOLACTIE, HOLACTIE, HOLACTIE, HOLACTIE]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Duel handle for use with OCG_* functions</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If duel creation fails</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="types.html" class="btn btn-neutral float-left" title="Shared Types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="search.html" class="btn btn-neutral float-right" title="Search Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

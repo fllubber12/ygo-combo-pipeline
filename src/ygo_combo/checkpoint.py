@@ -336,7 +336,7 @@ def restore_engine_from_checkpoint(engine, checkpoint: Checkpoint):
     Raises:
         ValueError: If checkpoint config doesn't match engine config.
     """
-    from .combo_enumeration import TerminalState, Action
+    from .types import TerminalState, Action
     from .search.transposition import TranspositionTable, TranspositionEntry
 
     cfg = checkpoint.config

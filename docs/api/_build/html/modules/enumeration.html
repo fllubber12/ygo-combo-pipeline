@@ -1,0 +1,790 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enumeration Module &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Combo Enumeration" href="combo_enumeration.html" />
+    <link rel="prev" title="Encoding Module" href="encoding.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="encoding.html">Encoding Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Enumeration Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.enumeration.parsers">Parsers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.read_u8"><code class="docutils literal notranslate"><span class="pre">read_u8()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.read_u16"><code class="docutils literal notranslate"><span class="pre">read_u16()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.read_u32"><code class="docutils literal notranslate"><span class="pre">read_u32()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.read_i32"><code class="docutils literal notranslate"><span class="pre">read_i32()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.read_u64"><code class="docutils literal notranslate"><span class="pre">read_u64()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_idle"><code class="docutils literal notranslate"><span class="pre">parse_idle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_select_card"><code class="docutils literal notranslate"><span class="pre">parse_select_card()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_select_chain"><code class="docutils literal notranslate"><span class="pre">parse_select_chain()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_select_place"><code class="docutils literal notranslate"><span class="pre">parse_select_place()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_select_unselect_card"><code class="docutils literal notranslate"><span class="pre">parse_select_unselect_card()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_select_option"><code class="docutils literal notranslate"><span class="pre">parse_select_option()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_select_tribute"><code class="docutils literal notranslate"><span class="pre">parse_select_tribute()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.find_valid_tribute_combinations"><code class="docutils literal notranslate"><span class="pre">find_valid_tribute_combinations()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.parsers.parse_select_sum"><code class="docutils literal notranslate"><span class="pre">parse_select_sum()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.enumeration.responses">Responses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_activate_response"><code class="docutils literal notranslate"><span class="pre">build_activate_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_summon_response"><code class="docutils literal notranslate"><span class="pre">build_summon_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_spsummon_response"><code class="docutils literal notranslate"><span class="pre">build_spsummon_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_mset_response"><code class="docutils literal notranslate"><span class="pre">build_mset_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_sset_response"><code class="docutils literal notranslate"><span class="pre">build_sset_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_reposition_response"><code class="docutils literal notranslate"><span class="pre">build_reposition_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_pass_response"><code class="docutils literal notranslate"><span class="pre">build_pass_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_to_battle_response"><code class="docutils literal notranslate"><span class="pre">build_to_battle_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_select_card_response"><code class="docutils literal notranslate"><span class="pre">build_select_card_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_cancel_select_card_response"><code class="docutils literal notranslate"><span class="pre">build_cancel_select_card_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_decline_chain_response"><code class="docutils literal notranslate"><span class="pre">build_decline_chain_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_chain_response"><code class="docutils literal notranslate"><span class="pre">build_chain_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_select_place_response"><code class="docutils literal notranslate"><span class="pre">build_select_place_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_select_position_response"><code class="docutils literal notranslate"><span class="pre">build_select_position_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_yesno_response"><code class="docutils literal notranslate"><span class="pre">build_yesno_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_select_option_response"><code class="docutils literal notranslate"><span class="pre">build_select_option_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_select_unselect_finish_response"><code class="docutils literal notranslate"><span class="pre">build_select_unselect_finish_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_select_unselect_card_response"><code class="docutils literal notranslate"><span class="pre">build_select_unselect_card_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.responses.build_select_tribute_response"><code class="docutils literal notranslate"><span class="pre">build_select_tribute_response()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.ygo_combo.enumeration.sum_utils">Sum Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.sum_utils.find_valid_sum_combinations"><code class="docutils literal notranslate"><span class="pre">find_valid_sum_combinations()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.ygo_combo.enumeration.sum_utils.find_sum_combinations_flexible"><code class="docutils literal notranslate"><span class="pre">find_sum_combinations_flexible()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Enumeration Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/enumeration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="enumeration-module">
+<h1>Enumeration Module<a class="headerlink" href="#enumeration-module" title="Link to this heading"></a></h1>
+<p>Message parsing and response building for ygopro-core interaction.</p>
+<section id="module-src.ygo_combo.enumeration.parsers">
+<span id="parsers"></span><h2>Parsers<a class="headerlink" href="#module-src.ygo_combo.enumeration.parsers" title="Link to this heading"></a></h2>
+<p>Message parsers for combo enumeration.</p>
+<p>Parse binary messages from ygopro-core engine into Python dictionaries.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.read_u8">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">read_u8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#read_u8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.read_u8" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.read_u16">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">read_u16</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#read_u16"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.read_u16" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.read_u32">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">read_u32</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#read_u32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.read_u32" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.read_i32">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">read_i32</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#read_i32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.read_i32" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.read_u64">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">read_u64</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#read_u64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.read_u64" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a></span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_idle">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_idle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_idle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_idle" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_IDLE to extract all legal actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_select_card">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_select_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_select_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_select_card" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_SELECT_CARD to extract selection options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_select_chain">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_select_chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_select_chain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_select_chain" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_SELECT_CHAIN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_select_place">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_select_place</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_select_place"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_select_place" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_SELECT_PLACE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_select_unselect_card">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_select_unselect_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_select_unselect_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_select_unselect_card" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_SELECT_UNSELECT_CARD.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_select_option">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_select_option</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_select_option"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_select_option" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_SELECT_OPTION to extract available options.</p>
+<p>Format:
+- player (1 byte)
+- count (1 byte)
+- options[] (count * 8 bytes each - u64 desc for each option)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_select_tribute">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_select_tribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_select_tribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_select_tribute" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_SELECT_TRIBUTE message.</p>
+<p>Format:
+- player: 1 byte
+- cancelable: 1 byte
+- min: 1 byte
+- max: 1 byte
+- count: 1 byte
+- cards[count]: each card is 11 bytes</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>code: 4 bytes</p></li>
+<li><p>controller: 1 byte</p></li>
+<li><p>location: 1 byte</p></li>
+<li><p>sequence: 1 byte</p></li>
+<li><p>release_param: 4 bytes (tribute value, usually 1)</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.find_valid_tribute_combinations">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">find_valid_tribute_combinations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_req</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_req</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#find_valid_tribute_combinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.find_valid_tribute_combinations" title="Link to this definition"></a></dt>
+<dd><p>Find all valid combinations of cards to tribute.</p>
+<p>Most tribute summons need count (1 for Level 5-6, 2 for Level 7+).
+Some cards have release_param &gt; 1 (count as 2 tributes).</p>
+<p>Returns list of card index lists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cards</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span>)</p></li>
+<li><p><strong>min_req</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+<li><p><strong>max_req</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.parsers.parse_select_sum">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.parsers.</span></span><span class="sig-name descname"><span class="pre">parse_select_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/parsers.html#parse_select_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.parsers.parse_select_sum" title="Link to this definition"></a></dt>
+<dd><p>Parse MSG_SELECT_SUM message for material/card selection.</p>
+<p>Format verified against ygopro-core source (playerop.cpp:796-819, card.h:26-31):
+- Header uses BIG-ENDIAN for target_sum and can_count
+- Card entries are 18 bytes (including 4-byte position field)</p>
+<p>Header format:
+- player: 1 byte (offset 0)
+- select_mode: 1 byte (offset 1) - 0 = exactly equal, 1 = at least equal
+- select_min: 1 byte (offset 2)
+- select_max: 1 byte (offset 3)
+- target_sum: 4 bytes BE (offset 4-7) - target sum
+- must_count: 4 bytes BE (offset 8-11) - treated as can_count
+- padding: 3 bytes (offset 12-14)
+- cards[]: 18 bytes each starting at offset 15</p>
+<p>Card format (18 bytes) from ygopro-core loc_info struct:
+- code: 4 bytes LE (card passcode)
+- controller: 1 byte
+- location: 1 byte
+- sequence: 4 bytes LE
+- position: 4 bytes LE (card position flags)
+- sum_param: 4 bytes LE (level for sum calculation)</p>
+<p>Note: sum_param encodes level in low 16 bits, optional secondary level in high 16 bits.</p>
+<p>Returns dict with parsed data for _handle_select_sum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.BinaryIO" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryIO</span></code></a>]</span>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.enumeration.responses">
+<span id="responses"></span><h2>Responses<a class="headerlink" href="#module-src.ygo_combo.enumeration.responses" title="Link to this heading"></a></h2>
+<p>Response builders for combo enumeration.</p>
+<p>Build binary response messages for ygopro-core engine.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_activate_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_activate_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_activate_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_activate_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to activate effect from IDLE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed position in activatable[] list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(value, bytes) - the response value and packed bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_summon_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_summon_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_summon_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_summon_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to normal summon from IDLE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed position in summonable[] list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(value, bytes) - the response value and packed bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_spsummon_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_spsummon_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_spsummon_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_spsummon_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to special summon from IDLE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed position in spsummon[] list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(value, bytes) - the response value and packed bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_mset_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_mset_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_mset_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_mset_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to set monster from IDLE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed position in mset[] list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(value, bytes) - the response value and packed bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_sset_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_sset_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_sset_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_sset_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to set spell/trap from IDLE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed position in sset[] list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(value, bytes) - the response value and packed bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_reposition_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_reposition_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_reposition_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_reposition_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to change position from IDLE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed position in repos[] list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(value, bytes) - the response value and packed bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_pass_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_pass_response</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_pass_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_pass_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to end main phase (PASS).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(IDLE_RESPONSE_TO_END, packed bytes).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_to_battle_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_to_battle_response</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_to_battle_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_to_battle_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to go to battle phase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(IDLE_RESPONSE_TO_BATTLE, packed bytes).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_select_card_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_select_card_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_select_card_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_select_card_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to select cards (MSG_SELECT_CARD).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>indices</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span>) – List of 0-indexed card positions from selectable[] list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(indices, packed bytes) - the selected indices and response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_cancel_select_card_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_cancel_select_card_response</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_cancel_select_card_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_cancel_select_card_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to cancel card selection (MSG_SELECT_CARD with cancelable=1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(-1, packed bytes) - cancel response.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_decline_chain_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_decline_chain_response</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_decline_chain_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_decline_chain_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to decline chain opportunity (MSG_SELECT_CHAIN).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(-1, packed bytes) - decline response.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_chain_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_chain_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_chain_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_chain_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to activate a chain (MSG_SELECT_CHAIN).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed position in chainable list.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(index, packed bytes) - the chain index and response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_select_place_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_select_place_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_select_place_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_select_place_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to select a zone (MSG_SELECT_PLACE).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>player</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0 or 1</p></li>
+<li><p><strong>location</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – LOCATION_* constant (e.g., LOCATION_MZONE=0x04)</p></li>
+<li><p><strong>sequence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Zone index (0-4 for main, 5-6 for EMZ)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Packed response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_select_position_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_select_position_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_select_position_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_select_position_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to select card position (MSG_SELECT_POSITION).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>position</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Position flags (POS_FACEUP_ATTACK=0x1, etc.)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Packed response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_yesno_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_yesno_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_yesno_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_yesno_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to YES/NO prompt (MSG_SELECT_YESNO, MSG_SELECT_EFFECTYN).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>yes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – True for yes, False for no.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Packed response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_select_option_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_select_option_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_select_option_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_select_option_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to select an option (MSG_SELECT_OPTION).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed option number.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Packed response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_select_unselect_finish_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_select_unselect_finish_response</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_select_unselect_finish_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_select_unselect_finish_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to finish selection (MSG_SELECT_UNSELECT_CARD).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(-1, packed bytes) - finish response.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_select_unselect_card_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_select_unselect_card_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_select_unselect_card_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_select_unselect_card_response" title="Link to this definition"></a></dt>
+<dd><p>Build response to select a card (MSG_SELECT_UNSELECT_CARD).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0-indexed card position.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(index, packed bytes) - the selection and response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.responses.build_select_tribute_response">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.responses.</span></span><span class="sig-name descname"><span class="pre">build_select_tribute_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/responses.html#build_select_tribute_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.responses.build_select_tribute_response" title="Link to this definition"></a></dt>
+<dd><p>Build response for MSG_SELECT_TRIBUTE.</p>
+<p>Format: 1-byte count + 1-byte indices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>selected_indices</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span>) – List of 0-indexed tribute card indices.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Packed response bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.ygo_combo.enumeration.sum_utils">
+<span id="sum-utilities"></span><h2>Sum Utilities<a class="headerlink" href="#module-src.ygo_combo.enumeration.sum_utils" title="Link to this heading"></a></h2>
+<p>Sum enumeration utilities for Xyz/Synchro/Ritual material selection.</p>
+<p>These functions enumerate all valid card combinations that sum to a target value,
+used for material selection in various summoning mechanics.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.sum_utils.find_valid_sum_combinations">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.sum_utils.</span></span><span class="sig-name descname"><span class="pre">find_valid_sum_combinations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">must_select</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">can_select</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/sum_utils.html#find_valid_sum_combinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.sum_utils.find_valid_sum_combinations" title="Link to this definition"></a></dt>
+<dd><p>Find all valid combinations of cards that sum to target value.</p>
+<p>Used for Xyz summon material selection, Synchro tuning, ritual tributes, etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>must_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>]</span>) – Cards that MUST be included (from must_select in message)</p></li>
+<li><p><strong>can_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>]</span>) – Cards that CAN be selected (from can_select in message)</p></li>
+<li><p><strong>target_sum</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Target sum value (e.g., 12 for 2x Level 6 -&gt; Rank 6)</p></li>
+<li><p><strong>min_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Minimum total cards to select</p></li>
+<li><p><strong>max_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Maximum total cards to select</p></li>
+<li><p><strong>mode</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – 0 = exactly equal, 1 = at least equal</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of valid index lists. Each inner list contains indices into can_select
+that form a valid sum when combined with must_select cards.</p>
+</dd>
+</dl>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p>For Xyz summon of Rank 6 with two Level 6 monsters available:
+- must_select = []
+- can_select = [{“value”: 6, …}, {“value”: 6, …}]
+- target_sum = 12 (6 + 6)
+- Returns: [[0, 1]] (select both cards)</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ygo_combo.enumeration.sum_utils.find_sum_combinations_flexible">
+<span class="sig-prename descclassname"><span class="pre">src.ygo_combo.enumeration.sum_utils.</span></span><span class="sig-name descname"><span class="pre">find_sum_combinations_flexible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">must_select</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">can_select</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/ygo_combo/enumeration/sum_utils.html#find_sum_combinations_flexible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.ygo_combo.enumeration.sum_utils.find_sum_combinations_flexible" title="Link to this definition"></a></dt>
+<dd><p>Find combinations with flexible matching (exact or at-least).</p>
+<p>Some Yu-Gi-Oh mechanics require exact sum (Xyz), others require at-least
+(some ritual tributes). This function supports both modes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>must_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>]</span>) – Cards that MUST be included</p></li>
+<li><p><strong>can_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>]</span>) – Cards that CAN be selected</p></li>
+<li><p><strong>target_sum</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Target sum value</p></li>
+<li><p><strong>min_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Minimum total cards to select</p></li>
+<li><p><strong>max_select</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Maximum total cards to select</p></li>
+<li><p><strong>exact</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If True, sum must equal target. If False, sum must be &gt;= target.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of valid index lists into can_select</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="encoding.html" class="btn btn-neutral float-left" title="Encoding Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="combo_enumeration.html" class="btn btn-neutral float-right" title="Combo Enumeration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

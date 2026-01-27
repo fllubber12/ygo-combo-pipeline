@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.enumeration.responses &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.enumeration.responses</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.enumeration.responses</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Response builders for combo enumeration.</span>
+
+<span class="sd">Build binary response messages for ygopro-core engine.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># IDLE RESPONSE TYPES</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># From ygopro-core field_processor.cpp OCG_DuelSetResponse for MSG_SELECT_IDLECMD</span>
+
+<span class="n">IDLE_RESPONSE_SUMMON</span> <span class="o">=</span> <span class="mi">0</span>       <span class="c1"># Normal summon</span>
+<span class="n">IDLE_RESPONSE_SPSUMMON</span> <span class="o">=</span> <span class="mi">1</span>     <span class="c1"># Special summon</span>
+<span class="n">IDLE_RESPONSE_REPOSITION</span> <span class="o">=</span> <span class="mi">2</span>   <span class="c1"># Change position</span>
+<span class="n">IDLE_RESPONSE_MSET</span> <span class="o">=</span> <span class="mi">3</span>         <span class="c1"># Monster set</span>
+<span class="n">IDLE_RESPONSE_SSET</span> <span class="o">=</span> <span class="mi">4</span>         <span class="c1"># Spell/trap set</span>
+<span class="n">IDLE_RESPONSE_ACTIVATE</span> <span class="o">=</span> <span class="mi">5</span>     <span class="c1"># Activate effect</span>
+<span class="n">IDLE_RESPONSE_TO_BATTLE</span> <span class="o">=</span> <span class="mi">6</span>    <span class="c1"># Go to battle phase</span>
+<span class="n">IDLE_RESPONSE_TO_END</span> <span class="o">=</span> <span class="mi">7</span>       <span class="c1"># End turn / pass</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># RESPONSE FORMAT DOCUMENTATION</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Response formats are based on ygopro-core ocgapi.cpp and playerop.cpp.</span>
+<span class="c1"># Reference: https://github.com/edo9300/ygopro-core</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_IDLE (MSG_SELECT_IDLECMD = 11):</span>
+<span class="c1">#   Response: u32 with format: (index &lt;&lt; 16) | action_type</span>
+<span class="c1">#   Where action_type is one of IDLE_RESPONSE_* constants below.</span>
+<span class="c1">#   For ACTIVATE: index is position in activatable[] list (0-indexed).</span>
+<span class="c1">#   For SPSUMMON: index is position in spsummon[] list.</span>
+<span class="c1">#   For TO_END: no index needed, just the action type.</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_CARD (15):</span>
+<span class="c1">#   Response: i32(cancelable?) + u32(count) + count*u32(indices)</span>
+<span class="c1">#   First i32: 0 = not canceling, -1 = cancel (if cancelable)</span>
+<span class="c1">#   Second u32: number of selected cards</span>
+<span class="c1">#   Remaining u32s: 0-indexed positions in the selectable[] list</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_CHAIN (16):</span>
+<span class="c1">#   Response: i32 - chain index (0-indexed from chainable list) or -1 to decline</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_PLACE (18):</span>
+<span class="c1">#   Response: u8(player) + u8(location) + u8(sequence)</span>
+<span class="c1">#   player: 0 or 1</span>
+<span class="c1">#   location: LOCATION_* constant (MZONE=0x04, SZONE=0x08)</span>
+<span class="c1">#   sequence: zone index (0-4 for main zones, 5-6 for EMZ)</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_POSITION (19):</span>
+<span class="c1">#   Response: u32 with position flags (POS_FACEUP_ATTACK=0x1, etc)</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_EFFECTYN (21):</span>
+<span class="c1">#   Response: u32 - 1 for yes, 0 for no</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_YESNO (22):</span>
+<span class="c1">#   Response: u32 - 1 for yes, 0 for no</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_OPTION (23):</span>
+<span class="c1">#   Response: u32 - 0-indexed option number</span>
+<span class="c1">#</span>
+<span class="c1"># MSG_SELECT_UNSELECT_CARD (25):</span>
+<span class="c1">#   Response: i32 - selected card index (0-indexed) or -1 to finish</span>
+<span class="c1">#</span>
+<span class="c1"># =============================================================================</span>
+
+
+<div class="viewcode-block" id="build_activate_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_activate_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_activate_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to activate effect from IDLE.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed position in activatable[] list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (value, bytes) - the response value and packed bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="n">IDLE_RESPONSE_ACTIVATE</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_summon_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_summon_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_summon_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to normal summon from IDLE.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed position in summonable[] list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (value, bytes) - the response value and packed bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="n">IDLE_RESPONSE_SUMMON</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_spsummon_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_spsummon_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_spsummon_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to special summon from IDLE.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed position in spsummon[] list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (value, bytes) - the response value and packed bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="n">IDLE_RESPONSE_SPSUMMON</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_mset_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_mset_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_mset_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to set monster from IDLE.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed position in mset[] list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (value, bytes) - the response value and packed bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="n">IDLE_RESPONSE_MSET</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_sset_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_sset_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_sset_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to set spell/trap from IDLE.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed position in sset[] list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (value, bytes) - the response value and packed bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="n">IDLE_RESPONSE_SSET</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_reposition_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_reposition_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_reposition_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to change position from IDLE.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed position in repos[] list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (value, bytes) - the response value and packed bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="n">IDLE_RESPONSE_REPOSITION</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_pass_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_pass_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_pass_response</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to end main phase (PASS).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (IDLE_RESPONSE_TO_END, packed bytes).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">IDLE_RESPONSE_TO_END</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">IDLE_RESPONSE_TO_END</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_to_battle_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_to_battle_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_to_battle_response</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to go to battle phase.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (IDLE_RESPONSE_TO_BATTLE, packed bytes).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">IDLE_RESPONSE_TO_BATTLE</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">IDLE_RESPONSE_TO_BATTLE</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_select_card_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_select_card_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_select_card_response</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to select cards (MSG_SELECT_CARD).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        indices: List of 0-indexed card positions from selectable[] list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (indices, packed bytes) - the selected indices and response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;iI&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>  <span class="c1"># 0 = not canceling, count</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">indices</span><span class="p">,</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="build_cancel_select_card_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_cancel_select_card_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_cancel_select_card_response</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to cancel card selection (MSG_SELECT_CARD with cancelable=1).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (-1, packed bytes) - cancel response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;i&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_decline_chain_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_decline_chain_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_decline_chain_response</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to decline chain opportunity (MSG_SELECT_CHAIN).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (-1, packed bytes) - decline response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;i&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_chain_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_chain_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_chain_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to activate a chain (MSG_SELECT_CHAIN).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed position in chainable list.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (index, packed bytes) - the chain index and response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">index</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;i&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_select_place_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_select_place_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_select_place_response</span><span class="p">(</span><span class="n">player</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sequence</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to select a zone (MSG_SELECT_PLACE).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        player: 0 or 1</span>
+<span class="sd">        location: LOCATION_* constant (e.g., LOCATION_MZONE=0x04)</span>
+<span class="sd">        sequence: Zone index (0-4 for main, 5-6 for EMZ)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Packed response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;BBB&quot;</span><span class="p">,</span> <span class="n">player</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">sequence</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_select_position_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_select_position_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_select_position_response</span><span class="p">(</span><span class="n">position</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to select card position (MSG_SELECT_POSITION).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        position: Position flags (POS_FACEUP_ATTACK=0x1, etc.)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Packed response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_yesno_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_yesno_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_yesno_response</span><span class="p">(</span><span class="n">yes</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to YES/NO prompt (MSG_SELECT_YESNO, MSG_SELECT_EFFECTYN).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        yes: True for yes, False for no.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Packed response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">yes</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_select_option_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_select_option_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_select_option_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to select an option (MSG_SELECT_OPTION).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed option number.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Packed response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_select_unselect_finish_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_select_unselect_finish_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_select_unselect_finish_response</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to finish selection (MSG_SELECT_UNSELECT_CARD).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (-1, packed bytes) - finish response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;i&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_select_unselect_card_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_select_unselect_card_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_select_unselect_card_response</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response to select a card (MSG_SELECT_UNSELECT_CARD).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index: 0-indexed card position.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (index, packed bytes) - the selection and response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">index</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;i&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_select_tribute_response">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.responses.build_select_tribute_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_select_tribute_response</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build response for MSG_SELECT_TRIBUTE.</span>
+
+<span class="sd">    Format: 1-byte count + 1-byte indices</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        selected_indices: List of 0-indexed tribute card indices.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Packed response bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&lt;B&#39;</span> <span class="o">+</span> <span class="s1">&#39;B&#39;</span> <span class="o">*</span> <span class="n">count</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="o">*</span><span class="n">selected_indices</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

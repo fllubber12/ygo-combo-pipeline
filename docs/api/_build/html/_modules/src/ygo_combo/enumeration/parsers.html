@@ -1,0 +1,744 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.enumeration.parsers &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.enumeration.parsers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.enumeration.parsers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Message parsers for combo enumeration.</span>
+
+<span class="sd">Parse binary messages from ygopro-core engine into Python dictionaries.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">BinaryIO</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..cards.validator</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardValidator</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">cards.validator</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardValidator</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># BINARY READERS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="read_u8">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.read_u8">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;B&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_u16">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.read_u16">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u16</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;H&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_u32">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.read_u32">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_i32">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.read_i32">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_i32</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;i&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="read_u64">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.read_u64">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_u64</span><span class="p">(</span><span class="n">buf</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;Q&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># MESSAGE PARSERS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="parse_idle">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_idle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_idle</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_IDLE to extract all legal actions.&quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_cardlist</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seq_u8</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read a card list from IDLE message.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            extra: If True, reads desc (u64) and mode (u8) for activatable cards</span>
+<span class="sd">            seq_u8: If True, reads sequence as u8 (for repos), else u32</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cards</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+            <span class="n">code</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">con</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="k">if</span> <span class="n">seq_u8</span> <span class="k">else</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
+                <span class="n">desc</span> <span class="o">=</span> <span class="n">read_u64</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+                <span class="n">mode</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+                <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">&quot;con&quot;</span><span class="p">:</span> <span class="n">con</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="n">loc</span><span class="p">,</span> <span class="s2">&quot;seq&quot;</span><span class="p">:</span> <span class="n">seq</span><span class="p">,</span> <span class="s2">&quot;desc&quot;</span><span class="p">:</span> <span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">&quot;con&quot;</span><span class="p">:</span> <span class="n">con</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="n">loc</span><span class="p">,</span> <span class="s2">&quot;seq&quot;</span><span class="p">:</span> <span class="n">seq</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">cards</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s2">&quot;summonable&quot;</span><span class="p">:</span> <span class="n">read_cardlist</span><span class="p">(),</span>
+        <span class="s2">&quot;spsummon&quot;</span><span class="p">:</span> <span class="n">read_cardlist</span><span class="p">(),</span>
+        <span class="s2">&quot;repos&quot;</span><span class="p">:</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">seq_u8</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s2">&quot;mset&quot;</span><span class="p">:</span> <span class="n">read_cardlist</span><span class="p">(),</span>
+        <span class="s2">&quot;sset&quot;</span><span class="p">:</span> <span class="n">read_cardlist</span><span class="p">(),</span>
+        <span class="s2">&quot;activatable&quot;</span><span class="p">:</span> <span class="n">read_cardlist</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="s2">&quot;to_bp&quot;</span><span class="p">:</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span>
+        <span class="s2">&quot;to_ep&quot;</span><span class="p">:</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span>
+        <span class="s2">&quot;can_shuffle&quot;</span><span class="p">:</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="parse_select_card">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_select_card">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_select_card</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_SELECT_CARD to extract selection options.&quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">cancelable</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">min_select</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">max_select</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="n">cards</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">&quot;con&quot;</span><span class="p">:</span> <span class="n">con</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="n">loc</span><span class="p">,</span> <span class="s2">&quot;seq&quot;</span><span class="p">:</span> <span class="n">seq</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s2">&quot;cancelable&quot;</span><span class="p">:</span> <span class="n">cancelable</span><span class="p">,</span>
+        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">min_select</span><span class="p">,</span>
+        <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">max_select</span><span class="p">,</span>
+        <span class="s2">&quot;cards&quot;</span><span class="p">:</span> <span class="n">cards</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="parse_select_chain">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_select_chain">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_select_chain</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_SELECT_CHAIN.&quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">specount</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">forced</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span>
+        <span class="s2">&quot;forced&quot;</span><span class="p">:</span> <span class="n">forced</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="parse_select_place">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_select_place">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_select_place</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_SELECT_PLACE.&quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span>
+        <span class="s2">&quot;flag&quot;</span><span class="p">:</span> <span class="n">flag</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="parse_select_unselect_card">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_select_unselect_card">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_select_unselect_card</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_SELECT_UNSELECT_CARD.&quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">finishable</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">cancelable</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">min_cards</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">max_cards</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">select_count</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="n">select_cards</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">select_count</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">select_cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">&quot;con&quot;</span><span class="p">:</span> <span class="n">con</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="n">loc</span><span class="p">,</span> <span class="s2">&quot;seq&quot;</span><span class="p">:</span> <span class="n">seq</span><span class="p">,</span> <span class="s2">&quot;pos&quot;</span><span class="p">:</span> <span class="n">pos</span><span class="p">})</span>
+
+    <span class="n">unselect_count</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">unselect_cards</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">unselect_count</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">unselect_cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span> <span class="s2">&quot;con&quot;</span><span class="p">:</span> <span class="n">con</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">:</span> <span class="n">loc</span><span class="p">,</span> <span class="s2">&quot;seq&quot;</span><span class="p">:</span> <span class="n">seq</span><span class="p">,</span> <span class="s2">&quot;pos&quot;</span><span class="p">:</span> <span class="n">pos</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s2">&quot;finishable&quot;</span><span class="p">:</span> <span class="n">finishable</span><span class="p">,</span>
+        <span class="s2">&quot;cancelable&quot;</span><span class="p">:</span> <span class="n">cancelable</span><span class="p">,</span>
+        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">min_cards</span><span class="p">,</span>
+        <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">max_cards</span><span class="p">,</span>
+        <span class="s2">&quot;select_cards&quot;</span><span class="p">:</span> <span class="n">select_cards</span><span class="p">,</span>
+        <span class="s2">&quot;unselect_cards&quot;</span><span class="p">:</span> <span class="n">unselect_cards</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="parse_select_option">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_select_option">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_select_option</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_SELECT_OPTION to extract available options.</span>
+
+<span class="sd">    Format:</span>
+<span class="sd">    - player (1 byte)</span>
+<span class="sd">    - count (1 byte)</span>
+<span class="sd">    - options[] (count * 8 bytes each - u64 desc for each option)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">read_u64</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;desc&quot;</span><span class="p">:</span> <span class="n">desc</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;player&quot;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span>
+        <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="n">options</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="parse_select_tribute">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_select_tribute">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_select_tribute</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_SELECT_TRIBUTE message.</span>
+
+<span class="sd">    Format:</span>
+<span class="sd">    - player: 1 byte</span>
+<span class="sd">    - cancelable: 1 byte</span>
+<span class="sd">    - min: 1 byte</span>
+<span class="sd">    - max: 1 byte</span>
+<span class="sd">    - count: 1 byte</span>
+<span class="sd">    - cards[count]: each card is 11 bytes</span>
+<span class="sd">        - code: 4 bytes</span>
+<span class="sd">        - controller: 1 byte</span>
+<span class="sd">        - location: 1 byte</span>
+<span class="sd">        - sequence: 1 byte</span>
+<span class="sd">        - release_param: 4 bytes (tribute value, usually 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="n">player</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">cancelable</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">min_tributes</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">max_tributes</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="n">cards</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">controller</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="n">read_u8</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">release_param</span> <span class="o">=</span> <span class="n">read_u32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+            <span class="s1">&#39;code&#39;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+            <span class="s1">&#39;controller&#39;</span><span class="p">:</span> <span class="n">controller</span><span class="p">,</span>
+            <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span>
+            <span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="n">sequence</span><span class="p">,</span>
+            <span class="s1">&#39;release_param&#39;</span><span class="p">:</span> <span class="n">release_param</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;player&#39;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+        <span class="s1">&#39;cancelable&#39;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cancelable</span><span class="p">),</span>
+        <span class="s1">&#39;min&#39;</span><span class="p">:</span> <span class="n">min_tributes</span><span class="p">,</span>
+        <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="n">max_tributes</span><span class="p">,</span>
+        <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span>
+        <span class="s1">&#39;cards&#39;</span><span class="p">:</span> <span class="n">cards</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="find_valid_tribute_combinations">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.find_valid_tribute_combinations">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_valid_tribute_combinations</span><span class="p">(</span><span class="n">cards</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">min_req</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_req</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find all valid combinations of cards to tribute.</span>
+
+<span class="sd">    Most tribute summons need count (1 for Level 5-6, 2 for Level 7+).</span>
+<span class="sd">    Some cards have release_param &gt; 1 (count as 2 tributes).</span>
+
+<span class="sd">    Returns list of card index lists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+
+    <span class="n">valid_combos</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Try all combination sizes from 1 to total cards</span>
+    <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cards</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cards</span><span class="p">)),</span> <span class="n">size</span><span class="p">):</span>
+            <span class="c1"># Calculate total tribute value</span>
+            <span class="n">total_value</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cards</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;release_param&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">combo</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">min_req</span> <span class="o">&lt;=</span> <span class="n">total_value</span> <span class="o">&lt;=</span> <span class="n">max_req</span><span class="p">:</span>
+                <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combo</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">valid_combos</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># SELECT_SUM PARSING</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="c1"># Global validator instance for level lookup</span>
+<span class="n">_card_validator</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_card_validator</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">CardValidator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get or create the global CardValidator instance.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_card_validator</span>
+    <span class="k">if</span> <span class="n">_card_validator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_card_validator</span> <span class="o">=</span> <span class="n">CardValidator</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_card_validator</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_sum_card_11byte</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a single card entry from MSG_SELECT_SUM (11-byte format).</span>
+
+<span class="sd">    Card format per ygopro-core field.cpp:</span>
+<span class="sd">    - code: 4 bytes LE (card passcode)</span>
+<span class="sd">    - controller: 1 byte</span>
+<span class="sd">    - location: 1 byte</span>
+<span class="sd">    - sequence: 1 byte</span>
+<span class="sd">    - sum_param: 4 bytes LE</span>
+<span class="sd">      - Low 16 bits: primary level/value</span>
+<span class="sd">      - High 16 bits: secondary level (for variable-level cards like Gagaga)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (card_dict, new_offset)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">11</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not enough data for card at offset </span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">controller</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">sequence</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">6</span><span class="p">]</span>  <span class="c1"># 1 byte, NOT 4!</span>
+    <span class="n">sum_param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">7</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Extract level values from sum_param</span>
+    <span class="n">level1</span> <span class="o">=</span> <span class="n">sum_param</span> <span class="o">&amp;</span> <span class="mh">0xFFFF</span>
+    <span class="n">level2</span> <span class="o">=</span> <span class="p">(</span><span class="n">sum_param</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFF</span>
+
+    <span class="c1"># Use level1 as primary value; level2 is for variable-level monsters</span>
+    <span class="n">effective_level</span> <span class="o">=</span> <span class="n">level1</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level1</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="n">card</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+        <span class="s1">&#39;code&#39;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+        <span class="s1">&#39;controller&#39;</span><span class="p">:</span> <span class="n">controller</span><span class="p">,</span>
+        <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span>
+        <span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="n">sequence</span><span class="p">,</span>
+        <span class="s1">&#39;sum_param&#39;</span><span class="p">:</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">effective_level</span><span class="p">,</span>
+        <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="n">effective_level</span><span class="p">,</span>
+        <span class="s1">&#39;level2&#39;</span><span class="p">:</span> <span class="n">level2</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level2</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="n">effective_level</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">card</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">11</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_sum_card_18byte</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a single card entry from MSG_SELECT_SUM (18-byte format).</span>
+
+<span class="sd">    Card format (18 bytes) - verified against ygopro-core source (card.h:26-31):</span>
+<span class="sd">    - code: 4 bytes LE (card passcode)</span>
+<span class="sd">    - controller: 1 byte</span>
+<span class="sd">    - location: 1 byte</span>
+<span class="sd">    - sequence: 4 bytes LE</span>
+<span class="sd">    - position: 4 bytes LE (card position flags)</span>
+<span class="sd">    - sum_param: 4 bytes LE (level for sum calculation)</span>
+
+<span class="sd">    The loc_info struct in ygopro-core is:</span>
+<span class="sd">        struct loc_info {</span>
+<span class="sd">            uint8_t controler;   // 1 byte</span>
+<span class="sd">            uint8_t location;    // 1 byte</span>
+<span class="sd">            uint32_t sequence;   // 4 bytes</span>
+<span class="sd">            uint32_t position;   // 4 bytes</span>
+<span class="sd">        };</span>
+<span class="sd">    Total: code(4) + loc_info(10) + sum_param(4) = 18 bytes</span>
+
+<span class="sd">    NOTE: This ygopro-core build may not populate sum_param correctly.</span>
+<span class="sd">    We fall back to verified_cards.json for level lookup when sum_param is 0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (card_dict, new_offset)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">18</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not enough data for 18-byte card at offset </span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">controller</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">sequence</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">6</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">position</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">10</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sum_param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">14</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Extract level from sum_param (low 16 bits = primary level)</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">sum_param</span> <span class="o">&amp;</span> <span class="mh">0xFFFF</span>
+    <span class="n">level2</span> <span class="o">=</span> <span class="p">(</span><span class="n">sum_param</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFF</span>
+
+    <span class="c1"># If sum_param is 0 or invalid, try to look up from verified cards</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">level</span> <span class="o">&gt;</span> <span class="mi">12</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">validator</span> <span class="o">=</span> <span class="n">_get_card_validator</span><span class="p">()</span>
+            <span class="n">verified</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">get_card</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verified</span> <span class="ow">and</span> <span class="s1">&#39;level&#39;</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;level&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">verified</span> <span class="ow">and</span> <span class="s1">&#39;rank&#39;</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;rank&#39;</span><span class="p">]</span>  <span class="c1"># For Xyz monsters</span>
+            <span class="k">elif</span> <span class="n">verified</span> <span class="ow">and</span> <span class="s1">&#39;link_rating&#39;</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;link_rating&#39;</span><span class="p">]</span>  <span class="c1"># For Link monsters</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="c1"># verified_cards.json not found - use sum_param as-is</span>
+            <span class="k">pass</span>
+
+    <span class="n">card</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+        <span class="s1">&#39;code&#39;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+        <span class="s1">&#39;controller&#39;</span><span class="p">:</span> <span class="n">controller</span><span class="p">,</span>
+        <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span>
+        <span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="n">sequence</span><span class="p">,</span>
+        <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="n">position</span><span class="p">,</span>
+        <span class="s1">&#39;sum_param&#39;</span><span class="p">:</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;sum_param_raw&#39;</span><span class="p">:</span> <span class="n">sum_param</span><span class="p">,</span>  <span class="c1"># Keep original for debugging</span>
+        <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">level</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="n">level</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;level2&#39;</span><span class="p">:</span> <span class="n">level2</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level2</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">card</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">18</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_sum_card_16byte</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a single card entry from MSG_SELECT_SUM (16-byte format).</span>
+
+<span class="sd">    Some ygopro-core builds use 16-byte card entries without the position field:</span>
+<span class="sd">    - code: 4 bytes LE (card passcode)</span>
+<span class="sd">    - controller: 1 byte</span>
+<span class="sd">    - location: 1 byte</span>
+<span class="sd">    - sequence: 4 bytes LE</span>
+<span class="sd">    - sum_param: 4 bytes LE (level for sum calculation)</span>
+<span class="sd">    - padding: 2 bytes</span>
+
+<span class="sd">    Total: 16 bytes (vs 18 with position field)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (card_dict, new_offset)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">16</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not enough data for 16-byte card at offset </span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">controller</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">sequence</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">6</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sum_param</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&lt;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">10</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Extract level from sum_param (low 16 bits = primary level)</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">sum_param</span> <span class="o">&amp;</span> <span class="mh">0xFFFF</span>
+    <span class="n">level2</span> <span class="o">=</span> <span class="p">(</span><span class="n">sum_param</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFF</span>
+
+    <span class="c1"># If sum_param is 0 or invalid, try to look up from verified cards</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">level</span> <span class="o">&gt;</span> <span class="mi">12</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">validator</span> <span class="o">=</span> <span class="n">_get_card_validator</span><span class="p">()</span>
+            <span class="n">verified</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">get_card</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verified</span> <span class="ow">and</span> <span class="s1">&#39;level&#39;</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;level&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">verified</span> <span class="ow">and</span> <span class="s1">&#39;rank&#39;</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;rank&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">verified</span> <span class="ow">and</span> <span class="s1">&#39;link_rating&#39;</span> <span class="ow">in</span> <span class="n">verified</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">verified</span><span class="p">[</span><span class="s1">&#39;link_rating&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="c1"># verified_cards.json not found - use sum_param as-is</span>
+            <span class="k">pass</span>
+
+    <span class="n">card</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+        <span class="s1">&#39;code&#39;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+        <span class="s1">&#39;controller&#39;</span><span class="p">:</span> <span class="n">controller</span><span class="p">,</span>
+        <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span>
+        <span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="n">sequence</span><span class="p">,</span>
+        <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># Not available in 16-byte format</span>
+        <span class="s1">&#39;sum_param&#39;</span><span class="p">:</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;sum_param_raw&#39;</span><span class="p">:</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">level</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="n">level</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="n">sum_param</span><span class="p">,</span>
+        <span class="s1">&#39;level2&#39;</span><span class="p">:</span> <span class="n">level2</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">level2</span> <span class="o">&lt;=</span> <span class="mi">12</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">card</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="mi">16</span>
+
+
+<div class="viewcode-block" id="parse_select_sum">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.parsers.parse_select_sum">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_select_sum</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse MSG_SELECT_SUM message for material/card selection.</span>
+
+<span class="sd">    Format verified against ygopro-core source (playerop.cpp:796-819, card.h:26-31):</span>
+<span class="sd">    - Header uses BIG-ENDIAN for target_sum and can_count</span>
+<span class="sd">    - Card entries are 18 bytes (including 4-byte position field)</span>
+
+<span class="sd">    Header format:</span>
+<span class="sd">    - player: 1 byte (offset 0)</span>
+<span class="sd">    - select_mode: 1 byte (offset 1) - 0 = exactly equal, 1 = at least equal</span>
+<span class="sd">    - select_min: 1 byte (offset 2)</span>
+<span class="sd">    - select_max: 1 byte (offset 3)</span>
+<span class="sd">    - target_sum: 4 bytes BE (offset 4-7) - target sum</span>
+<span class="sd">    - must_count: 4 bytes BE (offset 8-11) - treated as can_count</span>
+<span class="sd">    - padding: 3 bytes (offset 12-14)</span>
+<span class="sd">    - cards[]: 18 bytes each starting at offset 15</span>
+
+<span class="sd">    Card format (18 bytes) from ygopro-core loc_info struct:</span>
+<span class="sd">    - code: 4 bytes LE (card passcode)</span>
+<span class="sd">    - controller: 1 byte</span>
+<span class="sd">    - location: 1 byte</span>
+<span class="sd">    - sequence: 4 bytes LE</span>
+<span class="sd">    - position: 4 bytes LE (card position flags)</span>
+<span class="sd">    - sum_param: 4 bytes LE (level for sum calculation)</span>
+
+<span class="sd">    Note: sum_param encodes level in low 16 bits, optional secondary level in high 16 bits.</span>
+
+<span class="sd">    Returns dict with parsed data for _handle_select_sum.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">raw_data</span> <span class="o">=</span> <span class="n">data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Header</span>
+        <span class="n">player</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">offset</span><span class="p">];</span> <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">select_mode</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">offset</span><span class="p">];</span> <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">select_min</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">offset</span><span class="p">];</span> <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">select_max</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">offset</span><span class="p">];</span> <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Note: target_sum and card count are BIG-ENDIAN u32 in this ygopro-core build</span>
+        <span class="n">target_sum</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">,</span> <span class="n">offset</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span> <span class="n">offset</span> <span class="o">+=</span> <span class="mi">4</span>
+        <span class="c1"># The count at offset 8-11 appears to be the selectable card count</span>
+        <span class="n">can_count</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">,</span> <span class="n">offset</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span> <span class="n">offset</span> <span class="o">+=</span> <span class="mi">4</span>
+        <span class="n">must_count</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># No must-select cards observed in this format</span>
+        <span class="n">offset</span> <span class="o">+=</span> <span class="mi">3</span>  <span class="c1"># Skip padding bytes to align cards at offset 15</span>
+
+        <span class="c1"># Cards (all are can-select in observed data)</span>
+        <span class="c1"># Auto-detect card size based on message length and card count</span>
+        <span class="c1"># Possible sizes: 11, 16, or 18 bytes per card</span>
+        <span class="n">header_size</span> <span class="o">=</span> <span class="mi">15</span>
+        <span class="n">available_bytes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span> <span class="o">-</span> <span class="n">header_size</span>
+
+        <span class="c1"># Determine card size from available bytes and expected count</span>
+        <span class="c1"># NOTE: This ygopro-core build consistently uses 16-byte card format</span>
+        <span class="c1"># (without the 4-byte position field). The engine may pad messages to</span>
+        <span class="c1"># 18 bytes but sum_param is always at offset 10, not 14. So we always</span>
+        <span class="c1"># use 16-byte parsing and handle extra padding gracefully.</span>
+        <span class="k">if</span> <span class="n">can_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">bytes_per_card</span> <span class="o">=</span> <span class="n">available_bytes</span> <span class="o">//</span> <span class="n">can_count</span>
+            <span class="c1"># Always use 16-byte parser for this engine (sum_param at offset 10)</span>
+            <span class="c1"># Only fall back to 11-byte if there&#39;s truly not enough data</span>
+            <span class="k">if</span> <span class="n">bytes_per_card</span> <span class="o">&gt;=</span> <span class="mi">16</span><span class="p">:</span>
+                <span class="n">card_size</span> <span class="o">=</span> <span class="mi">16</span>
+                <span class="n">parse_func</span> <span class="o">=</span> <span class="n">_parse_sum_card_16byte</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">card_size</span> <span class="o">=</span> <span class="mi">11</span>
+                <span class="n">parse_func</span> <span class="o">=</span> <span class="n">_parse_sum_card_11byte</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">card_size</span> <span class="o">=</span> <span class="mi">16</span>  <span class="c1"># Default</span>
+            <span class="n">parse_func</span> <span class="o">=</span> <span class="n">_parse_sum_card_16byte</span>
+
+        <span class="n">max_complete_cards</span> <span class="o">=</span> <span class="n">available_bytes</span> <span class="o">//</span> <span class="n">card_size</span>
+
+        <span class="n">must_select</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">can_select</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cards_to_parse</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">can_count</span><span class="p">,</span> <span class="n">max_complete_cards</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cards_to_parse</span><span class="p">):</span>
+            <span class="n">card</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">parse_func</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">can_select</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+
+        <span class="c1"># Note: can_count in result reflects header value for selection logic</span>
+        <span class="c1"># Actual parsed cards may be fewer if message was truncated</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;player&#39;</span><span class="p">:</span> <span class="n">player</span><span class="p">,</span>
+            <span class="s1">&#39;select_mode&#39;</span><span class="p">:</span> <span class="n">select_mode</span><span class="p">,</span>
+            <span class="s1">&#39;target_sum&#39;</span><span class="p">:</span> <span class="n">target_sum</span><span class="p">,</span>
+            <span class="s1">&#39;min&#39;</span><span class="p">:</span> <span class="n">select_min</span><span class="p">,</span>
+            <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="n">select_max</span><span class="p">,</span>
+            <span class="s1">&#39;must_count&#39;</span><span class="p">:</span> <span class="n">must_count</span><span class="p">,</span>
+            <span class="s1">&#39;must_select&#39;</span><span class="p">:</span> <span class="n">must_select</span><span class="p">,</span>
+            <span class="s1">&#39;can_count&#39;</span><span class="p">:</span> <span class="n">can_count</span><span class="p">,</span>
+            <span class="s1">&#39;can_select&#39;</span><span class="p">:</span> <span class="n">can_select</span><span class="p">,</span>
+            <span class="s1">&#39;_raw_hex&#39;</span><span class="p">:</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">hex</span><span class="p">(),</span>  <span class="c1"># DEBUG: always include for analysis</span>
+            <span class="s1">&#39;_raw_len&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_data</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Return error info for debugging</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;player&#39;</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;select_mode&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;target_sum&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;min&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;must_count&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;must_select&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;can_count&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;can_select&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;_parse_error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s1">&#39;_raw_hex&#39;</span><span class="p">:</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span> <span class="k">if</span> <span class="n">raw_data</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

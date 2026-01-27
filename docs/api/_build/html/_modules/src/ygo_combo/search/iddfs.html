@@ -1,0 +1,874 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.search.iddfs &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.search.iddfs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.search.iddfs</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Iterative deepening wrapper for combo enumeration.</span>
+
+<span class="sd">Searches at increasing depth limits to find shortest combos first.</span>
+<span class="sd">Each iteration warms up the transposition table for the next.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    from iterative_deepening import IterativeDeepeningSearch, SearchConfig</span>
+
+<span class="sd">    config = SearchConfig(</span>
+<span class="sd">        max_depth=25,</span>
+<span class="sd">        target_score=100,  # Stop when S-tier board found</span>
+<span class="sd">        time_budget=60.0,  # Or stop after 60 seconds</span>
+<span class="sd">    )</span>
+
+<span class="sd">    search = IterativeDeepeningSearch(engine, config)</span>
+<span class="sd">    result = search.run()</span>
+
+<span class="sd">    # Result contains best combo found at each depth</span>
+<span class="sd">    print(f&quot;Shortest combo: {result.shortest_combo}&quot;)</span>
+<span class="sd">    print(f&quot;Best board: {result.best_terminal}&quot;)</span>
+
+<span class="sd">Architecture:</span>
+<span class="sd">    For depth 1, 2, 3, ... max_depth:</span>
+<span class="sd">        1. Set engine depth limit</span>
+<span class="sd">        2. Run enumeration</span>
+<span class="sd">        3. Collect terminals found at exactly this depth</span>
+<span class="sd">        4. Check stopping conditions (target found, timeout, etc.)</span>
+<span class="sd">        5. If not stopped, continue to next depth</span>
+
+<span class="sd">    Transposition table persists across iterations, providing:</span>
+<span class="sd">    - Faster re-exploration of shallow states</span>
+<span class="sd">    - Pruning of already-explored branches</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Set</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CONFIGURATION</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="SearchConfig">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.SearchConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration for iterative deepening search.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        max_depth: Maximum depth to search (absolute limit).</span>
+<span class="sd">        min_depth: Starting depth (default 1).</span>
+<span class="sd">        depth_step: Depth increment per iteration (default 1).</span>
+<span class="sd">        target_score: Stop if terminal with this score found (None = no target).</span>
+<span class="sd">        target_tier: Stop if terminal with this tier found (None = no target).</span>
+<span class="sd">        time_budget: Maximum seconds to search (None = no limit).</span>
+<span class="sd">        path_budget: Maximum total paths to explore (None = no limit).</span>
+<span class="sd">        terminals_per_depth: Max terminals to keep per depth (memory limit).</span>
+<span class="sd">        require_boss: Only count terminals with boss monsters.</span>
+<span class="sd">        early_stop_on_any: Stop on first terminal at any depth.</span>
+<span class="sd">        verbose: Print progress updates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span>
+    <span class="n">min_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">depth_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">target_score</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">target_tier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &quot;S&quot;, &quot;A&quot;, &quot;B&quot;, &quot;C&quot;</span>
+    <span class="n">time_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">path_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terminals_per_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">require_boss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">early_stop_on_any</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="DepthResult">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.DepthResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DepthResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Results from searching at a specific depth.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        depth: The depth limit used.</span>
+<span class="sd">        terminals_found: Number of terminals found at exactly this depth.</span>
+<span class="sd">        terminals_total: Cumulative terminals found up to this depth.</span>
+<span class="sd">        best_score: Best terminal score at this depth.</span>
+<span class="sd">        best_tier: Best terminal tier at this depth.</span>
+<span class="sd">        paths_explored: Paths explored in this iteration.</span>
+<span class="sd">        duration_seconds: Time spent on this depth.</span>
+<span class="sd">        new_terminals: List of new terminal hashes found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">terminals_found</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">terminals_total</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">best_score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">best_tier</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">paths_explored</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">duration_seconds</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">new_terminals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SearchResult">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.SearchResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Complete results from iterative deepening search.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        depths_searched: Number of depth iterations completed.</span>
+<span class="sd">        total_terminals: Total unique terminals found.</span>
+<span class="sd">        total_paths: Total paths explored across all iterations.</span>
+<span class="sd">        total_duration: Total search time in seconds.</span>
+<span class="sd">        best_score: Best terminal score found.</span>
+<span class="sd">        best_tier: Best terminal tier found.</span>
+<span class="sd">        best_depth: Depth at which best terminal was found.</span>
+<span class="sd">        shortest_combo_depth: Depth of shortest successful combo.</span>
+<span class="sd">        stopped_reason: Why search stopped (max_depth, target, timeout, etc.)</span>
+<span class="sd">        depth_results: Per-depth statistics.</span>
+<span class="sd">        best_terminals: Top terminals by score.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">depths_searched</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_terminals</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_paths</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_duration</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">best_score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">best_tier</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">best_depth</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">shortest_combo_depth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">stopped_reason</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">depth_results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DepthResult</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">best_terminals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># STOPPING CONDITIONS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="StoppingCondition">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.StoppingCondition">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StoppingCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for search stopping conditions.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="StoppingCondition.should_stop">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.StoppingCondition.should_stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if search should stop.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+<div class="viewcode-block" id="StoppingCondition.reason">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.StoppingCondition.reason">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return reason for stopping.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TargetScoreReached">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetScoreReached">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TargetScoreReached</span><span class="p">(</span><span class="n">StoppingCondition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop when target score is reached.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TargetScoreReached.__init__">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetScoreReached.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_score</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_score</span> <span class="o">=</span> <span class="n">target_score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reached</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="TargetScoreReached.should_stop">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetScoreReached.should_stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;best_score&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_score</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reached</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="TargetScoreReached.reason">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetScoreReached.reason">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;target_score_reached (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target_score</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TargetTierReached">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetTierReached">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TargetTierReached</span><span class="p">(</span><span class="n">StoppingCondition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop when target tier is reached.&quot;&quot;&quot;</span>
+
+    <span class="n">TIER_ORDER</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;S&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;brick&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+
+<div class="viewcode-block" id="TargetTierReached.__init__">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetTierReached.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_tier</span> <span class="o">=</span> <span class="n">target_tier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reached</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="TargetTierReached.should_stop">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetTierReached.should_stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">best_tier</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;best_tier&quot;</span><span class="p">,</span> <span class="s2">&quot;brick&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">TIER_ORDER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">best_tier</span><span class="p">,</span> <span class="mi">99</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TIER_ORDER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_tier</span><span class="p">,</span> <span class="mi">99</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reached</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="TargetTierReached.reason">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TargetTierReached.reason">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;target_tier_reached (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target_tier</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TimeBudgetExhausted">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TimeBudgetExhausted">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TimeBudgetExhausted</span><span class="p">(</span><span class="n">StoppingCondition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop when time budget is exhausted.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TimeBudgetExhausted.__init__">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TimeBudgetExhausted.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">budget_seconds</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">budget</span> <span class="o">=</span> <span class="n">budget_seconds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TimeBudgetExhausted.should_stop">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TimeBudgetExhausted.should_stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span>
+        <span class="k">return</span> <span class="n">elapsed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">budget</span></div>
+
+
+<div class="viewcode-block" id="TimeBudgetExhausted.reason">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.TimeBudgetExhausted.reason">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;time_budget_exhausted (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">budget</span><span class="si">}</span><span class="s2">s)&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PathBudgetExhausted">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.PathBudgetExhausted">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PathBudgetExhausted</span><span class="p">(</span><span class="n">StoppingCondition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop when path budget is exhausted.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PathBudgetExhausted.__init__">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.PathBudgetExhausted.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">budget_paths</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">budget</span> <span class="o">=</span> <span class="n">budget_paths</span></div>
+
+
+<div class="viewcode-block" id="PathBudgetExhausted.should_stop">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.PathBudgetExhausted.should_stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total_paths&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">budget</span></div>
+
+
+<div class="viewcode-block" id="PathBudgetExhausted.reason">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.PathBudgetExhausted.reason">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;path_budget_exhausted (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">budget</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AnyTerminalFound">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.AnyTerminalFound">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AnyTerminalFound</span><span class="p">(</span><span class="n">StoppingCondition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop when any terminal is found (for quick validation).&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AnyTerminalFound.__init__">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.AnyTerminalFound.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">require_boss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_boss</span> <span class="o">=</span> <span class="n">require_boss</span></div>
+
+
+<div class="viewcode-block" id="AnyTerminalFound.should_stop">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.AnyTerminalFound.should_stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_boss</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;terminals_with_boss&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total_terminals&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="AnyTerminalFound.reason">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.AnyTerminalFound.reason">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;any_terminal_found&quot;</span></div>
+</div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># ITERATIVE DEEPENING SEARCH</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="IterativeDeepeningSearch">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.IterativeDeepeningSearch">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IterativeDeepeningSearch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterative deepening search wrapper for combo enumeration.</span>
+
+<span class="sd">    Wraps an EnumerationEngine and runs it at increasing depth limits.</span>
+<span class="sd">    The transposition table is preserved across iterations for efficiency.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IterativeDeepeningSearch.__init__">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.IterativeDeepeningSearch.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">engine_factory</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">],</span>  <span class="c1"># Returns EnumerationEngine</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">SearchConfig</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize iterative deepening search.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            engine_factory: Callable that creates a fresh EnumerationEngine.</span>
+<span class="sd">                           Called once; engine is reused across depths.</span>
+<span class="sd">            config: SearchConfig with search parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine_factory</span> <span class="o">=</span> <span class="n">engine_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+
+        <span class="c1"># Build stopping conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stopping_conditions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">StoppingCondition</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">target_score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stopping_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TargetScoreReached</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">target_score</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">target_tier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stopping_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TargetTierReached</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">target_tier</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">time_budget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stopping_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TimeBudgetExhausted</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">time_budget</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">path_budget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stopping_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PathBudgetExhausted</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">path_budget</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">early_stop_on_any</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stopping_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AnyTerminalFound</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">require_boss</span><span class="p">))</span>
+
+        <span class="c1"># State</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_terminal_hashes</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth_results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DepthResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="IterativeDeepeningSearch.run">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.IterativeDeepeningSearch.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run iterative deepening search.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            SearchResult with all findings and statistics.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+        <span class="c1"># Create engine (transposition table will persist)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine_factory</span><span class="p">()</span>
+
+        <span class="n">total_paths</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">best_tier</span> <span class="o">=</span> <span class="s2">&quot;brick&quot;</span>
+        <span class="n">best_depth</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">shortest_combo_depth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">stopped_reason</span> <span class="o">=</span> <span class="s2">&quot;max_depth_reached&quot;</span>
+
+        <span class="c1"># Iterate through depths</span>
+        <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_depth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">depth_step</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching depth </span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+            <span class="n">depth_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+            <span class="c1"># Run enumeration at this depth</span>
+            <span class="n">depth_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_at_depth</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span>
+
+            <span class="n">depth_duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">depth_start</span>
+            <span class="n">depth_result</span><span class="o">.</span><span class="n">duration_seconds</span> <span class="o">=</span> <span class="n">depth_duration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">depth_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">depth_result</span><span class="p">)</span>
+
+            <span class="n">total_paths</span> <span class="o">+=</span> <span class="n">depth_result</span><span class="o">.</span><span class="n">paths_explored</span>
+
+            <span class="c1"># Update best</span>
+            <span class="k">if</span> <span class="n">depth_result</span><span class="o">.</span><span class="n">best_score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+                <span class="n">best_score</span> <span class="o">=</span> <span class="n">depth_result</span><span class="o">.</span><span class="n">best_score</span>
+                <span class="n">best_tier</span> <span class="o">=</span> <span class="n">depth_result</span><span class="o">.</span><span class="n">best_tier</span>
+                <span class="n">best_depth</span> <span class="o">=</span> <span class="n">depth</span>
+
+            <span class="c1"># Track shortest combo</span>
+            <span class="k">if</span> <span class="n">shortest_combo_depth</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">depth_result</span><span class="o">.</span><span class="n">terminals_found</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">require_boss</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_boss_terminal</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+                    <span class="n">shortest_combo_depth</span> <span class="o">=</span> <span class="n">depth</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;  Depth </span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">depth_result</span><span class="o">.</span><span class="n">terminals_found</span><span class="si">}</span><span class="s2"> new terminals, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;best=</span><span class="si">{</span><span class="n">depth_result</span><span class="o">.</span><span class="n">best_tier</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">depth_result</span><span class="o">.</span><span class="n">best_score</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">), &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">depth_result</span><span class="o">.</span><span class="n">paths_explored</span><span class="si">}</span><span class="s2"> paths, </span><span class="si">{</span><span class="n">depth_duration</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Check stopping conditions</span>
+            <span class="n">search_state</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span>
+                <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="n">best_score</span><span class="p">,</span>
+                <span class="s2">&quot;best_tier&quot;</span><span class="p">:</span> <span class="n">best_tier</span><span class="p">,</span>
+                <span class="s2">&quot;total_terminals&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_terminal_hashes</span><span class="p">),</span>
+                <span class="s2">&quot;terminals_with_boss&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_boss_terminals</span><span class="p">(),</span>
+                <span class="s2">&quot;total_paths&quot;</span><span class="p">:</span> <span class="n">total_paths</span><span class="p">,</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopping_conditions</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">should_stop</span><span class="p">(</span><span class="n">search_state</span><span class="p">):</span>
+                    <span class="n">stopped_reason</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">reason</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Stopping: </span><span class="si">{</span><span class="n">stopped_reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>  <span class="c1"># No condition triggered, continue to next depth</span>
+            <span class="k">break</span>  <span class="c1"># Condition triggered, exit loop</span>
+
+        <span class="n">total_duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+        <span class="k">return</span> <span class="n">SearchResult</span><span class="p">(</span>
+            <span class="n">depths_searched</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_results</span><span class="p">),</span>
+            <span class="n">total_terminals</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_terminal_hashes</span><span class="p">),</span>
+            <span class="n">total_paths</span><span class="o">=</span><span class="n">total_paths</span><span class="p">,</span>
+            <span class="n">total_duration</span><span class="o">=</span><span class="n">total_duration</span><span class="p">,</span>
+            <span class="n">best_score</span><span class="o">=</span><span class="n">best_score</span><span class="p">,</span>
+            <span class="n">best_tier</span><span class="o">=</span><span class="n">best_tier</span><span class="p">,</span>
+            <span class="n">best_depth</span><span class="o">=</span><span class="n">best_depth</span><span class="p">,</span>
+            <span class="n">shortest_combo_depth</span><span class="o">=</span><span class="n">shortest_combo_depth</span><span class="p">,</span>
+            <span class="n">stopped_reason</span><span class="o">=</span><span class="n">stopped_reason</span><span class="p">,</span>
+            <span class="n">depth_results</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_results</span><span class="p">,</span>
+            <span class="n">best_terminals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span><span class="p">[:</span><span class="mi">10</span><span class="p">],</span>  <span class="c1"># Top 10</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_search_at_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DepthResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run enumeration at a specific depth limit.</span>
+
+<span class="sd">        The engine&#39;s transposition table is preserved, so previously</span>
+<span class="sd">        explored states will be skipped (hit in cache).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pre_terminal_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_terminal_hashes</span><span class="p">)</span>
+        <span class="n">pre_paths</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;paths_explored&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Run enumeration with depth limit</span>
+        <span class="n">terminals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_engine_at_depth</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span>
+
+        <span class="n">post_paths</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;paths_explored&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Process results</span>
+        <span class="n">new_terminals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">best_tier</span> <span class="o">=</span> <span class="s2">&quot;brick&quot;</span>
+
+        <span class="k">for</span> <span class="n">terminal</span> <span class="ow">in</span> <span class="n">terminals</span><span class="p">:</span>
+            <span class="c1"># Skip if already seen</span>
+            <span class="n">terminal_hash</span> <span class="o">=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;board_hash&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state_hash&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">terminal_hash</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_terminal_hashes</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Only count terminals at exactly this depth</span>
+            <span class="k">if</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">depth</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_terminal_hashes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">terminal_hash</span><span class="p">)</span>
+            <span class="n">new_terminals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">terminal_hash</span><span class="p">)</span>
+
+            <span class="c1"># Track best</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">tier</span> <span class="o">=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tier&quot;</span><span class="p">,</span> <span class="s2">&quot;brick&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
+                <span class="n">best_tier</span> <span class="o">=</span> <span class="n">tier</span>
+
+            <span class="c1"># Add to best terminals list</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">terminal</span><span class="p">)</span>
+
+        <span class="c1"># Sort and trim best terminals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">terminals_per_depth</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">DepthResult</span><span class="p">(</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span>
+            <span class="n">terminals_found</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">new_terminals</span><span class="p">),</span>
+            <span class="n">terminals_total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_terminal_hashes</span><span class="p">),</span>
+            <span class="n">best_score</span><span class="o">=</span><span class="n">best_score</span><span class="p">,</span>
+            <span class="n">best_tier</span><span class="o">=</span><span class="n">best_tier</span><span class="p">,</span>
+            <span class="n">paths_explored</span><span class="o">=</span><span class="n">post_paths</span> <span class="o">-</span> <span class="n">pre_paths</span><span class="p">,</span>
+            <span class="n">duration_seconds</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># Filled in by caller</span>
+            <span class="n">new_terminals</span><span class="o">=</span><span class="n">new_terminals</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_engine_at_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the enumeration engine at a specific depth.</span>
+
+<span class="sd">        This method calls the engine&#39;s enumerate_with_depth_limit if available,</span>
+<span class="sd">        otherwise falls back to setting max_depth and running enumerate_all.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Try the preferred method first</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;enumerate_with_depth_limit&#39;</span><span class="p">):</span>
+            <span class="n">terminals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">enumerate_with_depth_limit</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;to_dict&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">terminals</span><span class="p">]</span>
+
+        <span class="c1"># Fallback: set max_depth and run</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;max_depth&#39;</span><span class="p">):</span>
+            <span class="n">old_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">max_depth</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">depth</span>
+
+            <span class="c1"># Clear terminals but preserve transposition table</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;terminals&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">terminals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;paths_explored&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">paths_explored</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Run enumeration</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;enumerate_all&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">enumerate_all</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;_enumerate_recursive&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">_enumerate_recursive</span><span class="p">([])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">old_depth</span>
+
+            <span class="n">terminals</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="s1">&#39;terminals&#39;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s1">&#39;to_dict&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">terminals</span><span class="p">]</span>
+
+        <span class="c1"># No compatible interface found</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Engine must have enumerate_with_depth_limit() or max_depth attribute. &quot;</span>
+            <span class="s2">&quot;See combo_enumeration.py for required interface.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_has_boss_terminal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if any terminal at this depth has a boss monster.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">terminal</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">depth</span> <span class="ow">and</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;has_boss&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_count_boss_terminals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Count terminals with boss monsters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_terminals</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;has_boss&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CONVENIENCE FUNCTIONS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="iterative_search">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.iterative_search">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">iterative_search</span><span class="p">(</span>
+    <span class="n">engine_factory</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+    <span class="n">target_tier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span>
+    <span class="n">time_budget</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for iterative deepening search.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        engine_factory: Callable that creates EnumerationEngine.</span>
+<span class="sd">        max_depth: Maximum depth to search.</span>
+<span class="sd">        target_tier: Stop when this tier is reached.</span>
+<span class="sd">        time_budget: Maximum seconds (None = no limit).</span>
+<span class="sd">        verbose: Print progress.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        SearchResult with findings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">SearchConfig</span><span class="p">(</span>
+        <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span>
+        <span class="n">target_tier</span><span class="o">=</span><span class="n">target_tier</span><span class="p">,</span>
+        <span class="n">time_budget</span><span class="o">=</span><span class="n">time_budget</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">search</span> <span class="o">=</span> <span class="n">IterativeDeepeningSearch</span><span class="p">(</span><span class="n">engine_factory</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">search</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="find_shortest_combo">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.find_shortest_combo">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_shortest_combo</span><span class="p">(</span>
+    <span class="n">engine_factory</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+    <span class="n">require_boss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the shortest combo that produces a boss monster.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        engine_factory: Callable that creates EnumerationEngine.</span>
+<span class="sd">        max_depth: Maximum depth to search.</span>
+<span class="sd">        require_boss: Require boss monster on final board.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Depth of shortest combo, or None if not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">SearchConfig</span><span class="p">(</span>
+        <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span>
+        <span class="n">early_stop_on_any</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">require_boss</span><span class="o">=</span><span class="n">require_boss</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">search</span> <span class="o">=</span> <span class="n">IterativeDeepeningSearch</span><span class="p">(</span><span class="n">engine_factory</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">shortest_combo_depth</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># INTEGRATION HELPERS</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="create_depth_limited_engine">
+<a class="viewcode-back" href="../../../../modules/search.html#src.ygo_combo.search.iddfs.create_depth_limited_engine">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_depth_limited_engine</span><span class="p">(</span>
+    <span class="n">lib</span><span class="p">,</span>
+    <span class="n">main_deck</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">extra_deck</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">transposition_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an EnumerationEngine with specific depth limit.</span>
+
+<span class="sd">    This is a helper for integration with combo_enumeration.py.</span>
+<span class="sd">    The transposition table can be passed in to preserve state</span>
+<span class="sd">    across iterations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lib: OCG library handle.</span>
+<span class="sd">        main_deck: Main deck card list.</span>
+<span class="sd">        extra_deck: Extra deck card list.</span>
+<span class="sd">        max_depth: Maximum search depth.</span>
+<span class="sd">        transposition_table: Optional existing TranspositionTable.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Configured EnumerationEngine.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Import here to avoid circular dependency</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..combo_enumeration</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnumerationEngine</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.transposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">TranspositionTable</span>
+
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">EnumerationEngine</span><span class="p">(</span>
+        <span class="n">lib</span><span class="o">=</span><span class="n">lib</span><span class="p">,</span>
+        <span class="n">main_deck</span><span class="o">=</span><span class="n">main_deck</span><span class="p">,</span>
+        <span class="n">extra_deck</span><span class="o">=</span><span class="n">extra_deck</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">dedupe_boards</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">dedupe_intermediate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Override max depth</span>
+    <span class="n">engine</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">max_depth</span>
+
+    <span class="c1"># Use provided transposition table if given</span>
+    <span class="k">if</span> <span class="n">transposition_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">engine</span><span class="o">.</span><span class="n">transposition_table</span> <span class="o">=</span> <span class="n">transposition_table</span>
+
+    <span class="k">return</span> <span class="n">engine</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># TESTS</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Iterative Deepening Tests&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="c1"># Test 1: SearchConfig defaults</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">1. SearchConfig:&quot;</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">SearchConfig</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   max_depth: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">max_depth</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   min_depth: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">min_depth</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   depth_step: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">depth_step</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">==</span> <span class="mi">25</span>
+    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">min_depth</span> <span class="o">==</span> <span class="mi">1</span>
+
+    <span class="c1"># Test 2: Stopping conditions</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">2. Stopping conditions:&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Target score</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">TargetScoreReached</span><span class="p">(</span><span class="mf">100.0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">})</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   TargetScoreReached: OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Target tier</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">TargetTierReached</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;best_tier&quot;</span><span class="p">:</span> <span class="s2">&quot;B&quot;</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;best_tier&quot;</span><span class="p">:</span> <span class="s2">&quot;A&quot;</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;best_tier&quot;</span><span class="p">:</span> <span class="s2">&quot;S&quot;</span><span class="p">})</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   TargetTierReached: OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Path budget</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">PathBudgetExhausted</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;total_paths&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;total_paths&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">})</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   PathBudgetExhausted: OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Any terminal</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">AnyTerminalFound</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;total_terminals&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">cond</span><span class="o">.</span><span class="n">should_stop</span><span class="p">({</span><span class="s2">&quot;total_terminals&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   AnyTerminalFound: OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 3: DepthResult</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">3. DepthResult:&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">DepthResult</span><span class="p">(</span>
+        <span class="n">depth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">terminals_found</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">terminals_total</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+        <span class="n">best_score</span><span class="o">=</span><span class="mf">85.0</span><span class="p">,</span>
+        <span class="n">best_tier</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="p">,</span>
+        <span class="n">paths_explored</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">duration_seconds</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">depth</span> <span class="o">==</span> <span class="mi">5</span>
+    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">terminals_found</span> <span class="o">==</span> <span class="mi">10</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Created result for depth </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">depth</span><span class="si">}</span><span class="s2">: OK&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test 4: SearchResult</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">4. SearchResult:&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">SearchResult</span><span class="p">(</span>
+        <span class="n">depths_searched</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">total_terminals</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">total_paths</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+        <span class="n">total_duration</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
+        <span class="n">best_score</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+        <span class="n">best_tier</span><span class="o">=</span><span class="s2">&quot;S&quot;</span><span class="p">,</span>
+        <span class="n">best_depth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">shortest_combo_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">stopped_reason</span><span class="o">=</span><span class="s2">&quot;target_tier_reached&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">best_tier</span> <span class="o">==</span> <span class="s2">&quot;S&quot;</span>
+    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">shortest_combo_depth</span> <span class="o">==</span> <span class="mi">5</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Best tier: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_tier</span><span class="si">}</span><span class="s2">, shortest: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">shortest_combo_depth</span><span class="si">}</span><span class="s2">: OK&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All tests passed!&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

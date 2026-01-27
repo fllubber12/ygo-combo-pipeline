@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.ygo_combo.enumeration.sum_utils &mdash; YGO-Combo-Pipeline 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            YGO-Combo-Pipeline
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/types.html">Shared Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/engine.html">Engine Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/search.html">Search Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/cards.html">Cards Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/encoding.html">Encoding Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/enumeration.html">Enumeration Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/combo_enumeration.html">Combo Enumeration</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">YGO-Combo-Pipeline</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.ygo_combo.enumeration.sum_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.ygo_combo.enumeration.sum_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sum enumeration utilities for Xyz/Synchro/Ritual material selection.</span>
+
+<span class="sd">These functions enumerate all valid card combinations that sum to a target value,</span>
+<span class="sd">used for material selection in various summoning mechanics.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">product</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+
+
+<div class="viewcode-block" id="find_valid_sum_combinations">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.sum_utils.find_valid_sum_combinations">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_valid_sum_combinations</span><span class="p">(</span>
+    <span class="n">must_select</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+    <span class="n">can_select</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+    <span class="n">target_sum</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">min_select</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">max_select</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find all valid combinations of cards that sum to target value.</span>
+
+<span class="sd">    Used for Xyz summon material selection, Synchro tuning, ritual tributes, etc.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        must_select: Cards that MUST be included (from must_select in message)</span>
+<span class="sd">        can_select: Cards that CAN be selected (from can_select in message)</span>
+<span class="sd">        target_sum: Target sum value (e.g., 12 for 2x Level 6 -&gt; Rank 6)</span>
+<span class="sd">        min_select: Minimum total cards to select</span>
+<span class="sd">        max_select: Maximum total cards to select</span>
+<span class="sd">        mode: 0 = exactly equal, 1 = at least equal</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of valid index lists. Each inner list contains indices into can_select</span>
+<span class="sd">        that form a valid sum when combined with must_select cards.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        For Xyz summon of Rank 6 with two Level 6 monsters available:</span>
+<span class="sd">        - must_select = []</span>
+<span class="sd">        - can_select = [{&quot;value&quot;: 6, ...}, {&quot;value&quot;: 6, ...}]</span>
+<span class="sd">        - target_sum = 12 (6 + 6)</span>
+<span class="sd">        - Returns: [[0, 1]] (select both cards)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate sum from must_select cards (these are always included)</span>
+    <span class="n">must_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">must_select</span><span class="p">)</span>
+    <span class="n">must_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">must_select</span><span class="p">)</span>
+
+    <span class="c1"># Remaining sum needed from can_select cards</span>
+    <span class="n">remaining_sum</span> <span class="o">=</span> <span class="n">target_sum</span> <span class="o">-</span> <span class="n">must_sum</span>
+
+    <span class="c1"># Early exit: impossible to reach target with no cards available</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">can_select</span> <span class="ow">and</span> <span class="n">remaining_sum</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># No cards available, can&#39;t reach target</span>
+
+    <span class="c1"># Early exit: check if sum is achievable</span>
+    <span class="k">if</span> <span class="n">can_select</span> <span class="ow">and</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Exact match mode</span>
+        <span class="c1"># Get min and max possible values for each card</span>
+        <span class="n">card_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">can_select</span><span class="p">:</span>
+            <span class="n">lvl1</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">lvl2</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level2&quot;</span><span class="p">,</span> <span class="n">lvl1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">lvl1</span>
+            <span class="n">card_values</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">min</span><span class="p">(</span><span class="n">lvl1</span><span class="p">,</span> <span class="n">lvl2</span><span class="p">)</span> <span class="k">if</span> <span class="n">lvl2</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">lvl1</span><span class="p">,</span>
+                               <span class="nb">max</span><span class="p">(</span><span class="n">lvl1</span><span class="p">,</span> <span class="n">lvl2</span><span class="p">)</span> <span class="k">if</span> <span class="n">lvl2</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">lvl1</span><span class="p">))</span>
+
+        <span class="n">max_possible</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">card_values</span><span class="p">)</span>
+        <span class="n">min_single</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">card_values</span><span class="p">)</span> <span class="k">if</span> <span class="n">card_values</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">max_possible</span> <span class="o">&lt;</span> <span class="n">remaining_sum</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># Even using all cards can&#39;t reach target</span>
+        <span class="k">if</span> <span class="n">remaining_sum</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">min_single</span> <span class="o">&gt;</span> <span class="n">remaining_sum</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># Smallest card exceeds target, impossible to hit exactly</span>
+
+    <span class="c1"># Adjust selection bounds for can_select</span>
+    <span class="n">remaining_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_select</span> <span class="o">-</span> <span class="n">must_count</span><span class="p">)</span>
+    <span class="n">remaining_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_select</span> <span class="o">-</span> <span class="n">must_count</span><span class="p">)</span>
+
+    <span class="n">valid_combos</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Edge case: if must_select already meets target</span>
+    <span class="k">if</span> <span class="n">remaining_sum</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">remaining_min</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>  <span class="c1"># Empty selection from can_select is valid</span>
+
+    <span class="c1"># Try all combination sizes from remaining_min to remaining_max</span>
+    <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">remaining_min</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">remaining_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">can_select</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">combo_indices</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">can_select</span><span class="p">)),</span> <span class="n">size</span><span class="p">):</span>
+            <span class="n">combo_cards</span> <span class="o">=</span> <span class="p">[</span><span class="n">can_select</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">combo_indices</span><span class="p">]</span>
+
+            <span class="c1"># Handle cards with multiple possible levels (level vs level2)</span>
+            <span class="n">level_choices</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">combo_cards</span><span class="p">:</span>
+                <span class="n">lvl1</span> <span class="o">=</span> <span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">lvl2</span> <span class="o">=</span> <span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level2&quot;</span><span class="p">,</span> <span class="n">lvl1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">lvl2</span> <span class="o">!=</span> <span class="n">lvl1</span> <span class="ow">and</span> <span class="n">lvl2</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">level_choices</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lvl1</span><span class="p">,</span> <span class="n">lvl2</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">level_choices</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lvl1</span><span class="p">])</span>
+
+            <span class="c1"># Check all possible level combinations</span>
+            <span class="k">for</span> <span class="n">levels</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">level_choices</span><span class="p">):</span>
+                <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">levels</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Exactly equal</span>
+                    <span class="k">if</span> <span class="n">total</span> <span class="o">==</span> <span class="n">remaining_sum</span><span class="p">:</span>
+                        <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combo_indices</span><span class="p">))</span>
+                        <span class="k">break</span>  <span class="c1"># Only need one valid level choice per combo</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># At least equal</span>
+                    <span class="k">if</span> <span class="n">total</span> <span class="o">&gt;=</span> <span class="n">remaining_sum</span><span class="p">:</span>
+                        <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combo_indices</span><span class="p">))</span>
+                        <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">valid_combos</span></div>
+
+
+
+<div class="viewcode-block" id="find_sum_combinations_flexible">
+<a class="viewcode-back" href="../../../../modules/enumeration.html#src.ygo_combo.enumeration.sum_utils.find_sum_combinations_flexible">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_sum_combinations_flexible</span><span class="p">(</span>
+    <span class="n">must_select</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+    <span class="n">can_select</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+    <span class="n">target_sum</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">min_select</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">max_select</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">exact</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find combinations with flexible matching (exact or at-least).</span>
+
+<span class="sd">    Some Yu-Gi-Oh mechanics require exact sum (Xyz), others require at-least</span>
+<span class="sd">    (some ritual tributes). This function supports both modes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        must_select: Cards that MUST be included</span>
+<span class="sd">        can_select: Cards that CAN be selected</span>
+<span class="sd">        target_sum: Target sum value</span>
+<span class="sd">        min_select: Minimum total cards to select</span>
+<span class="sd">        max_select: Maximum total cards to select</span>
+<span class="sd">        exact: If True, sum must equal target. If False, sum must be &gt;= target.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of valid index lists into can_select</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">must_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">must_select</span><span class="p">)</span>
+    <span class="n">must_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">must_select</span><span class="p">)</span>
+    <span class="n">remaining_sum</span> <span class="o">=</span> <span class="n">target_sum</span> <span class="o">-</span> <span class="n">must_sum</span>
+    <span class="n">remaining_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_select</span> <span class="o">-</span> <span class="n">must_count</span><span class="p">)</span>
+    <span class="n">remaining_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_select</span> <span class="o">-</span> <span class="n">must_count</span><span class="p">)</span>
+
+    <span class="n">valid_combos</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Handle edge case</span>
+    <span class="k">if</span> <span class="n">exact</span> <span class="ow">and</span> <span class="n">remaining_sum</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">remaining_min</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">exact</span> <span class="ow">and</span> <span class="n">remaining_sum</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">remaining_min</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">remaining_min</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">remaining_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">can_select</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">combo_indices</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">can_select</span><span class="p">)),</span> <span class="n">size</span><span class="p">):</span>
+            <span class="n">combo_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">can_select</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">combo_indices</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">exact</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">combo_sum</span> <span class="o">==</span> <span class="n">remaining_sum</span><span class="p">:</span>
+                    <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combo_indices</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">combo_sum</span> <span class="o">&gt;=</span> <span class="n">remaining_sum</span><span class="p">:</span>
+                    <span class="n">valid_combos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combo_indices</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">valid_combos</span></div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;find_valid_sum_combinations&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;find_sum_combinations_flexible&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, YGO-Combo-Pipeline Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
