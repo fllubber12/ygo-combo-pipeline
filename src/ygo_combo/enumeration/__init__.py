@@ -25,6 +25,9 @@ from .sum_utils import (
     find_sum_combinations_flexible,
 )
 
+# Note: MessageHandlerMixin is imported lazily to avoid circular imports
+# Use: from src.ygo_combo.enumeration.handlers import MessageHandlerMixin
+
 from .responses import (
     # Constants
     IDLE_RESPONSE_SUMMON,
