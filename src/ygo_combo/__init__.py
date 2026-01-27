@@ -46,6 +46,9 @@ from .engine.bindings import (
 # Shared types
 from .types import Action, TerminalState
 
+# Ranking
+from .ranking import ComboScore, ComboRanker, SortKey, rank_terminals
+
 __all__ = [
     # Bindings
     "ffi",
@@ -72,4 +75,9 @@ __all__ = [
     # Shared types
     "Action",
     "TerminalState",
+    # Ranking
+    "ComboScore",
+    "ComboRanker",
+    "SortKey",
+    "rank_terminals",
 ]
