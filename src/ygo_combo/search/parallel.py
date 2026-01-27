@@ -758,6 +758,23 @@ def main():
         default=LOCKED_LIBRARY_PATH,
         help="Path to deck JSON file"
     )
+    parser.add_argument(
+        "--checkpoint", "-c",
+        type=Path,
+        default=None,
+        help="Path for checkpoint file (enables save/resume)"
+    )
+    parser.add_argument(
+        "--checkpoint-interval",
+        type=int,
+        default=100,
+        help="Hands between checkpoint saves (default: 100)"
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from existing checkpoint"
+    )
 
     args = parser.parse_args()
 
@@ -782,13 +799,19 @@ def main():
         print(f"  Hands/second: {estimate['hands_per_second']:.1f}")
         return
 
-    # Run enumeration
-    result = enumerate_deck_parallel(
+    # Build config with checkpoint support
+    config = ParallelConfig(
         deck=deck,
+        hand_size=args.hand_size,
         num_workers=args.workers,
         max_depth=args.max_depth,
-        hand_size=args.hand_size,
+        checkpoint_path=args.checkpoint,
+        checkpoint_interval=args.checkpoint_interval,
+        resume=args.resume,
     )
+
+    # Run enumeration
+    result = parallel_enumerate(config)
 
     # Print summary
     print(f"\n{'='*60}")

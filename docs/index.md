@@ -2,6 +2,19 @@
 
 Welcome to the YGO-Combo-Pipeline documentation.
 
+## Quick Start
+
+```bash
+# Run end-to-end pipeline (sampling → parallel enumeration → ranking)
+python scripts/run_pipeline.py --samples 100 --workers 4
+
+# Run with checkpointing for long jobs
+python scripts/run_pipeline.py --samples 500 --checkpoint-dir ./checkpoints
+
+# Resume interrupted run
+python scripts/run_pipeline.py --checkpoint-dir ./checkpoints --resume
+```
+
 ## Quick Links
 
 - [Getting Started](guides/GETTING_STARTED.md) - Installation and first run
