@@ -165,9 +165,43 @@ python3 scripts/validate_gold_standard_combo.py --show-steps
 
 ---
 
+## Additional Analysis (2026-01-26)
+
+### Branching Factor Measurements
+```
+Depth  0: avg=2.0 branches
+Depth 15: avg=3.8 branches
+Depth 20: avg=3.2 branches
+Depth 24: avg=5.5 branches
+First branch explored to depth 28 before backtracking
+```
+
+### Shuffle Mode Results
+Randomizing action order at each decision point:
+| Seed | Unique Boards | Using Tract |
+|------|--------------|-------------|
+| 0 | 196 | 165 (84%) |
+| 1 | 184 | 150 (82%) |
+| 2 | 196 | 193 (98%) |
+
+**Key Finding:** Shuffle dramatically improves Tract path coverage (82-98% vs 0% without shuffle).
+
+### Gold Standard Search Status
+- Caesar found alone at depth 23
+- A Bao A Qu NOT found
+- Gold standard (A Bao A Qu + Caesar together) NOT found
+
+The 23-step gold standard combo may require:
+1. Very specific card choices at each branch
+2. Deeper exploration than current budgets allow
+3. Better pruning to avoid exploring suboptimal branches
+
+---
+
 ## Next Steps
 
 1. **Web client investigation** - Research best practices for combo game search
 2. **Evaluate search strategies** - BFS, MCTS, beam search, etc.
 3. **Design improved pruning** - Without privileging specific cards
-4. **Implement chosen solution** - After investigation concludes
+4. **Consider shuffle as baseline** - Randomization helps coverage significantly
+5. **Implement chosen solution** - After investigation concludes
