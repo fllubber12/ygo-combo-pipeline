@@ -54,141 +54,70 @@ def _signal_handler(signum, frame):
         print("\nForce quit - results may be incomplete.")
         raise KeyboardInterrupt
 
-# Import from engine interface (production code, not test file)
-# Support both relative imports (package) and absolute imports (sys.path)
-try:
-    from .engine.interface import (
-        init_card_database, load_library, preload_utility_scripts,
-        py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
-        ffi, get_card_name, set_lib,
-    )
-    from .engine.bindings import (
-        LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
-        LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
-        POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
-        QUERY_CODE, QUERY_POSITION, QUERY_ATTACK, QUERY_DEFENSE, QUERY_END,
-        MSG_SELECT_BATTLECMD, MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
-        MSG_SELECT_PLACE, MSG_SELECT_POSITION, MSG_SELECT_TRIBUTE,
-        MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO, MSG_SELECT_OPTION,
-        MSG_SELECT_COUNTER, MSG_SELECT_UNSELECT_CARD, MSG_SELECT_SUM,
-        MSG_SORT_CARD, MSG_SELECT_DISFIELD,
-        MSG_RETRY, MSG_HINT, MSG_WAITING, MSG_START, MSG_WIN,
-        MSG_UPDATE_DATA, MSG_UPDATE_CARD,
-        MSG_CONFIRM_DECKTOP, MSG_CONFIRM_CARDS, MSG_SHUFFLE_DECK, MSG_SHUFFLE_HAND,
-        MSG_REFRESH_DECK, MSG_SWAP_GRAVE_DECK, MSG_SHUFFLE_SET_CARD, MSG_REVERSE_DECK,
-        MSG_DECK_TOP, MSG_SHUFFLE_EXTRA,
-        MSG_NEW_TURN, MSG_NEW_PHASE, MSG_CONFIRM_EXTRATOP,
-        MSG_MOVE, MSG_POS_CHANGE, MSG_SET, MSG_SWAP, MSG_FIELD_DISABLED,
-        MSG_SUMMONING, MSG_SUMMONED, MSG_SPSUMMONING, MSG_SPSUMMONED,
-        MSG_FLIPSUMMONING, MSG_FLIPSUMMONED,
-        MSG_CHAINING, MSG_CHAINED, MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED,
-        MSG_CHAIN_END, MSG_CHAIN_NEGATED, MSG_CHAIN_DISABLED,
-        MSG_CARD_SELECTED, MSG_RANDOM_SELECTED, MSG_BECOME_TARGET,
-        MSG_DRAW, MSG_DAMAGE, MSG_RECOVER, MSG_EQUIP, MSG_LPUPDATE, MSG_UNEQUIP,
-        MSG_CARD_TARGET, MSG_CANCEL_TARGET, MSG_PAY_LPCOST,
-        MSG_ADD_COUNTER, MSG_REMOVE_COUNTER,
-        MSG_ATTACK, MSG_BATTLE, MSG_ATTACK_DISABLED,
-        MSG_DAMAGE_STEP_START, MSG_DAMAGE_STEP_END,
-        MSG_MISSED_EFFECT, MSG_BE_CHAIN_TARGET, MSG_CREATE_RELATION, MSG_RELEASE_RELATION,
-        MSG_TOSS_COIN, MSG_TOSS_DICE, MSG_ROCK_PAPER_SCISSORS, MSG_HAND_RES,
-        MSG_ANNOUNCE_RACE, MSG_ANNOUNCE_ATTRIB, MSG_ANNOUNCE_CARD, MSG_ANNOUNCE_NUMBER,
-        MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME,
-        MSG_SHOW_HINT, MSG_PLAYER_HINT, MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
-    )
-    from .engine.state import (
-        BoardSignature, IntermediateState, ActionSpec,
-        evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
-    )
-    from .engine.board_capture import (
-        parse_query_response, compute_board_signature,
-        compute_idle_state_hash, capture_board_state,
-    )
-    from .engine.duel_factory import (
-        ENGRAVER, HOLACTIE,
-        load_locked_library, get_deck_lists, create_duel,
-    )
-    from .search.transposition import TranspositionTable, TranspositionEntry
-    from .cards.validator import CardValidator
-    from .enumeration import (
-        read_u8, read_u16, read_u32, read_i32, read_u64,
-        parse_idle, parse_select_card, parse_select_chain, parse_select_place,
-        parse_select_unselect_card, parse_select_option, parse_select_tribute,
-        parse_select_sum, find_valid_tribute_combinations,
-        find_valid_sum_combinations, find_sum_combinations_flexible,
-        IDLE_RESPONSE_SUMMON, IDLE_RESPONSE_SPSUMMON, IDLE_RESPONSE_REPOSITION,
-        IDLE_RESPONSE_MSET, IDLE_RESPONSE_SSET, IDLE_RESPONSE_ACTIVATE,
-        IDLE_RESPONSE_TO_BATTLE, IDLE_RESPONSE_TO_END,
-        build_activate_response, build_pass_response, build_select_card_response,
-        build_decline_chain_response, build_select_tribute_response,
-    )
-    from .enumeration.handlers import MessageHandlerMixin
-except ImportError:
-    # Fallback for direct execution (sys.path includes src/ygo_combo)
-    from engine.interface import (
-        init_card_database, load_library, preload_utility_scripts,
-        py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
-        ffi, get_card_name, set_lib,
-    )
-    from engine.bindings import (
-        LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
-        LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
-        POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
-        QUERY_CODE, QUERY_POSITION, QUERY_ATTACK, QUERY_DEFENSE, QUERY_END,
-        MSG_SELECT_BATTLECMD, MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
-        MSG_SELECT_PLACE, MSG_SELECT_POSITION, MSG_SELECT_TRIBUTE,
-        MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO, MSG_SELECT_OPTION,
-        MSG_SELECT_COUNTER, MSG_SELECT_UNSELECT_CARD, MSG_SELECT_SUM,
-        MSG_SORT_CARD, MSG_SELECT_DISFIELD,
-        MSG_RETRY, MSG_HINT, MSG_WAITING, MSG_START, MSG_WIN,
-        MSG_UPDATE_DATA, MSG_UPDATE_CARD,
-        MSG_CONFIRM_DECKTOP, MSG_CONFIRM_CARDS, MSG_SHUFFLE_DECK, MSG_SHUFFLE_HAND,
-        MSG_REFRESH_DECK, MSG_SWAP_GRAVE_DECK, MSG_SHUFFLE_SET_CARD, MSG_REVERSE_DECK,
-        MSG_DECK_TOP, MSG_SHUFFLE_EXTRA,
-        MSG_NEW_TURN, MSG_NEW_PHASE, MSG_CONFIRM_EXTRATOP,
-        MSG_MOVE, MSG_POS_CHANGE, MSG_SET, MSG_SWAP, MSG_FIELD_DISABLED,
-        MSG_SUMMONING, MSG_SUMMONED, MSG_SPSUMMONING, MSG_SPSUMMONED,
-        MSG_FLIPSUMMONING, MSG_FLIPSUMMONED,
-        MSG_CHAINING, MSG_CHAINED, MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED,
-        MSG_CHAIN_END, MSG_CHAIN_NEGATED, MSG_CHAIN_DISABLED,
-        MSG_CARD_SELECTED, MSG_RANDOM_SELECTED, MSG_BECOME_TARGET,
-        MSG_DRAW, MSG_DAMAGE, MSG_RECOVER, MSG_EQUIP, MSG_LPUPDATE, MSG_UNEQUIP,
-        MSG_CARD_TARGET, MSG_CANCEL_TARGET, MSG_PAY_LPCOST,
-        MSG_ADD_COUNTER, MSG_REMOVE_COUNTER,
-        MSG_ATTACK, MSG_BATTLE, MSG_ATTACK_DISABLED,
-        MSG_DAMAGE_STEP_START, MSG_DAMAGE_STEP_END,
-        MSG_MISSED_EFFECT, MSG_BE_CHAIN_TARGET, MSG_CREATE_RELATION, MSG_RELEASE_RELATION,
-        MSG_TOSS_COIN, MSG_TOSS_DICE, MSG_ROCK_PAPER_SCISSORS, MSG_HAND_RES,
-        MSG_ANNOUNCE_RACE, MSG_ANNOUNCE_ATTRIB, MSG_ANNOUNCE_CARD, MSG_ANNOUNCE_NUMBER,
-        MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME,
-        MSG_SHOW_HINT, MSG_PLAYER_HINT, MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
-    )
-    from engine.state import (
-        BoardSignature, IntermediateState, ActionSpec,
-        evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
-    )
-    from engine.board_capture import (
-        parse_query_response, compute_board_signature,
-        compute_idle_state_hash, capture_board_state,
-    )
-    from engine.duel_factory import (
-        ENGRAVER, HOLACTIE,
-        load_locked_library, get_deck_lists, create_duel,
-    )
-    from search.transposition import TranspositionTable, TranspositionEntry
-    from cards.validator import CardValidator
-    from enumeration import (
-        read_u8, read_u16, read_u32, read_i32, read_u64,
-        parse_idle, parse_select_card, parse_select_chain, parse_select_place,
-        parse_select_unselect_card, parse_select_option, parse_select_tribute,
-        parse_select_sum, find_valid_tribute_combinations,
-        find_valid_sum_combinations, find_sum_combinations_flexible,
-        IDLE_RESPONSE_SUMMON, IDLE_RESPONSE_SPSUMMON, IDLE_RESPONSE_REPOSITION,
-        IDLE_RESPONSE_MSET, IDLE_RESPONSE_SSET, IDLE_RESPONSE_ACTIVATE,
-        IDLE_RESPONSE_TO_BATTLE, IDLE_RESPONSE_TO_END,
-        build_activate_response, build_pass_response, build_select_card_response,
-        build_decline_chain_response, build_select_tribute_response,
-    )
-    from enumeration.handlers import MessageHandlerMixin
+# Engine imports
+from .engine.interface import (
+    init_card_database, load_library, preload_utility_scripts,
+    py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
+    ffi, get_card_name, set_lib,
+)
+from .engine.bindings import (
+    LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
+    LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
+    POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
+    MSG_SELECT_BATTLECMD, MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
+    MSG_SELECT_PLACE, MSG_SELECT_POSITION, MSG_SELECT_TRIBUTE,
+    MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO, MSG_SELECT_OPTION,
+    MSG_SELECT_COUNTER, MSG_SELECT_UNSELECT_CARD, MSG_SELECT_SUM,
+    MSG_SORT_CARD, MSG_SELECT_DISFIELD, MSG_RETRY,
+    MSG_HINT, MSG_WAITING, MSG_START, MSG_WIN,
+    MSG_UPDATE_DATA, MSG_UPDATE_CARD,
+    MSG_CONFIRM_DECKTOP, MSG_CONFIRM_CARDS, MSG_SHUFFLE_DECK, MSG_SHUFFLE_HAND,
+    MSG_REFRESH_DECK, MSG_SWAP_GRAVE_DECK, MSG_SHUFFLE_SET_CARD, MSG_REVERSE_DECK,
+    MSG_DECK_TOP, MSG_SHUFFLE_EXTRA, MSG_NEW_TURN, MSG_NEW_PHASE, MSG_CONFIRM_EXTRATOP,
+    MSG_MOVE, MSG_POS_CHANGE, MSG_SET, MSG_SWAP, MSG_FIELD_DISABLED,
+    MSG_SUMMONING, MSG_SUMMONED, MSG_SPSUMMONING, MSG_SPSUMMONED,
+    MSG_FLIPSUMMONING, MSG_FLIPSUMMONED,
+    MSG_CHAINING, MSG_CHAINED, MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED,
+    MSG_CHAIN_END, MSG_CHAIN_NEGATED, MSG_CHAIN_DISABLED,
+    MSG_CARD_SELECTED, MSG_RANDOM_SELECTED, MSG_BECOME_TARGET,
+    MSG_DRAW, MSG_DAMAGE, MSG_RECOVER, MSG_EQUIP, MSG_LPUPDATE, MSG_UNEQUIP,
+    MSG_CARD_TARGET, MSG_CANCEL_TARGET, MSG_PAY_LPCOST,
+    MSG_ADD_COUNTER, MSG_REMOVE_COUNTER,
+    MSG_ATTACK, MSG_BATTLE, MSG_ATTACK_DISABLED,
+    MSG_DAMAGE_STEP_START, MSG_DAMAGE_STEP_END,
+    MSG_MISSED_EFFECT, MSG_BE_CHAIN_TARGET, MSG_CREATE_RELATION, MSG_RELEASE_RELATION,
+    MSG_TOSS_COIN, MSG_TOSS_DICE, MSG_ROCK_PAPER_SCISSORS, MSG_HAND_RES,
+    MSG_ANNOUNCE_RACE, MSG_ANNOUNCE_ATTRIB, MSG_ANNOUNCE_CARD, MSG_ANNOUNCE_NUMBER,
+    MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME,
+    MSG_SHOW_HINT, MSG_PLAYER_HINT, MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
+)
+from .engine.state import (
+    BoardSignature, IntermediateState, ActionSpec,
+    evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
+)
+from .engine.board_capture import (
+    parse_query_response, compute_board_signature,
+    compute_idle_state_hash, capture_board_state,
+)
+from .engine.duel_factory import (
+    ENGRAVER, HOLACTIE,
+    load_locked_library, get_deck_lists, create_duel,
+)
+from .search.transposition import TranspositionTable, TranspositionEntry
+from .cards.validator import CardValidator
+from .enumeration import (
+    read_u8, read_u16, read_u32, read_i32, read_u64,
+    parse_idle, parse_select_card, parse_select_chain, parse_select_place,
+    parse_select_unselect_card, parse_select_option, parse_select_tribute,
+    parse_select_sum, find_valid_tribute_combinations,
+    find_valid_sum_combinations, find_sum_combinations_flexible,
+    IDLE_RESPONSE_SUMMON, IDLE_RESPONSE_SPSUMMON, IDLE_RESPONSE_REPOSITION,
+    IDLE_RESPONSE_MSET, IDLE_RESPONSE_SSET, IDLE_RESPONSE_ACTIVATE,
+    IDLE_RESPONSE_TO_BATTLE, IDLE_RESPONSE_TO_END,
+    build_activate_response, build_pass_response, build_select_card_response,
+    build_decline_chain_response, build_select_tribute_response,
+)
+from .enumeration.handlers import MessageHandlerMixin
 
 
 # =============================================================================
@@ -856,122 +785,13 @@ def enumerate_from_hand(
 
 
 # =============================================================================
-# MAIN
+# MAIN (CLI entry point moved to cli.py)
 # =============================================================================
 
 def main():
-    global MAX_DEPTH, MAX_PATHS
-    import argparse
-
-    # Register signal handlers for graceful shutdown
-    signal.signal(signal.SIGINT, _signal_handler)
-    signal.signal(signal.SIGTERM, _signal_handler)
-
-    parser = argparse.ArgumentParser(description="Exhaustive combo enumeration")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
-    parser.add_argument("--max-depth", type=int, default=MAX_DEPTH, help="Max actions per path")
-    parser.add_argument("--max-paths", type=int, default=MAX_PATHS, help="Max paths to explore")
-    parser.add_argument("--output", "-o", type=str, default="enumeration_results.json",
-                        help="Output file")
-    parser.add_argument("--no-dedupe", action="store_true",
-                        help="Disable terminal board state deduplication")
-    parser.add_argument("--no-dedupe-intermediate", action="store_true",
-                        help="Disable intermediate state pruning")
-    parser.add_argument("--prioritize-cards", type=str, default="",
-                        help="Comma-separated list of card passcodes to explore first during SELECT_CARD")
-    args = parser.parse_args()
-
-    # Parse prioritized cards
-    prioritize_cards = []
-    if args.prioritize_cards:
-        prioritize_cards = [int(x.strip()) for x in args.prioritize_cards.split(",") if x.strip()]
-        if prioritize_cards:
-            print(f"Card prioritization enabled: {prioritize_cards}")
-
-    # Update limits
-    MAX_DEPTH = args.max_depth
-    MAX_PATHS = args.max_paths
-
-    # Initialize
-    logger.info("Loading card database...")
-    if not init_card_database():
-        logger.error("Failed to load card database")
-        return 1
-
-    print("Loading library...")
-    lib = load_library()
-
-    # Set the library reference for callbacks in engine_interface
-    set_lib(lib)
-
-    print("Loading locked library...")
-    library = load_locked_library()
-    main_deck, extra_deck = get_deck_lists(library)
-
-    print(f"Main deck: {len(main_deck)} cards")
-    print(f"Extra deck: {len(extra_deck)} cards")
-
-    # Run enumeration
-    dedupe_terminals = not args.no_dedupe
-    dedupe_intermediate = not args.no_dedupe_intermediate
-    engine = EnumerationEngine(
-        lib, main_deck, extra_deck,
-        verbose=args.verbose,
-        dedupe_boards=dedupe_terminals,
-        dedupe_intermediate=dedupe_intermediate,
-        prioritize_cards=prioritize_cards if prioritize_cards else None
-    )
-    terminals = engine.enumerate_all()
-
-    # Save results
-    output_path = Path(args.output)
-    tt_stats = engine.transposition_table.stats()
-    results = {
-        "meta": {
-            "timestamp": datetime.now().isoformat(),
-            "max_depth": MAX_DEPTH,
-            "max_paths": MAX_PATHS,
-            "paths_explored": engine.paths_explored,
-            "terminals_found": len(terminals),
-            "unique_board_signatures": len(engine.terminal_boards),
-            "duplicate_boards_skipped": engine.duplicate_boards_skipped,
-            "intermediate_states_pruned": engine.intermediate_states_pruned,
-            "transposition_table_size": tt_stats["size"],
-            "transposition_hit_rate": tt_stats["hit_rate"],
-            "dedupe_terminals_enabled": dedupe_terminals,
-            "dedupe_intermediate_enabled": dedupe_intermediate,
-            "prioritize_cards": prioritize_cards if prioritize_cards else [],
-            "max_depth_seen": engine.max_depth_seen,
-        },
-        "terminals": [t.to_dict() for t in terminals],
-        "board_groups": {k: len(v) for k, v in engine.terminal_boards.items()},
-    }
-
-    with open(output_path, "w") as f:
-        json.dump(results, f, indent=2)
-
-    print(f"\nResults saved to: {output_path}")
-
-    # Print summary
-    print("\n" + "=" * 80)
-    print("SUMMARY")
-    print("=" * 80)
-
-    by_reason = {}
-    by_depth = {}
-    for t in terminals:
-        by_reason[t.termination_reason] = by_reason.get(t.termination_reason, 0) + 1
-        by_depth[t.depth] = by_depth.get(t.depth, 0) + 1
-
-    print("\nBy termination reason:")
-    for reason, count in sorted(by_reason.items()):
-        print(f"  {reason}: {count}")
-
-    print("\nBy depth:")
-    for depth in sorted(by_depth.keys()):
-        print(f"  Depth {depth}: {by_depth[depth]}")
-
-    return 0
+    """CLI entry point - delegates to cli module."""
+    from .cli import main as cli_main
+    return cli_main()
 
 
 if __name__ == "__main__":
