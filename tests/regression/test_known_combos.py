@@ -7,18 +7,13 @@ They capture known behavior and alert when results change.
 Run with: pytest tests/regression/ -v
 """
 import pytest
-import sys
 import os
-from pathlib import Path
 
 # Skip all tests if YGOPRO_SCRIPTS_PATH not set (CI environment)
 pytestmark = pytest.mark.skipif(
     not os.environ.get("YGOPRO_SCRIPTS_PATH"),
     reason="YGOPRO_SCRIPTS_PATH not set - skipping engine tests"
 )
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
 
 # =============================================================================
@@ -41,9 +36,8 @@ BRICK_HAND = [14558127, 14558127, 14558127, 94145021, 94145021]     # All hand t
 @pytest.fixture(scope="module")
 def engine_setup():
     """Initialize engine once per test module."""
-    from engine.interface import init_card_database, set_lib
-    from engine.bindings import load_library
-    from combo_enumeration import load_locked_library, get_deck_lists
+    from src.ygo_combo.engine.interface import init_card_database, load_library, set_lib
+    from src.ygo_combo.engine.duel_factory import load_locked_library, get_deck_lists
 
     if not init_card_database():
         pytest.skip("Could not initialize card database")
@@ -64,8 +58,8 @@ def engine_setup():
 @pytest.fixture
 def enumeration_engine(engine_setup):
     """Create fresh EnumerationEngine for each test."""
-    from combo_enumeration import EnumerationEngine
-    import combo_enumeration
+    from src.ygo_combo.combo_enumeration import EnumerationEngine
+    import src.ygo_combo.combo_enumeration as combo_enumeration
 
     combo_enumeration.MAX_PATHS = MAX_PATHS
     combo_enumeration.MAX_DEPTH = MAX_DEPTH
