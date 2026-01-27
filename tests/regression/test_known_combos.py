@@ -86,8 +86,8 @@ class TestEnumerationDeterminism:
         terminals1 = enumeration_engine.enumerate_from_hand(ENGRAVER_HAND)
 
         # Create fresh engine for second run
-        from combo_enumeration import EnumerationEngine
-        import combo_enumeration
+        from src.ygo_combo.combo_enumeration import EnumerationEngine
+        import src.ygo_combo.combo_enumeration as combo_enumeration
 
         engine2 = EnumerationEngine(
             enumeration_engine.lib,

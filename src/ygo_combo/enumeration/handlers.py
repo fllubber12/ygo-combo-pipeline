@@ -427,7 +427,10 @@ class MessageHandlerMixin:
             seen_codes.add(code)
 
             name = get_card_name(code)
-            response = struct.pack("<i", i)
+            # CORRECT format per ygopro-core playerop.cpp:439-450:
+            # returns.at<int32_t>(0) = count (must be 1 for single selection)
+            # returns.at<int32_t>(1) = selected index
+            response = struct.pack("<ii", 1, i)
             action = Action(
                 action_type="SELECT_UNSELECT_SELECT",
                 message_type=MSG_SELECT_UNSELECT_CARD,
