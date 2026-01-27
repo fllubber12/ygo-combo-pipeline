@@ -1,85 +1,102 @@
 # TODO Next Session
 
-## Handoff Protocol
+## Current State (Updated 2026-01-26)
 
-At 10% context remaining, run:
-```bash
-bash scripts/prepare_handoff.sh
+### Repository Structure - COMPLETE
+```
+src/ygo_combo/
+├── engine/           ✅ bindings, interface, state, paths
+├── search/           ✅ iddfs, transposition, parallel
+├── cards/            ✅ roles, validator, verification
+├── encoding/         ✅ ml
+├── utils/            ✅ hashing
+├── enumeration/      ✅ parsers, responses, handlers
+├── combo_enumeration.py  (923 lines - core dispatcher)
+├── ranking.py        ✅ combo scoring system
+└── checkpoint.py     ✅ save/resume enumeration
 ```
 
-This will:
-1. Run all tests and audits
-2. Commit any uncommitted changes
-3. Create a timestamped handoff bundle in `handoffs/`
-4. Print current status for session notes
+### Test Status
+- **Unit Tests:** 200+ passing
+- **Property Tests:** 20 tests (9 pass, 11 skip without engine)
+- **Regression Tests:** Known-count tests implemented
+- **Integration Tests:** Require engine (YGOPRO_SCRIPTS_PATH)
 
-## Current State (Updated 2026-01-23)
+Total: **236 passed, 33 skipped** (engine-dependent)
 
-### Phase 3: Complete Library Verification (COMPLETE)
-- **112 tests passing** (92 unit + 20 golden fixtures)
-- All 27 cards verified against Lua ground truth
-- 16 golden fixtures created (12 effects for 5 core + 5 additional)
-- 3 critical bugs FIXED and regression-tested (e626e68)
+### Completed Features
+- ✅ CFFI engine integration
+- ✅ Exhaustive combo enumeration (IDDFS)
+- ✅ Transposition table with instrumentation
+- ✅ Parallel search infrastructure
+- ✅ Card role classification
+- ✅ ML-compatible state encoding
+- ✅ Checkpointing (save/resume)
+- ✅ Combo ranking system
+- ✅ Property-based testing with Hypothesis
+- ✅ Known-count regression tests
 
-### Validation Framework (Phase 2 Complete)
-- Rules engine: `src/sim/rules.py`
-- Validation script: `scripts/validate_effects_comprehensive.py`
-- 10 documented limitations (trap STZ activation, continuous effects, summoning procedures)
-
-### Effect Coverage
-- 28 CIDs registered in effect registry
-- 25/25 decklist cards modeled
-- 0 stubs, 0 missing
-
-### Golden Fixtures (NEW)
-- `tests/fixtures/combo_scenarios/golden/` - 11 minimal test fixtures
-- `tests/test_golden_fixtures.py` - 15 unit tests with regression coverage
-- Each fixture documents Lua reference, preconditions, expected outcomes
-
-### Verified Effects
-- ✅ verified_effects.json complete for all 25+ cards
-- ✅ Engraver e3: cost is "shuffle OTHER LIGHT Fiend", NO "different name" restriction
-- ✅ All effects documented with source verification
-- ✅ 12/12 effects for 5 core cards verified against Lua
-
-### Key Files
-- `src/sim/effects/registry.py` - Effect registration and validation
-- `src/sim/effects/fiendsmith_effects.py` - Fiendsmith card implementations
-- `config/verified_effects.json` - Verified effect metadata
-- `docs/EFFECT_VERIFICATION_CHECKLIST.md` - Lua vs Python comparison
-- `tests/` - 107 unit tests (92 core + 15 golden)
+### Key Metrics
+| Metric | Value |
+|--------|-------|
+| combo_enumeration.py | 923 lines (56% reduction from 2,096) |
+| Test coverage | 236 tests |
+| Property tests | 20 |
+| Regression tests | 4 known-count hands |
 
 ## Next Steps (Priority Order)
 
-1. **Trap STZ iteration** - Currently traps set in STZ don't enumerate when flipped
-2. **Continuous effects** - Passive effects don't enumerate actions (by design)
-3. **Summoning procedure effects** - Ritual/Fusion from hand need special handling
+### Short-Term
+1. **Engine Integration Testing** - Set up YGOPRO_SCRIPTS_PATH for full test suite
+2. **Gold Standard Combo Validation** - Verify A Bao A Qu + Caesar reachable
 
-### Search Optimization (Lower Priority)
-- Beam search is greedy, consumes Engravers for Desirae before exploring Caesar path
-- S=2 scoring works (verified with pre-set fixture)
-- Xyz enumeration added to closure passes
-- Potential fixes: heuristic scoring, wider beam, multi-objective
+### Medium-Term
+1. **Sampling Strategy** - Design approach for 1.7M hand coverage
+2. **Differential Testing** - Build expert corpus for comparison
+
+### Long-Term
+1. **Production Deployment** - Full deck enumeration at scale
+2. **ML Training Data** - Generate training data from enumeration results
 
 ## Quick Commands
 
 ```bash
-# Run all tests
-python3 -m unittest discover -s tests
+# Run all tests (unit, property, regression)
+python3 -m pytest tests/unit/ tests/property/ tests/regression/ -v
 
-# Run validation framework
-python3 scripts/validate_effects_comprehensive.py
+# Run with engine (requires YGOPRO_SCRIPTS_PATH)
+export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-core/script
+python3 -m pytest tests/ -v
 
-# Run combo search
-python3 scripts/combos/search_combo.py --scenario tests/fixtures/combo_scenarios/fixture_engraver_lurrie_optimal.json --max-depth 15 --beam-width 20
+# Check imports
+python3 -c "from src.ygo_combo import ComboEnumerator, ComboRanker"
 
-# Create handoff
-bash scripts/prepare_handoff.sh
+# Run enumeration
+python3 -m src.ygo_combo.combo_enumeration --max-depth 25 --max-paths 1000
 ```
 
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/ygo_combo/combo_enumeration.py` | Core enumeration engine |
+| `src/ygo_combo/ranking.py` | Combo scoring and ranking |
+| `src/ygo_combo/checkpoint.py` | Save/resume enumeration |
+| `src/ygo_combo/search/transposition.py` | State memoization |
+| `src/ygo_combo/search/iddfs.py` | Iterative deepening |
+| `config/locked_library.json` | Card library (48 cards) |
+| `CLAUDE.md` | Project guidelines |
+
+## Reference Documents
+
+| Document | Location |
+|----------|----------|
+| Master Plan | `/tmp/select_sum_fix/MASTER_PLAN.md` |
+| Architecture Overview | `docs/architecture/OVERVIEW.md` |
+| Search Strategy | `docs/architecture/SEARCH_STRATEGY.md` |
+
 ## Recent Commits
-- 3e3741b: Phase 3 Complete - Verify all 27 cards against Lua ground truth
-- 44507ee: Add golden fixtures for 5 core verified cards
-- ddb283d: Update verification checklist to reflect fixed bugs
-- e626e68: Fix 3 critical bugs (Engraver e2, Requiem e2, Desirae e1)
-- b83e749: Comprehensive effect validation framework
+
+```bash
+git log --oneline -5
+```

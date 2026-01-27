@@ -43,9 +43,10 @@ Background research and analysis.
 
 ### Handoffs
 Session handoff documents.
-- [Combo Enumeration](handoffs/HANDOFF_COMBO_ENUMERATION.md)
-- [Enumeration Investigation](handoffs/HANDOFF_ENUMERATION_INVESTIGATION.md)
+- [TODO Next Session](handoffs/TODO_NEXT_SESSION.md) - Current state and next steps
 
 ### Legacy
 Historical documents (kept for reference).
 - [Legacy Docs](legacy/) - Old planning documents
+- [Combo Enumeration Handoff](legacy/HANDOFF_COMBO_ENUMERATION.md) - Archived
+- [Enumeration Investigation](legacy/HANDOFF_ENUMERATION_INVESTIGATION.md) - Archived
