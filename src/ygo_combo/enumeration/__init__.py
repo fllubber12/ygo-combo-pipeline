@@ -20,6 +20,11 @@ from .parsers import (
     find_valid_tribute_combinations,
 )
 
+from .sum_utils import (
+    find_valid_sum_combinations,
+    find_sum_combinations_flexible,
+)
+
 from .responses import (
     # Constants
     IDLE_RESPONSE_SUMMON,
@@ -53,6 +58,8 @@ from .responses import (
 )
 
 __all__ = [
+    # Sum utilities
+    'find_valid_sum_combinations', 'find_sum_combinations_flexible',
     # Parsers
     'read_u8', 'read_u16', 'read_u32', 'read_i32', 'read_u64',
     'parse_idle', 'parse_select_card', 'parse_select_chain',

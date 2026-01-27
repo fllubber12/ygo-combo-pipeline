@@ -92,6 +92,14 @@ try:
         BoardSignature, IntermediateState, ActionSpec,
         evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
     )
+    from .engine.board_capture import (
+        parse_query_response, compute_board_signature,
+        compute_idle_state_hash, capture_board_state,
+    )
+    from .engine.duel_factory import (
+        ENGRAVER, HOLACTIE,
+        load_locked_library, get_deck_lists, create_duel,
+    )
     from .search.transposition import TranspositionTable, TranspositionEntry
     from .cards.validator import CardValidator
     from .enumeration import (
@@ -99,6 +107,7 @@ try:
         parse_idle, parse_select_card, parse_select_chain, parse_select_place,
         parse_select_unselect_card, parse_select_option, parse_select_tribute,
         parse_select_sum, find_valid_tribute_combinations,
+        find_valid_sum_combinations, find_sum_combinations_flexible,
         IDLE_RESPONSE_SUMMON, IDLE_RESPONSE_SPSUMMON, IDLE_RESPONSE_REPOSITION,
         IDLE_RESPONSE_MSET, IDLE_RESPONSE_SSET, IDLE_RESPONSE_ACTIVATE,
         IDLE_RESPONSE_TO_BATTLE, IDLE_RESPONSE_TO_END,
@@ -149,6 +158,14 @@ except ImportError:
         BoardSignature, IntermediateState, ActionSpec,
         evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
     )
+    from engine.board_capture import (
+        parse_query_response, compute_board_signature,
+        compute_idle_state_hash, capture_board_state,
+    )
+    from engine.duel_factory import (
+        ENGRAVER, HOLACTIE,
+        load_locked_library, get_deck_lists, create_duel,
+    )
     from search.transposition import TranspositionTable, TranspositionEntry
     from cards.validator import CardValidator
     from enumeration import (
@@ -156,6 +173,7 @@ except ImportError:
         parse_idle, parse_select_card, parse_select_chain, parse_select_place,
         parse_select_unselect_card, parse_select_option, parse_select_tribute,
         parse_select_sum, find_valid_tribute_combinations,
+        find_valid_sum_combinations, find_sum_combinations_flexible,
         IDLE_RESPONSE_SUMMON, IDLE_RESPONSE_SPSUMMON, IDLE_RESPONSE_REPOSITION,
         IDLE_RESPONSE_MSET, IDLE_RESPONSE_SSET, IDLE_RESPONSE_ACTIVATE,
         IDLE_RESPONSE_TO_BATTLE, IDLE_RESPONSE_TO_END,
@@ -187,185 +205,18 @@ MSG_TYPE_NAMES = {
 
 
 # =============================================================================
-# SUM ENUMERATION HELPERS
+# SUM ENUMERATION - Now imported from enumeration.sum_utils
 # =============================================================================
-
-def find_valid_sum_combinations(
-    must_select: List[Dict],
-    can_select: List[Dict],
-    target_sum: int,
-    min_select: int = 1,
-    max_select: int = 5,
-    mode: int = 0,
-) -> List[List[int]]:
-    """Find all valid combinations of cards that sum to target value.
-
-    Used for Xyz summon material selection, Synchro tuning, ritual tributes, etc.
-
-    Args:
-        must_select: Cards that MUST be included (from must_select in message)
-        can_select: Cards that CAN be selected (from can_select in message)
-        target_sum: Target sum value (e.g., 12 for 2x Level 6 -> Rank 6)
-        min_select: Minimum total cards to select
-        max_select: Maximum total cards to select
-        mode: 0 = exactly equal, 1 = at least equal
-
-    Returns:
-        List of valid index lists. Each inner list contains indices into can_select
-        that form a valid sum when combined with must_select cards.
-
-    Example:
-        For Xyz summon of Rank 6 with two Level 6 monsters available:
-        - must_select = []
-        - can_select = [{"value": 6, ...}, {"value": 6, ...}]
-        - target_sum = 12 (6 + 6)
-        - Returns: [[0, 1]] (select both cards)
-    """
-    from itertools import combinations, product
-
-    # Calculate sum from must_select cards (these are always included)
-    must_sum = sum(card.get("value", 0) for card in must_select)
-    must_count = len(must_select)
-
-    # Remaining sum needed from can_select cards
-    remaining_sum = target_sum - must_sum
-
-    # Early exit: impossible to reach target with no cards available
-    if not can_select and remaining_sum > 0:
-        return []  # No cards available, can't reach target
-
-    # Early exit: check if sum is achievable
-    if can_select and mode == 0:  # Exact match mode
-        # Get min and max possible values for each card
-        card_values = []
-        for c in can_select:
-            lvl1 = c.get("value", 0) or c.get("level", 0)
-            lvl2 = c.get("level2", lvl1) or lvl1
-            card_values.append((min(lvl1, lvl2) if lvl2 > 0 else lvl1,
-                               max(lvl1, lvl2) if lvl2 > 0 else lvl1))
-
-        max_possible = sum(v[1] for v in card_values)
-        min_single = min(v[0] for v in card_values) if card_values else 0
-
-        if max_possible < remaining_sum:
-            return []  # Even using all cards can't reach target
-        if remaining_sum > 0 and min_single > remaining_sum:
-            return []  # Smallest card exceeds target, impossible to hit exactly
-
-    # Adjust selection bounds for can_select
-    remaining_min = max(0, min_select - must_count)
-    remaining_max = max(0, max_select - must_count)
-
-    valid_combos = []
-
-    # Edge case: if must_select already meets target
-    if remaining_sum == 0 and remaining_min == 0:
-        valid_combos.append([])  # Empty selection from can_select is valid
-
-    # Try all combination sizes from remaining_min to remaining_max
-    for size in range(max(1, remaining_min), min(remaining_max + 1, len(can_select) + 1)):
-        for combo_indices in combinations(range(len(can_select)), size):
-            combo_cards = [can_select[i] for i in combo_indices]
-
-            # Handle cards with multiple possible levels (level vs level2)
-            level_choices = []
-            for card in combo_cards:
-                lvl1 = card.get("value", 0) or card.get("level", 0)
-                lvl2 = card.get("level2", lvl1)
-                if lvl2 != lvl1 and lvl2 > 0:
-                    level_choices.append([lvl1, lvl2])
-                else:
-                    level_choices.append([lvl1])
-
-            # Check all possible level combinations
-            for levels in product(*level_choices):
-                total = sum(levels)
-
-                if mode == 0:  # Exactly equal
-                    if total == remaining_sum:
-                        valid_combos.append(list(combo_indices))
-                        break  # Only need one valid level choice per combo
-                else:  # At least equal
-                    if total >= remaining_sum:
-                        valid_combos.append(list(combo_indices))
-                        break
-
-    return valid_combos
-
-
-def find_sum_combinations_flexible(
-    must_select: List[Dict],
-    can_select: List[Dict], 
-    target_sum: int,
-    min_select: int = 1,
-    max_select: int = 5,
-    exact: bool = True,
-) -> List[List[int]]:
-    """Find combinations with flexible matching (exact or at-least).
-    
-    Some Yu-Gi-Oh mechanics require exact sum (Xyz), others require at-least
-    (some ritual tributes). This function supports both modes.
-    
-    Args:
-        exact: If True, sum must equal target. If False, sum must be >= target.
-    """
-    from itertools import combinations
-    
-    must_sum = sum(card.get("value", 0) for card in must_select)
-    must_count = len(must_select)
-    remaining_sum = target_sum - must_sum
-    remaining_min = max(0, min_select - must_count)
-    remaining_max = max(0, max_select - must_count)
-    
-    valid_combos = []
-    
-    # Handle edge case
-    if exact and remaining_sum == 0 and remaining_min == 0:
-        valid_combos.append([])
-    elif not exact and remaining_sum <= 0 and remaining_min == 0:
-        valid_combos.append([])
-    
-    for size in range(max(1, remaining_min), min(remaining_max + 1, len(can_select) + 1)):
-        for combo_indices in combinations(range(len(can_select)), size):
-            combo_sum = sum(can_select[i].get("value", 0) for i in combo_indices)
-            
-            if exact:
-                if combo_sum == remaining_sum:
-                    valid_combos.append(list(combo_indices))
-            else:
-                if combo_sum >= remaining_sum:
-                    valid_combos.append(list(combo_indices))
-    
-    return valid_combos
+# Functions moved to src/ygo_combo/enumeration/sum_utils.py:
+# - find_valid_sum_combinations()
+# - find_sum_combinations_flexible()
 
 
 # =============================================================================
-# CONFIGURATION - SINGLE SOURCE OF TRUTH
+# CONFIGURATION - Now imported from engine.duel_factory
 # =============================================================================
-
-# Load from locked library
-LOCKED_LIBRARY_PATH = Path(__file__).parents[2] / "config" / "locked_library.json"
-CONSTANTS_PATH = Path(__file__).parents[2] / "config" / "constants.json"
-
-# Load constants from config file (anti-hallucination: no hardcoded card IDs)
-def _load_constants() -> dict:
-    """Load pipeline constants from config/constants.json."""
-    if not CONSTANTS_PATH.exists():
-        raise FileNotFoundError(
-            f"constants.json not found at {CONSTANTS_PATH}. "
-            "This file is required - do not use hardcoded card IDs."
-        )
-    with open(CONSTANTS_PATH) as f:
-        return json.load(f)
-
-_CONSTANTS = _load_constants()
-
-# Starting state - loaded from config (verified against cards.cdb)
-ENGRAVER = _CONSTANTS["default_hand"]["starter"]  # Fiendsmith Engraver
-
-# Standardized filler/dead card: Holactie cannot be summoned normally and has no
-# relevant effects during combo testing. Use this for deck padding and hand filler.
-HOLACTIE = _CONSTANTS["default_hand"]["filler"]  # Holactie the Creator of Light
+# ENGRAVER, HOLACTIE constants imported from engine.duel_factory
+# load_locked_library(), get_deck_lists(), create_duel() imported from engine.duel_factory
 
 # Limits
 MAX_DEPTH = 50          # Maximum actions per path
@@ -416,155 +267,12 @@ class TerminalState:
 
 
 # =============================================================================
-# LIBRARY LOADING
+# LIBRARY LOADING & DUEL CREATION - Now imported from engine.duel_factory
 # =============================================================================
-
-def load_locked_library():
-    """Load the verified locked library."""
-    if not LOCKED_LIBRARY_PATH.exists():
-        raise FileNotFoundError(f"Locked library not found: {LOCKED_LIBRARY_PATH}")
-
-    with open(LOCKED_LIBRARY_PATH) as f:
-        library = json.load(f)
-
-    meta = library.get("_meta", {})
-    if not meta.get("verified", False):
-        logger.warning("Locked library not yet verified!")
-    if library.get("_LOCKED", False):
-        logger.info("Using LOCKED library - do not modify without user approval")
-
-    return library
-
-
-def get_deck_lists(library):
-    """Extract main deck and extra deck card lists from library."""
-    main_deck = []
-    extra_deck = []
-
-    for passcode_str, card in library["cards"].items():
-        passcode = int(passcode_str)
-        if card["is_extra_deck"]:
-            extra_deck.append(passcode)
-        else:
-            main_deck.append(passcode)
-
-    return main_deck, extra_deck
-
-
-# =============================================================================
-# DUEL CREATION
-# =============================================================================
-
-def create_duel(lib, main_deck_cards, extra_deck_cards, starting_hand=None):
-    """Create a fresh duel with the starting state.
-
-    Args:
-        lib: CFFI library handle
-        main_deck_cards: List of main deck passcodes
-        extra_deck_cards: List of extra deck passcodes
-        starting_hand: Optional list of 5 passcodes for starting hand.
-                       If None, uses default [ENGRAVER, HOLACTIE, HOLACTIE, HOLACTIE, HOLACTIE]
-    """
-
-    options = ffi.new("OCG_DuelOptions*")
-
-    # Fixed seed for reproducibility
-    options.seed[0] = 12345
-    options.seed[1] = 67890
-    options.seed[2] = 11111
-    options.seed[3] = 22222
-
-    options.flags = (5 << 16)  # MR5
-
-    # Player 0 (us)
-    options.team1.startingLP = 8000
-    options.team1.startingDrawCount = 0  # Hand set manually
-    options.team1.drawCountPerTurn = 0   # No draws during combo
-
-    # Player 1 (opponent - does nothing)
-    options.team2.startingLP = 8000
-    options.team2.startingDrawCount = 5
-    options.team2.drawCountPerTurn = 1
-
-    # Callbacks
-    options.cardReader = py_card_reader
-    options.scriptReader = py_script_reader
-    options.logHandler = py_log_handler
-    options.cardReaderDone = py_card_reader_done
-
-    duel_ptr = ffi.new("OCG_Duel*")
-    result = lib.OCG_CreateDuel(duel_ptr, options)
-
-    if result != 0:
-        raise RuntimeError(f"Failed to create duel: {result}")
-
-    duel = duel_ptr[0]
-    preload_utility_scripts(lib, duel)
-
-    # === HAND: Use provided hand or default ===
-    if starting_hand is not None:
-        hand_cards = list(starting_hand)
-        # Pad with HOLACTIE if less than 5 cards
-        while len(hand_cards) < 5:
-            hand_cards.append(HOLACTIE)
-        # Truncate if more than 5 cards
-        hand_cards = hand_cards[:5]
-    else:
-        # Default: 1 Engraver + 4 Holactie (original behavior)
-        hand_cards = [ENGRAVER, HOLACTIE, HOLACTIE, HOLACTIE, HOLACTIE]
-    for i, code in enumerate(hand_cards):
-        card_info = ffi.new("OCG_NewCardInfo*")
-        card_info.team = 0
-        card_info.duelist = 0
-        card_info.code = code
-        card_info.con = 0
-        card_info.loc = LOCATION_HAND
-        card_info.seq = i
-        card_info.pos = POS_FACEUP_ATTACK
-        lib.OCG_DuelNewCard(duel, card_info)
-
-    # === MAIN DECK ===
-    # Include all main deck cards, pad to 40 with Holactie
-    deck = list(main_deck_cards)
-    while len(deck) < 40:
-        deck.append(HOLACTIE)
-
-    for i, code in enumerate(deck):
-        card_info = ffi.new("OCG_NewCardInfo*")
-        card_info.team = 0
-        card_info.duelist = 0
-        card_info.code = code
-        card_info.con = 0
-        card_info.loc = LOCATION_DECK
-        card_info.seq = i
-        card_info.pos = POS_FACEDOWN_DEFENSE
-        lib.OCG_DuelNewCard(duel, card_info)
-
-    # === EXTRA DECK ===
-    for i, code in enumerate(extra_deck_cards):
-        card_info = ffi.new("OCG_NewCardInfo*")
-        card_info.team = 0
-        card_info.duelist = 0
-        card_info.code = code
-        card_info.con = 0
-        card_info.loc = LOCATION_EXTRA
-        card_info.seq = i
-        card_info.pos = POS_FACEDOWN_DEFENSE
-        lib.OCG_DuelNewCard(duel, card_info)
-
-    # === OPPONENT DECK (Holactie filler) ===
-    for i in range(40):
-        card_info = ffi.new("OCG_NewCardInfo*")
-        card_info.team = 1
-        card_info.duelist = 0
-        card_info.code = HOLACTIE
-        card_info.con = 1
-        card_info.loc = LOCATION_DECK
-        card_info.seq = i
-        card_info.pos = POS_FACEDOWN_DEFENSE
-        lib.OCG_DuelNewCard(duel, card_info)
-
-    return duel
+# Functions moved to src/ygo_combo/engine/duel_factory.py:
+# - load_locked_library()
+# - get_deck_lists()
+# - create_duel()
 
 
 # =============================================================================
@@ -585,170 +293,13 @@ def create_duel(lib, main_deck_cards, extra_deck_cards, starting_hand=None):
 
 
 # =============================================================================
-# BOARD STATE CAPTURE
+# BOARD STATE CAPTURE - Now imported from engine.board_capture
 # =============================================================================
-
-def parse_query_response(data: bytes) -> list:
-    """Parse OCG_DuelQueryLocation response to extract card codes.
-
-    Format:
-    - Total size (u32)
-    - Per card: either int16(0) for empty slot, or field blocks ending with QUERY_END
-    - Field block: [size(u16)][flag(u32)][value(varies)]
-    """
-    if len(data) < 4:
-        logger.warning(f"parse_query_response: data too short ({len(data)} bytes), expected at least 4")
-        return []
-
-    buf = io.BytesIO(data)
-    total_size = read_u32(buf)
-
-    cards = []
-    while buf.tell() < len(data):
-        start_pos = buf.tell()
-
-        # Read first u16 - if 0, empty slot
-        if buf.tell() + 2 > len(data):
-            break
-        first_u16 = struct.unpack("<H", buf.read(2))[0]
-
-        if first_u16 == 0:
-            # Empty slot
-            cards.append(None)
-            continue
-
-        # Non-empty slot: first_u16 is the size of the first field block
-        # Parse field blocks
-        card_info = {}
-        buf.seek(start_pos)  # Rewind to read properly
-
-        while buf.tell() < len(data):
-            if buf.tell() + 2 > len(data):
-                break
-            block_size = struct.unpack("<H", buf.read(2))[0]
-
-            if block_size < 4:
-                break
-
-            if buf.tell() + block_size > len(data):
-                break
-
-            flag = read_u32(buf)
-
-            if flag == QUERY_END:
-                break
-            elif flag == QUERY_CODE:
-                card_info["code"] = read_u32(buf)
-            elif flag == QUERY_POSITION:
-                card_info["position"] = read_u32(buf)
-            elif flag == QUERY_ATTACK:
-                card_info["attack"] = read_i32(buf)
-            elif flag == QUERY_DEFENSE:
-                card_info["defense"] = read_i32(buf)
-            else:
-                # Skip unknown field
-                remaining = block_size - 4
-                if remaining > 0:
-                    buf.read(remaining)
-
-        cards.append(card_info if card_info else None)
-
-    return cards
-
-
-def compute_board_signature(board_state: dict) -> str:
-    """Compute a unique signature for a board state.
-
-    Used to detect duplicate board states reached via different paths.
-    Only considers player0's board (we're doing solitaire combo evaluation).
-
-    Uses BoardSignature from state_representation for structured representation.
-    """
-    sig = BoardSignature.from_board_state(board_state)
-    return sig.hash()
-
-
-def compute_idle_state_hash(idle_data: dict, board_state: dict) -> str:
-    """Compute a unique hash for an intermediate game state at MSG_IDLE.
-
-    This hash captures:
-    - Board state (cards in each zone)
-    - Available actions (which encodes OPT usage implicitly)
-
-    Two states with identical hash will have identical future action spaces,
-    so we only need to explore one of them.
-
-    Uses IntermediateState from state_representation for structured representation.
-    """
-    state = IntermediateState.from_idle_data(idle_data, board_state)
-    return state.hash()
-
-
-def capture_board_state(lib, duel) -> dict:
-    """Capture complete board state at current duel position."""
-
-    state = {
-        "player0": {
-            "hand": [],
-            "monsters": [],
-            "spells": [],
-            "graveyard": [],
-            "banished": [],
-            "extra": [],
-        },
-        "player1": {
-            "hand": [],
-            "monsters": [],
-            "spells": [],
-            "graveyard": [],
-            "banished": [],
-            "extra": [],
-        },
-    }
-
-    locations = [
-        ("hand", LOCATION_HAND),
-        ("monsters", LOCATION_MZONE),
-        ("spells", LOCATION_SZONE),
-        ("graveyard", LOCATION_GRAVE),
-        ("banished", LOCATION_REMOVED),
-        ("extra", LOCATION_EXTRA),
-    ]
-
-    for player in [0, 1]:
-        player_key = f"player{player}"
-
-        for loc_name, loc_value in locations:
-            # Query this location
-            query_info = ffi.new("OCG_QueryInfo*")
-            query_info.flags = QUERY_CODE | QUERY_POSITION | QUERY_ATTACK | QUERY_DEFENSE
-            query_info.con = player
-            query_info.loc = loc_value
-            query_info.seq = 0
-            query_info.overlay_seq = 0
-
-            length = ffi.new("uint32_t*")
-            buf = lib.OCG_DuelQueryLocation(duel, length, query_info)
-
-            if length[0] > 0:
-                data = bytes(ffi.buffer(buf, length[0]))
-                cards = parse_query_response(data)
-
-                for card in cards:
-                    if card and "code" in card:
-                        code = card["code"]
-                        name = get_card_name(code)
-                        card_entry = {
-                            "code": code,
-                            "name": name,
-                        }
-                        if "attack" in card:
-                            card_entry["atk"] = card["attack"]
-                        if "defense" in card:
-                            card_entry["def"] = card["defense"]
-                        state[player_key][loc_name].append(card_entry)
-
-    return state
+# Functions moved to src/ygo_combo/engine/board_capture.py:
+# - parse_query_response()
+# - compute_board_signature()
+# - compute_idle_state_hash()
+# - capture_board_state()
 
 
 # =============================================================================
@@ -1127,6 +678,14 @@ class EnumerationEngine:
                     self.log(f"AWAITING with no messages at depth {len(action_history)}", len(action_history))
                 return
             # status == 2 means CONTINUE - keep processing
+
+    # =========================================================================
+    # MESSAGE HANDLERS
+    # =========================================================================
+    # These methods handle different message types from the engine.
+    # Future refactoring: Extract to enumeration/handlers.py as a mixin class.
+    # Blocked by: Circular import (handlers need Action dataclass from this file)
+    # Solution: Move Action to a shared types module first.
 
     def _handle_idle(self, duel, action_history: List[Action], idle_data: dict):
         """Handle MSG_IDLE - branch on all actions + PASS.

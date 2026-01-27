@@ -81,6 +81,21 @@ from .paths import (
     CDB_PATH, LOCKED_LIBRARY_PATH,
 )
 
+from .board_capture import (
+    parse_query_response,
+    compute_board_signature,
+    compute_idle_state_hash,
+    capture_board_state,
+)
+
+from .duel_factory import (
+    ENGRAVER,
+    HOLACTIE,
+    load_locked_library,
+    get_deck_lists,
+    create_duel,
+)
+
 __all__ = [
     # Bindings
     'ffi', 'load_library', 'get_lib',
@@ -102,4 +117,10 @@ __all__ = [
     'evaluate_board_quality', 'BOSS_MONSTERS', 'INTERACTION_PIECES',
     # Paths
     'get_scripts_path', 'get_library_path', 'CDB_PATH', 'LOCKED_LIBRARY_PATH',
+    # Board capture
+    'parse_query_response', 'compute_board_signature',
+    'compute_idle_state_hash', 'capture_board_state',
+    # Duel factory
+    'ENGRAVER', 'HOLACTIE',
+    'load_locked_library', 'get_deck_lists', 'create_duel',
 ]
