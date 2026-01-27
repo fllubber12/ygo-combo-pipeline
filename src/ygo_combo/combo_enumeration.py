@@ -19,16 +19,12 @@ TODO (Phase 6 Refactoring):
     - message_parsers.py: parse_idle, parse_select_card, etc.
 """
 
-import json
-import struct
 import hashlib
 import io
 import logging
 import signal
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Any, Optional, Tuple, Union, BinaryIO
-from datetime import datetime
+from typing import List, Dict, Any, Tuple
 
 # Import shared types to avoid circular imports
 # These are re-exported for backwards compatibility
@@ -56,19 +52,13 @@ def _signal_handler(signum, frame):
 
 # Engine imports
 from .engine.interface import (
-    init_card_database, load_library, preload_utility_scripts,
-    py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
-    ffi, get_card_name, set_lib,
+    init_card_database, load_library, ffi, get_card_name, set_lib,
 )
 from .engine.bindings import (
-    LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
-    LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
-    POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
-    MSG_SELECT_BATTLECMD, MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
+    MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
     MSG_SELECT_PLACE, MSG_SELECT_POSITION, MSG_SELECT_TRIBUTE,
     MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO, MSG_SELECT_OPTION,
-    MSG_SELECT_COUNTER, MSG_SELECT_UNSELECT_CARD, MSG_SELECT_SUM,
-    MSG_SORT_CARD, MSG_SELECT_DISFIELD, MSG_RETRY,
+    MSG_SELECT_UNSELECT_CARD, MSG_SELECT_SUM, MSG_RETRY,
     MSG_HINT, MSG_WAITING, MSG_START, MSG_WIN,
     MSG_UPDATE_DATA, MSG_UPDATE_CARD,
     MSG_CONFIRM_DECKTOP, MSG_CONFIRM_CARDS, MSG_SHUFFLE_DECK, MSG_SHUFFLE_HAND,
@@ -91,31 +81,16 @@ from .engine.bindings import (
     MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME,
     MSG_SHOW_HINT, MSG_PLAYER_HINT, MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
 )
-from .engine.state import (
-    BoardSignature, IntermediateState, ActionSpec,
-    evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
-)
-from .engine.board_capture import (
-    parse_query_response, compute_board_signature,
-    compute_idle_state_hash, capture_board_state,
-)
-from .engine.duel_factory import (
-    ENGRAVER, HOLACTIE,
-    load_locked_library, get_deck_lists, create_duel,
-)
-from .search.transposition import TranspositionTable, TranspositionEntry
-from .cards.validator import CardValidator
+from .engine.state import BoardSignature, evaluate_board_quality
+from .engine.board_capture import capture_board_state
+from .engine.duel_factory import load_locked_library, get_deck_lists, create_duel
+from .search.transposition import TranspositionTable
 from .enumeration import (
-    read_u8, read_u16, read_u32, read_i32, read_u64,
+    read_u8, read_u32,
     parse_idle, parse_select_card, parse_select_chain, parse_select_place,
     parse_select_unselect_card, parse_select_option, parse_select_tribute,
-    parse_select_sum, find_valid_tribute_combinations,
-    find_valid_sum_combinations, find_sum_combinations_flexible,
-    IDLE_RESPONSE_SUMMON, IDLE_RESPONSE_SPSUMMON, IDLE_RESPONSE_REPOSITION,
-    IDLE_RESPONSE_MSET, IDLE_RESPONSE_SSET, IDLE_RESPONSE_ACTIVATE,
-    IDLE_RESPONSE_TO_BATTLE, IDLE_RESPONSE_TO_END,
-    build_activate_response, build_pass_response, build_select_card_response,
-    build_decline_chain_response, build_select_tribute_response,
+    parse_select_sum,
+    build_decline_chain_response,
 )
 from .enumeration.handlers import MessageHandlerMixin
 
@@ -219,11 +194,8 @@ class EnumerationEngine(MessageHandlerMixin):
         self._starting_hand = None
 
     def _recurse(self, action_history: List[Action]):
-        """Call the appropriate recursive method based on whether custom hand is set."""
-        if self._starting_hand is not None:
-            self._enumerate_recursive_with_hand(action_history)
-        else:
-            self._enumerate_recursive(action_history)
+        """Continue enumeration from action history (alias for handlers)."""
+        self._enumerate_recursive(action_history)
 
     def log(self, msg, depth=0):
         if self.verbose:
@@ -329,7 +301,7 @@ class EnumerationEngine(MessageHandlerMixin):
         print(f"Max paths: {MAX_PATHS}")
         print("=" * 80)
 
-        self._enumerate_recursive_with_hand([])
+        self._enumerate_recursive([])
 
         print("\n" + "=" * 80)
         print("ENUMERATION COMPLETE")
@@ -340,8 +312,11 @@ class EnumerationEngine(MessageHandlerMixin):
 
         return self.terminals
 
-    def _enumerate_recursive_with_hand(self, action_history: List[Action]):
-        """Recursively explore all paths using stored starting hand."""
+    def _enumerate_recursive(self, action_history: List[Action]):
+        """Recursively explore all paths from current action history.
+
+        Uses self._starting_hand if set, otherwise uses default deck order.
+        """
         global _shutdown_requested
 
         # Check for graceful shutdown
@@ -362,50 +337,9 @@ class EnumerationEngine(MessageHandlerMixin):
         if self.paths_explored % 100 == 0:
             print(f"  Progress: {self.paths_explored} paths, {len(self.terminals)} terminals")
 
-        # Create fresh duel with the specific starting hand
+        # Create fresh duel (with optional starting hand)
         duel = create_duel(self.lib, self.main_deck, self.extra_deck,
                            starting_hand=self._starting_hand)
-
-        try:
-            # Start duel
-            self.lib.OCG_StartDuel(duel)
-
-            # Replay all previous actions
-            for action in action_history:
-                if not self._replay_action(duel, action):
-                    self.log(f"Replay failed at action: {action.description}", len(action_history))
-                    return
-
-            # Now explore from current state
-            self._explore_from_state(duel, action_history)
-
-        finally:
-            self.lib.OCG_DestroyDuel(duel)
-
-    def _enumerate_recursive(self, action_history: List[Action]):
-        """Recursively explore all paths from current action history."""
-        global _shutdown_requested
-
-        # Check for graceful shutdown
-        if _shutdown_requested:
-            return
-
-        # Safety limits
-        if len(action_history) >= MAX_DEPTH:
-            self._record_terminal(action_history, "MAX_DEPTH")
-            return
-
-        if self.paths_explored >= MAX_PATHS:
-            return
-
-        self.paths_explored += 1
-        self.max_depth_seen = max(self.max_depth_seen, len(action_history))
-
-        if self.paths_explored % 100 == 0:
-            print(f"  Progress: {self.paths_explored} paths, {len(self.terminals)} terminals")
-
-        # Create fresh duel and replay action history
-        duel = create_duel(self.lib, self.main_deck, self.extra_deck)
 
         try:
             # Start duel
