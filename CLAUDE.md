@@ -10,6 +10,18 @@ A research project for exhaustively enumerating combo paths in Yu-Gi-Oh! using t
 
 ---
 
+## CRITICAL: User Commands
+
+**STOP/HALT REQUESTS**: When the user says "stop", "halt", "stop running code", "killall", or any similar urgent command, Claude must:
+1. **Immediately cease all tool execution** - do not continue running commands
+2. **Do not analyze results** - stop processing and wait
+3. **Acknowledge the request** - confirm you have stopped
+4. **Wait for instructions** - do not take further action until directed
+
+This applies regardless of how the message appears (direct message, system-reminder, or embedded in tool results).
+
+---
+
 ## Architecture Principles
 
 This project follows a clean module hierarchy:

@@ -178,6 +178,28 @@ def find_valid_sum_combinations(
     # Remaining sum needed from can_select cards
     remaining_sum = target_sum - must_sum
 
+    # Early exit: impossible to reach target with no cards available
+    if not can_select and remaining_sum > 0:
+        return []  # No cards available, can't reach target
+
+    # Early exit: check if sum is achievable
+    if can_select and mode == 0:  # Exact match mode
+        # Get min and max possible values for each card
+        card_values = []
+        for c in can_select:
+            lvl1 = c.get("value", 0) or c.get("level", 0)
+            lvl2 = c.get("level2", lvl1) or lvl1
+            card_values.append((min(lvl1, lvl2) if lvl2 > 0 else lvl1,
+                               max(lvl1, lvl2) if lvl2 > 0 else lvl1))
+
+        max_possible = sum(v[1] for v in card_values)
+        min_single = min(v[0] for v in card_values) if card_values else 0
+
+        if max_possible < remaining_sum:
+            return []  # Even using all cards can't reach target
+        if remaining_sum > 0 and min_single > remaining_sum:
+            return []  # Smallest card exceeds target, impossible to hit exactly
+
     # Adjust selection bounds for can_select
     remaining_min = max(0, min_select - must_count)
     remaining_max = max(0, max_select - must_count)
@@ -1313,13 +1335,19 @@ def capture_board_state(lib, duel) -> dict:
 class EnumerationEngine:
     """Exhaustive combo path enumeration with deduplication optimizations."""
 
-    def __init__(self, lib, main_deck, extra_deck, verbose=False, dedupe_boards=True, dedupe_intermediate=True):
+    def __init__(self, lib, main_deck, extra_deck, verbose=False, dedupe_boards=True, dedupe_intermediate=True,
+                 prioritize_cards=None):
         self.lib = lib
         self.main_deck = main_deck
         self.extra_deck = extra_deck
         self.verbose = verbose
         self.dedupe_boards = dedupe_boards  # Skip duplicate terminal board states
         self.dedupe_intermediate = dedupe_intermediate  # Skip duplicate intermediate states
+
+        # Card prioritization for SELECT_CARD - these codes are explored first
+        # Format: list of card passcodes to prioritize (explored in order given)
+        self.prioritize_cards = set(prioritize_cards) if prioritize_cards else set()
+        self.prioritize_order = list(prioritize_cards) if prioritize_cards else []
 
         self.terminals = []         # All terminal states found
         self.paths_explored = 0     # Counter
@@ -1764,6 +1792,10 @@ class EnumerationEngine:
         Optimization: Selecting Holactie #1 vs Holactie #2 produces identical outcomes,
         so we deduplicate by card code and only branch on the first instance of each.
         This reduces branching significantly (e.g., 5 Holacties -> 1 branch instead of 5).
+
+        Card Prioritization: If prioritize_cards is set, those cards are explored first
+        in the order specified. This ensures specific combo paths are explored before
+        the search budget is exhausted.
         """
 
         depth = len(action_history)
@@ -1775,13 +1807,31 @@ class EnumerationEngine:
 
         # For simplicity, enumerate single selections if min==max==1
         if min_sel == 1 and max_sel == 1:
-            # Deduplicate by card code - only branch on first instance of each unique card
+            # Build list of (index, code) pairs, deduplicating by code
+            unique_cards = []
             seen_codes = set()
             for i, card in enumerate(cards):
                 code = card["code"]
                 if code in seen_codes:
-                    continue  # Skip duplicate card instances
+                    continue
                 seen_codes.add(code)
+                unique_cards.append((i, code))
+
+            # Sort to put prioritized cards first
+            if self.prioritize_cards:
+                def priority_key(item):
+                    idx, code = item
+                    if code in self.prioritize_cards:
+                        # Prioritized cards come first, in the order specified
+                        try:
+                            return (0, self.prioritize_order.index(code))
+                        except ValueError:
+                            return (0, 999)
+                    return (1, idx)  # Non-prioritized cards keep original order
+                unique_cards.sort(key=priority_key)
+
+            # Branch on each unique card (now in priority order)
+            for i, code in unique_cards:
 
                 name = get_card_name(code)
                 indices, response = build_select_card_response([i])
@@ -1796,7 +1846,7 @@ class EnumerationEngine:
                     card_name=name,
                 )
 
-                self.log(f"Branch: Select {name} (idx {i}, {len(seen_codes)} unique)", depth)
+                self.log(f"Branch: Select {name} (idx {i}, {len(unique_cards)} unique)", depth)
                 self._recurse(action_history + [action])
         else:
             # Multi-select: enumerate combinations of unique card codes
@@ -2427,7 +2477,16 @@ def main():
                         help="Disable terminal board state deduplication")
     parser.add_argument("--no-dedupe-intermediate", action="store_true",
                         help="Disable intermediate state pruning")
+    parser.add_argument("--prioritize-cards", type=str, default="",
+                        help="Comma-separated list of card passcodes to explore first during SELECT_CARD")
     args = parser.parse_args()
+
+    # Parse prioritized cards
+    prioritize_cards = []
+    if args.prioritize_cards:
+        prioritize_cards = [int(x.strip()) for x in args.prioritize_cards.split(",") if x.strip()]
+        if prioritize_cards:
+            print(f"Card prioritization enabled: {prioritize_cards}")
 
     # Update limits
     MAX_DEPTH = args.max_depth
@@ -2459,7 +2518,8 @@ def main():
         lib, main_deck, extra_deck,
         verbose=args.verbose,
         dedupe_boards=dedupe_terminals,
-        dedupe_intermediate=dedupe_intermediate
+        dedupe_intermediate=dedupe_intermediate,
+        prioritize_cards=prioritize_cards if prioritize_cards else None
     )
     terminals = engine.enumerate_all()
 
@@ -2480,6 +2540,7 @@ def main():
             "transposition_hit_rate": tt_stats["hit_rate"],
             "dedupe_terminals_enabled": dedupe_terminals,
             "dedupe_intermediate_enabled": dedupe_intermediate,
+            "prioritize_cards": prioritize_cards if prioritize_cards else [],
             "max_depth_seen": engine.max_depth_seen,
         },
         "terminals": [t.to_dict() for t in terminals],
