@@ -1796,6 +1796,11 @@ class EnumerationEngine:
         Card Prioritization: If prioritize_cards is set, those cards are explored first
         in the order specified. This ensures specific combo paths are explored before
         the search budget is exhausted.
+
+        SELECT_SUM_CANCEL Backtracking: If a SELECT_CARD choice led to SELECT_SUM_CANCEL,
+        we exclude that card from subsequent SELECT_CARD prompts in the same path. This
+        prevents degenerate loops where DFS repeatedly selects a card whose materials
+        can't be satisfied.
         """
 
         depth = len(action_history)
@@ -1805,6 +1810,21 @@ class EnumerationEngine:
 
         self.log(f"SELECT_CARD: {len(cards)} cards, select {min_sel}-{max_sel}", depth)
 
+        # Find cards that led to SELECT_SUM_CANCEL in this path
+        # Pattern: SELECT_CARD(code X) followed by SELECT_SUM_CANCEL
+        failed_codes = set()
+        for i in range(len(action_history) - 1):
+            action = action_history[i]
+            next_action = action_history[i + 1]
+            if (action.action_type == "SELECT_CARD" and
+                next_action.action_type == "SELECT_SUM_CANCEL" and
+                action.card_code is not None):
+                failed_codes.add(action.card_code)
+
+        if failed_codes:
+            failed_names = [get_card_name(c) for c in failed_codes]
+            self.log(f"  Excluding failed SELECT_SUM cards: {failed_names}", depth)
+
         # For simplicity, enumerate single selections if min==max==1
         if min_sel == 1 and max_sel == 1:
             # Build list of (index, code) pairs, deduplicating by code
@@ -1813,6 +1833,9 @@ class EnumerationEngine:
             for i, card in enumerate(cards):
                 code = card["code"]
                 if code in seen_codes:
+                    continue
+                # Skip cards that led to SELECT_SUM_CANCEL in this path
+                if code in failed_codes:
                     continue
                 seen_codes.add(code)
                 unique_cards.append((i, code))
@@ -1856,6 +1879,9 @@ class EnumerationEngine:
             code_to_indices = {}
             for i, card in enumerate(cards):
                 code = card["code"]
+                # Skip cards that led to SELECT_SUM_CANCEL in this path
+                if code in failed_codes:
+                    continue
                 if code not in code_to_indices:
                     code_to_indices[code] = []
                 code_to_indices[code].append(i)
