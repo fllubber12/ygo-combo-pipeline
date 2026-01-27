@@ -30,12 +30,14 @@ Architecture:
 
 import multiprocessing as mp
 from multiprocessing import Pool, Manager
-from dataclasses import dataclass, field
-from typing import List, Tuple, Dict, Any, Optional, FrozenSet, Callable
+from dataclasses import dataclass, field, asdict
+from typing import List, Tuple, Dict, Any, Optional, FrozenSet, Callable, Set
 from itertools import combinations
 from pathlib import Path
+from datetime import datetime, timezone
 import time
 import json
+import gzip
 import logging
 
 # Configure logging for main process
@@ -63,6 +65,10 @@ class ParallelConfig:
         output_dir: Directory for worker result files (optional).
         batch_size: Hands per worker batch (default: auto-calculated).
         progress_interval: Seconds between progress updates (default: 10).
+        checkpoint_path: Path for checkpoint file (enables save/resume).
+        checkpoint_interval: Hands between checkpoint saves (default: 100).
+        resume: Whether to resume from existing checkpoint (default: True).
+        save_results: Whether to include full ComboResult in checkpoint (default: False).
     """
     deck: List[int]
     hand_size: int = 5
@@ -72,6 +78,10 @@ class ParallelConfig:
     output_dir: Optional[Path] = None
     batch_size: Optional[int] = None
     progress_interval: float = 10.0
+    checkpoint_path: Optional[Path] = None
+    checkpoint_interval: int = 100
+    resume: bool = True
+    save_results: bool = False
 
     def __post_init__(self):
         if self.num_workers is None:
@@ -133,6 +143,135 @@ class ParallelResult:
     duration_seconds: float
     worker_stats: Dict[int, Dict[str, Any]]
     terminal_distribution: Dict[int, int] = field(default_factory=dict)
+
+
+# =============================================================================
+# PARALLEL CHECKPOINTING
+# =============================================================================
+
+PARALLEL_CHECKPOINT_VERSION = 1
+
+
+@dataclass
+class ParallelCheckpoint:
+    """Checkpoint for parallel enumeration runs.
+
+    Captures completed hands and aggregated results for resuming interrupted runs.
+
+    Attributes:
+        version: Checkpoint schema version.
+        timestamp: When checkpoint was created.
+        config_hash: Hash of ParallelConfig for validation.
+        completed_hands: Set of hands that have been processed.
+        all_terminals: Set of unique terminal board hashes found.
+        total_paths: Total paths explored across all completed hands.
+        best_hand: Hand with highest score so far.
+        best_score: Highest score found.
+        terminal_counts: Histogram of terminals per hand.
+        results: List of ComboResult for completed hands (optional).
+    """
+    version: int
+    timestamp: str
+    config_hash: str
+    completed_hands: List[Tuple[int, ...]]
+    all_terminals: List[str]
+    total_paths: int
+    best_hand: Optional[Tuple[int, ...]]
+    best_score: float
+    terminal_counts: Dict[int, int]
+    results: Optional[List[Dict]] = None
+
+
+def _config_hash(config: ParallelConfig) -> str:
+    """Generate a hash of config for checkpoint validation."""
+    import hashlib
+    key = f"{sorted(config.deck)}_{config.hand_size}_{config.max_depth}_{config.max_paths_per_hand}"
+    return hashlib.md5(key.encode()).hexdigest()[:16]
+
+
+def save_parallel_checkpoint(
+    checkpoint: ParallelCheckpoint,
+    path: Path,
+    compress: bool = True,
+) -> Path:
+    """Save a parallel checkpoint to disk.
+
+    Args:
+        checkpoint: The checkpoint to save.
+        path: Path to save to (without extension).
+        compress: Whether to gzip compress the output.
+
+    Returns:
+        Path to the saved checkpoint file.
+    """
+    data = {
+        "version": checkpoint.version,
+        "timestamp": checkpoint.timestamp,
+        "config_hash": checkpoint.config_hash,
+        "completed_hands": [list(h) for h in checkpoint.completed_hands],
+        "all_terminals": checkpoint.all_terminals,
+        "total_paths": checkpoint.total_paths,
+        "best_hand": list(checkpoint.best_hand) if checkpoint.best_hand else None,
+        "best_score": checkpoint.best_score,
+        "terminal_counts": {str(k): v for k, v in checkpoint.terminal_counts.items()},
+        "results": checkpoint.results,
+    }
+
+    if compress:
+        final_path = Path(str(path) + ".json.gz")
+        with gzip.open(final_path, "wt", encoding="utf-8") as f:
+            json.dump(data, f)
+    else:
+        final_path = Path(str(path) + ".json")
+        with open(final_path, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+
+    return final_path
+
+
+def load_parallel_checkpoint(path: Path) -> ParallelCheckpoint:
+    """Load a parallel checkpoint from disk.
+
+    Args:
+        path: Path to the checkpoint file.
+
+    Returns:
+        Loaded ParallelCheckpoint object.
+
+    Raises:
+        FileNotFoundError: If checkpoint file doesn't exist.
+        ValueError: If checkpoint version is incompatible.
+    """
+    path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"Checkpoint not found: {path}")
+
+    if path.suffix == ".gz" or str(path).endswith(".json.gz"):
+        with gzip.open(path, "rt", encoding="utf-8") as f:
+            data = json.load(f)
+    else:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+    if data.get("version", 0) > PARALLEL_CHECKPOINT_VERSION:
+        raise ValueError(
+            f"Checkpoint version {data['version']} is newer than "
+            f"supported version {PARALLEL_CHECKPOINT_VERSION}"
+        )
+
+    return ParallelCheckpoint(
+        version=data["version"],
+        timestamp=data["timestamp"],
+        config_hash=data["config_hash"],
+        completed_hands=[tuple(h) for h in data["completed_hands"]],
+        all_terminals=data["all_terminals"],
+        total_paths=data["total_paths"],
+        best_hand=tuple(data["best_hand"]) if data["best_hand"] else None,
+        best_score=data["best_score"],
+        terminal_counts={int(k): v for k, v in data["terminal_counts"].items()},
+        results=data.get("results"),
+    )
 
 
 # =============================================================================
@@ -277,6 +416,10 @@ def generate_all_hands(deck: List[int], hand_size: int) -> List[Tuple[int, ...]]
 def parallel_enumerate(config: ParallelConfig) -> ParallelResult:
     """Run parallel combo enumeration across all starting hands.
 
+    Supports checkpointing for long-running jobs. If checkpoint_path is set:
+    - Saves progress periodically (every checkpoint_interval hands)
+    - Can resume from existing checkpoint if resume=True
+
     Args:
         config: ParallelConfig with deck, workers, depth settings.
 
@@ -291,17 +434,81 @@ def parallel_enumerate(config: ParallelConfig) -> ParallelResult:
     total_hands = len(all_hands)
     logger.info(f"Total hands to process: {total_hands:,}")
 
+    # Track accumulated state (may be restored from checkpoint)
+    all_terminals: Set[str] = set()
+    total_paths = 0
+    best_hand: Optional[Tuple[int, ...]] = None
+    best_score = 0.0
+    terminal_counts: Dict[int, int] = {}
+    completed_hands: Set[Tuple[int, ...]] = set()
+    all_results: List[ComboResult] = []
+
+    # Try to load existing checkpoint
+    config_hash = _config_hash(config) if config.checkpoint_path else ""
+
+    if config.checkpoint_path and config.resume:
+        checkpoint_file = Path(str(config.checkpoint_path) + ".json.gz")
+        if not checkpoint_file.exists():
+            checkpoint_file = Path(str(config.checkpoint_path) + ".json")
+
+        if checkpoint_file.exists():
+            try:
+                checkpoint = load_parallel_checkpoint(checkpoint_file)
+
+                # Validate config matches
+                if checkpoint.config_hash != config_hash:
+                    logger.warning(
+                        f"Checkpoint config hash mismatch. Starting fresh. "
+                        f"(checkpoint: {checkpoint.config_hash}, current: {config_hash})"
+                    )
+                else:
+                    # Restore state from checkpoint
+                    completed_hands = set(checkpoint.completed_hands)
+                    all_terminals = set(checkpoint.all_terminals)
+                    total_paths = checkpoint.total_paths
+                    best_hand = checkpoint.best_hand
+                    best_score = checkpoint.best_score
+                    terminal_counts = checkpoint.terminal_counts.copy()
+
+                    logger.info(
+                        f"Resumed from checkpoint: {len(completed_hands):,} hands completed, "
+                        f"{len(all_terminals):,} terminals found"
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to load checkpoint: {e}. Starting fresh.")
+
+    # Filter out already-completed hands
+    hands_to_process = [h for h in all_hands if h not in completed_hands]
+    remaining_hands = len(hands_to_process)
+
+    if remaining_hands == 0:
+        logger.info("All hands already completed (from checkpoint)")
+        duration = time.perf_counter() - start_time
+        return ParallelResult(
+            total_hands=total_hands,
+            total_terminals=len(all_terminals),
+            total_paths=total_paths,
+            best_hand=best_hand,
+            best_score=best_score,
+            duration_seconds=duration,
+            worker_stats={},
+            terminal_distribution=terminal_counts,
+        )
+
+    logger.info(f"Remaining hands to process: {remaining_hands:,}")
+
     # Split into batches
     batches = []
-    for i in range(0, total_hands, config.batch_size):
-        batches.append(all_hands[i:i + config.batch_size])
+    for i in range(0, remaining_hands, config.batch_size):
+        batches.append(hands_to_process[i:i + config.batch_size])
     logger.info(f"Split into {len(batches):,} batches of ~{config.batch_size} hands")
 
     # Create process pool with initializer
     logger.info(f"Starting {config.num_workers} worker processes")
 
-    all_results: List[ComboResult] = []
     worker_stats: Dict[int, Dict[str, Any]] = {}
+    hands_since_checkpoint = 0
+    last_checkpoint_time = time.perf_counter()
 
     with Pool(
         processes=config.num_workers,
@@ -315,19 +522,36 @@ def parallel_enumerate(config: ParallelConfig) -> ParallelResult:
             async_results.append(pool.apply_async(_worker_batch, (batch,)))
 
         # Collect results with progress tracking
-        completed = 0
+        completed = len(completed_hands)
         last_progress = time.perf_counter()
 
         for async_result in async_results:
             batch_results = async_result.get()  # Blocks until batch complete
-            all_results.extend(batch_results)
+
+            # Process batch results
+            for result in batch_results:
+                all_results.append(result)
+                completed_hands.add(result.hand)
+                all_terminals.update(result.terminal_boards)
+                total_paths += result.paths_explored
+
+                # Track best hand
+                if result.best_score > best_score:
+                    best_score = result.best_score
+                    best_hand = result.hand
+
+                # Histogram of terminals per hand
+                count = len(result.terminal_boards)
+                terminal_counts[count] = terminal_counts.get(count, 0) + 1
+
             completed += len(batch_results)
+            hands_since_checkpoint += len(batch_results)
 
             # Progress update
             now = time.perf_counter()
             if now - last_progress >= config.progress_interval:
                 elapsed = now - start_time
-                rate = completed / elapsed
+                rate = (completed - len(completed_hands) + len(batch_results)) / elapsed if elapsed > 0 else 0
                 eta = (total_hands - completed) / rate if rate > 0 else 0
                 logger.info(
                     f"Progress: {completed:,}/{total_hands:,} hands "
@@ -337,28 +561,41 @@ def parallel_enumerate(config: ParallelConfig) -> ParallelResult:
                 )
                 last_progress = now
 
+            # Checkpoint save
+            if config.checkpoint_path and hands_since_checkpoint >= config.checkpoint_interval:
+                _save_checkpoint_state(
+                    config=config,
+                    config_hash=config_hash,
+                    completed_hands=completed_hands,
+                    all_terminals=all_terminals,
+                    total_paths=total_paths,
+                    best_hand=best_hand,
+                    best_score=best_score,
+                    terminal_counts=terminal_counts,
+                    save_results=config.save_results,
+                    results=all_results if config.save_results else None,
+                )
+                hands_since_checkpoint = 0
+                logger.info(f"Checkpoint saved: {len(completed_hands):,} hands completed")
+
+    # Final checkpoint save
+    if config.checkpoint_path:
+        _save_checkpoint_state(
+            config=config,
+            config_hash=config_hash,
+            completed_hands=completed_hands,
+            all_terminals=all_terminals,
+            total_paths=total_paths,
+            best_hand=best_hand,
+            best_score=best_score,
+            terminal_counts=terminal_counts,
+            save_results=config.save_results,
+            results=all_results if config.save_results else None,
+        )
+        logger.info(f"Final checkpoint saved: {len(completed_hands):,} hands completed")
+
     # Aggregate results
     duration = time.perf_counter() - start_time
-
-    # Find unique terminals across all hands
-    all_terminals: set = set()
-    total_paths = 0
-    best_hand = None
-    best_score = 0.0
-    terminal_counts: Dict[int, int] = {}
-
-    for result in all_results:
-        all_terminals.update(result.terminal_boards)
-        total_paths += result.paths_explored
-
-        # Track best hand
-        if result.best_score > best_score:
-            best_score = result.best_score
-            best_hand = result.hand
-
-        # Histogram of terminals per hand
-        count = len(result.terminal_boards)
-        terminal_counts[count] = terminal_counts.get(count, 0) + 1
 
     logger.info(f"Completed {total_hands:,} hands in {duration:.1f}s")
     logger.info(f"Unique terminals: {len(all_terminals):,}")
@@ -375,6 +612,44 @@ def parallel_enumerate(config: ParallelConfig) -> ParallelResult:
         worker_stats=worker_stats,
         terminal_distribution=terminal_counts,
     )
+
+
+def _save_checkpoint_state(
+    config: ParallelConfig,
+    config_hash: str,
+    completed_hands: Set[Tuple[int, ...]],
+    all_terminals: Set[str],
+    total_paths: int,
+    best_hand: Optional[Tuple[int, ...]],
+    best_score: float,
+    terminal_counts: Dict[int, int],
+    save_results: bool = False,
+    results: Optional[List[ComboResult]] = None,
+):
+    """Save current state to checkpoint file."""
+    checkpoint = ParallelCheckpoint(
+        version=PARALLEL_CHECKPOINT_VERSION,
+        timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        config_hash=config_hash,
+        completed_hands=list(completed_hands),
+        all_terminals=list(all_terminals),
+        total_paths=total_paths,
+        best_hand=best_hand,
+        best_score=best_score,
+        terminal_counts=terminal_counts,
+        results=[
+            {
+                "hand": list(r.hand),
+                "terminal_boards": r.terminal_boards,
+                "best_score": r.best_score,
+                "paths_explored": r.paths_explored,
+                "depth_reached": r.depth_reached,
+                "duration_ms": r.duration_ms,
+            }
+            for r in results
+        ] if save_results and results else None,
+    )
+    save_parallel_checkpoint(checkpoint, config.checkpoint_path)
 
 
 # =============================================================================

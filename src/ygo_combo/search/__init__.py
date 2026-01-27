@@ -29,6 +29,10 @@ from .parallel import (
     ParallelConfig,
     ComboResult,
     ParallelResult,
+    ParallelCheckpoint,
+    save_parallel_checkpoint,
+    load_parallel_checkpoint,
+    parallel_enumerate,
 )
 
 __all__ = [
@@ -50,4 +54,8 @@ __all__ = [
     'ParallelConfig',
     'ComboResult',
     'ParallelResult',
+    'ParallelCheckpoint',
+    'save_parallel_checkpoint',
+    'load_parallel_checkpoint',
+    'parallel_enumerate',
 ]
