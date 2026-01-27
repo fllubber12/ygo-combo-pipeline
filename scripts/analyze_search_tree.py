@@ -61,7 +61,7 @@ def run_with_shuffle(seed: int, max_paths: int = 5000, max_depth: int = 30):
         EnumerationEngine, load_locked_library, get_deck_lists,
         init_card_database, MAX_DEPTH, MAX_PATHS
     )
-    from engine_interface import load_library, set_lib
+    from engine.interface import load_library, set_lib
 
     print(f"\n{'='*60}")
     print(f"SHUFFLE RUN - Seed {seed}")
@@ -142,7 +142,7 @@ def measure_branching_factor(max_paths: int = 1000):
         EnumerationEngine, load_locked_library, get_deck_lists,
         init_card_database
     )
-    from engine_interface import load_library, set_lib
+    from engine.interface import load_library, set_lib
     import combo_enumeration
 
     print(f"\n{'='*60}")

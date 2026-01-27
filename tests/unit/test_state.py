@@ -14,15 +14,15 @@ import sys
 import unittest
 from pathlib import Path
 
-# Add src/cffi to path for imports
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
+# Add src/ygo_combo to path for imports
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
-from state_representation import (
+from engine.state import (
     BoardSignature, IntermediateState, ActionSpec,
     evaluate_board_quality,
 )
-from transposition_table import TranspositionTable, TranspositionEntry
-from ocg_bindings import LOCATION_HAND, LOCATION_MZONE, LOCATION_GRAVE
+from search.transposition import TranspositionTable, TranspositionEntry
+from engine.bindings import LOCATION_HAND, LOCATION_MZONE, LOCATION_GRAVE
 
 # Card passcode constants for test clarity
 CAESAR = 79559912           # D/D/D Wave High King Caesar

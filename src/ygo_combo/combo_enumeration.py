@@ -48,13 +48,13 @@ def _signal_handler(signum, frame):
         raise KeyboardInterrupt
 
 # Import from engine interface (production code, not test file)
-from engine_interface import (
+from .engine.interface import (
     init_card_database, load_library, preload_utility_scripts,
     py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
     ffi, get_card_name, set_lib,
 )
-# All constants come from ocg_bindings - the canonical source
-from ocg_bindings import (
+# All constants come from engine.bindings - the canonical source
+from .engine.bindings import (
     # Location constants
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     LOCATION_GRAVE, LOCATION_SZONE, LOCATION_REMOVED,
@@ -104,15 +104,15 @@ from ocg_bindings import (
     MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME,
     MSG_SHOW_HINT, MSG_PLAYER_HINT, MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
 )
-from state_representation import (
+from .engine.state import (
     BoardSignature, IntermediateState, ActionSpec,
     evaluate_board_quality, BOSS_MONSTERS, INTERACTION_PIECES,
 )
-from transposition_table import TranspositionTable, TranspositionEntry
-from card_validator import CardValidator
+from .search.transposition import TranspositionTable, TranspositionEntry
+from .cards.validator import CardValidator
 
 # Import parsers and response builders from enumeration submodule
-from enumeration import (
+from .enumeration import (
     # Binary readers
     read_u8, read_u16, read_u32, read_i32, read_u64,
     # Message parsers

@@ -176,7 +176,7 @@ def _init_worker_engine():
         return
 
     # Import engine components
-    from engine_interface import init_card_database, load_library, ffi, set_lib
+    from ..engine.interface import init_card_database, load_library, ffi, set_lib
 
     # Initialize card database (read-only, shared via copy-on-write)
     _worker_card_db_initialized = init_card_database()
@@ -449,7 +449,7 @@ def main():
     """Command-line interface for parallel enumeration."""
     import argparse
     import json
-    from paths import LOCKED_LIBRARY_PATH
+    from ..engine.paths import LOCKED_LIBRARY_PATH
 
     parser = argparse.ArgumentParser(
         description="Parallel combo enumeration across starting hands"

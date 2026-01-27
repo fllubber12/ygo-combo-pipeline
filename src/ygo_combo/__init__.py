@@ -1,17 +1,24 @@
 """
-CFFI bindings for ygopro-core (edo9300 fork).
+YGO Combo Pipeline: Exhaustive Yu-Gi-Oh! Combo Enumeration.
 
-This module provides Python bindings to the OCG Core library,
-enabling programmatic duel simulation using the official Yu-Gi-Oh! engine.
+This package provides Python bindings to the ygopro-core OCG library,
+enabling programmatic duel simulation and combo path analysis.
+
+Submodules:
+    engine   - Core OCG bindings, interface, and state representation
+    search   - Search algorithms (IDDFS, parallel, transposition tables)
+    cards    - Card validation and role classification
+    encoding - ML-compatible state encoding
+    utils    - Utility functions (Zobrist hashing)
+    enumeration - Message parsing and response building
 
 Usage:
-    from src.cffi import ffi, load_library
-
-    lib = load_library()
-    # ... use lib.OCG_* functions
+    from ygo_combo.engine import ffi, load_library
+    from ygo_combo.search import IterativeDeepeningSearch, SearchConfig
+    from ygo_combo.cards import CardValidator
 """
 
-from .ocg_bindings import (
+from .engine.bindings import (
     ffi,
     load_library,
     get_lib,

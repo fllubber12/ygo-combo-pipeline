@@ -15,14 +15,18 @@ Test approach:
 
 import struct
 import io
-from engine_interface import (
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
+
+from engine.interface import (
     init_card_database, load_library, preload_utility_scripts,
     py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
     ffi, get_card_name, set_lib,
+)
+from engine.bindings import (
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
-)
-from ocg_bindings import (
     LOCATION_GRAVE, LOCATION_SZONE,
     MSG_IDLE, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
 )

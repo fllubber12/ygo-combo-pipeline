@@ -566,8 +566,8 @@ def create_depth_limited_engine(
         Configured EnumerationEngine.
     """
     # Import here to avoid circular dependency
-    from combo_enumeration import EnumerationEngine
-    from transposition_table import TranspositionTable
+    from ..combo_enumeration import EnumerationEngine
+    from .transposition import TranspositionTable
 
     engine = EnumerationEngine(
         lib=lib,

@@ -6,9 +6,9 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
-from iterative_deepening import (
+from search.iddfs import (
     SearchConfig, DepthResult, SearchResult,
     TargetScoreReached, TargetTierReached, TimeBudgetExhausted,
     PathBudgetExhausted, AnyTerminalFound,

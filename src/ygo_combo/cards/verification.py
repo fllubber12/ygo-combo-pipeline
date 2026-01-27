@@ -17,7 +17,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Tuple
 
-from ocg_bindings import (
+from ..engine.bindings import (
     ffi, load_library,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_GRAVE,
     LOCATION_MZONE, LOCATION_SZONE, LOCATION_REMOVED,
@@ -33,7 +33,7 @@ from ocg_bindings import (
     MSG_CHAINING, MSG_CHAINED, MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED, MSG_CHAIN_END,
     MSG_DRAW, MSG_CONFIRM_CARDS,
 )
-from paths import CDB_PATH, get_scripts_path
+from ..engine.paths import CDB_PATH, get_scripts_path
 
 
 # Script path

@@ -16,11 +16,14 @@ Optimal Combo Line:
 import io
 import sqlite3
 import struct
+import sys
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 
-from ocg_bindings import (
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
+
+from engine.bindings import (
     ffi, load_library,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_GRAVE,
     LOCATION_MZONE, LOCATION_SZONE,
@@ -36,7 +39,7 @@ from ocg_bindings import (
     MSG_CHAINING, MSG_CHAINED, MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED, MSG_CHAIN_END,
     MSG_DRAW, MSG_CONFIRM_CARDS, MSG_UPDATE_DATA, MSG_UPDATE_CARD,
 )
-from paths import CDB_PATH, get_scripts_path
+from engine.paths import CDB_PATH, get_scripts_path
 
 
 # Script path

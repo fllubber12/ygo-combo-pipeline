@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src" / "ygo_combo"))
 
 # =============================================================================
 # TEST DATA

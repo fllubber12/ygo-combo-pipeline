@@ -24,8 +24,8 @@ if not os.environ.get("YGOPRO_SCRIPTS_PATH"):
 import struct
 import json
 
-from engine_interface import EngineContext
-from ocg_bindings import MSG_SELECT_CARD, MSG_IDLE, MSG_SELECT_CHAIN
+from engine.interface import EngineContext
+from engine.bindings import MSG_SELECT_CARD, MSG_IDLE, MSG_SELECT_CHAIN
 from combo_enumeration import (
     create_duel, parse_idle, parse_select_card, parse_select_chain,
     read_u8, read_u32
@@ -209,7 +209,7 @@ def main():
 
         # Process to see what cards can be searched
         select_card_data = None
-        from ocg_bindings import MSG_SELECT_CHAIN
+        from engine.bindings import MSG_SELECT_CHAIN
         from combo_enumeration import parse_select_chain
 
         for _ in range(200):

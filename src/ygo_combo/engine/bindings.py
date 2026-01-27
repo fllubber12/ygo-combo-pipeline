@@ -146,7 +146,7 @@ def load_library():
 
     Uses paths.get_library_path() for platform detection.
     """
-    from paths import get_library_path, get_lib_extension
+    from .paths import get_library_path, get_lib_extension
     lib_path = get_library_path()
     if not lib_path.exists():
         ext = get_lib_extension()

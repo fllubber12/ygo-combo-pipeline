@@ -18,7 +18,7 @@ import struct
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from ocg_bindings import (
+from .bindings import (
     ffi, load_library,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     LOCATION_SZONE, LOCATION_GRAVE, LOCATION_REMOVED, LOCATION_OVERLAY,
@@ -29,7 +29,7 @@ from ocg_bindings import (
     MSG_SHUFFLE_DECK, MSG_NEW_TURN, MSG_NEW_PHASE, MSG_DRAW,
     TYPE_LINK, TYPE_SYNCHRO, TYPE_XYZ, TYPE_FUSION,
 )
-from paths import CDB_PATH, get_scripts_path, verify_scripts_path
+from .paths import CDB_PATH, get_scripts_path, verify_scripts_path
 
 
 # Re-export commonly used items from ocg_bindings for convenience

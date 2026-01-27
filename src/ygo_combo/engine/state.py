@@ -20,8 +20,8 @@ import hashlib
 import io
 import struct
 
-# Import location and query constants from canonical source (ocg_bindings.py)
-from ocg_bindings import (
+# Import location and query constants from canonical source
+from .bindings import (
     LOCATION_DECK, LOCATION_HAND, LOCATION_MZONE, LOCATION_SZONE,
     LOCATION_GRAVE, LOCATION_REMOVED, LOCATION_EXTRA,
     QUERY_CODE, QUERY_POSITION, QUERY_EQUIP_CARD, QUERY_END,
@@ -70,7 +70,10 @@ class BoardSignature:
         Returns 64-bit integer hash. Use this instead of hash() for
         transposition table lookups - supports O(1) incremental updates.
         """
-        from zobrist import zobrist_hash
+        try:
+            from utils.hashing import zobrist_hash
+        except ImportError:
+            from ..utils.hashing import zobrist_hash
         return zobrist_hash(self)
 
     def to_dict(self) -> dict:
@@ -264,7 +267,10 @@ class IntermediateState:
 
         Returns 64-bit integer hash.
         """
-        from zobrist import zobrist_hash_intermediate
+        try:
+            from utils.hashing import zobrist_hash_intermediate
+        except ImportError:
+            from ..utils.hashing import zobrist_hash_intermediate
         return zobrist_hash_intermediate(self)
 
     def to_dict(self) -> dict:
@@ -380,7 +386,7 @@ def _load_evaluation_config() -> dict:
     if _EVALUATION_CONFIG is not None:
         return _EVALUATION_CONFIG
 
-    config_path = Path(__file__).parents[2] / "config" / "evaluation_config.json"
+    config_path = Path(__file__).parents[3] / "config" / "evaluation_config.json"
     if not config_path.exists():
         raise FileNotFoundError(
             f"evaluation_config.json not found at {config_path}. "

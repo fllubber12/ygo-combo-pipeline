@@ -142,7 +142,7 @@ def run_hand_test(hand: List[int], max_depth: int = 25, verbose: bool = False):
 
     # Import engine
     try:
-        from engine_interface import init_card_database, load_library, set_lib
+        from engine.interface import init_card_database, load_library, set_lib
         from combo_enumeration import EnumerationEngine, load_locked_library, get_deck_lists
         import combo_enumeration
     except ImportError as e:

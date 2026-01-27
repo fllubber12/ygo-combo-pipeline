@@ -7,9 +7,9 @@ import tempfile
 import json
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
-from card_roles import (
+from cards.roles import (
     CardRole, CardClassification, CardRoleClassifier,
     create_fiendsmith_classifier, get_fiendsmith_classifications,
 )

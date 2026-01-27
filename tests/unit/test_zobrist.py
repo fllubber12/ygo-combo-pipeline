@@ -5,9 +5,9 @@ import unittest
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
-from zobrist import (
+from utils.hashing import (
     ZobristHasher, CardState, StateChange,
     LOCATION_HAND, LOCATION_MZONE, LOCATION_GRAVE,
     POS_FACEUP_ATTACK,
@@ -155,7 +155,7 @@ class TestZobristIntegration(unittest.TestCase):
 
     def test_board_signature_zobrist(self):
         """BoardSignature.zobrist_hash() returns int."""
-        from state_representation import BoardSignature
+        from engine.state import BoardSignature
 
         sig = BoardSignature(
             monsters=frozenset([79559912]),
@@ -176,7 +176,7 @@ class TestZobristIntegration(unittest.TestCase):
 
     def test_intermediate_state_zobrist(self):
         """IntermediateState.zobrist_hash() returns int."""
-        from state_representation import BoardSignature, IntermediateState
+        from engine.state import BoardSignature, IntermediateState
 
         board = BoardSignature(
             monsters=frozenset([79559912]),
@@ -202,7 +202,7 @@ class TestZobristIntegration(unittest.TestCase):
 
     def test_different_boards_different_hashes(self):
         """Different boards produce different Zobrist hashes."""
-        from state_representation import BoardSignature
+        from engine.state import BoardSignature
 
         sig1 = BoardSignature(
             monsters=frozenset([79559912]),

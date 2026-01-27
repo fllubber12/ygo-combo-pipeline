@@ -6,9 +6,9 @@ import sys
 from pathlib import Path
 from math import comb
 
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
-from parallel_search import (
+from search.parallel import (
     ParallelConfig,
     ComboResult,
     ParallelResult,

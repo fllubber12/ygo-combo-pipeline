@@ -181,8 +181,8 @@ def test_6_engine_import() -> bool:
         sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "ygo_combo"))
 
         from combo_enumeration import EnumerationEngine
-        from state_representation import BoardSignature
-        from transposition_table import TranspositionTable
+        from engine.state import BoardSignature
+        from search.transposition import TranspositionTable
 
         print("  + EnumerationEngine imported")
         print("  + BoardSignature imported")

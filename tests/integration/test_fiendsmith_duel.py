@@ -13,19 +13,21 @@ This test validates that we can:
 import sys
 from pathlib import Path
 
-# Add src/cffi to path for imports
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
+# Add src/ygo_combo to path for imports
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
-# Import all shared functionality from engine_interface
-from engine_interface import (
+# Import all shared functionality from engine
+from engine.interface import (
     init_card_database, load_library, preload_utility_scripts,
     py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
     ffi, get_card_name, set_lib, location_name, process_messages,
     parse_msg_idle, clear_setcode_cache,
+)
+from engine.bindings import (
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_MZONE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
 )
-from paths import CDB_PATH
+from engine.paths import CDB_PATH
 
 
 # Fiendsmith card IDs (verified from cards.cdb)

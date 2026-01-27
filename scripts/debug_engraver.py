@@ -215,7 +215,7 @@ def run_debug_enumeration(show_all_actions: bool = False):
 
     # Import engine components
     try:
-        from engine_interface import init_card_database, load_library, set_lib
+        from engine.interface import init_card_database, load_library, set_lib
         from combo_enumeration import (
             EnumerationEngine,
             load_locked_library,

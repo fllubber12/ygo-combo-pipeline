@@ -20,7 +20,7 @@ from typing import List, Dict
 from itertools import combinations
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src" / "ygo_combo"))
 
 
 # =============================================================================

@@ -5,9 +5,9 @@ import unittest
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "cffi"))
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
 
-from ml_encoding import (
+from encoding.ml import (
     EncodingConfig, CardFeatures, GlobalFeatures, ActionFeatures,
     CardLocation, CardPosition, CardAttribute, CardType, ActionType,
     StateEncoder, ActionEncoder, HistoryBuffer, ObservationEncoder,

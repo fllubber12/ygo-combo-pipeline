@@ -13,8 +13,8 @@ from pathlib import Path
 # PROJECT ROOT
 # =============================================================================
 
-# Project root is two directories up from src/cffi/
-PROJECT_ROOT = Path(__file__).parents[2]
+# Project root is three directories up from src/ygo_combo/engine/
+PROJECT_ROOT = Path(__file__).parents[3]
 
 # =============================================================================
 # CONFIGURATION FILES

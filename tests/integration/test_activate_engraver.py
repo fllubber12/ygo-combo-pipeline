@@ -12,9 +12,12 @@ This test:
 import io
 import sqlite3
 import struct
+import sys
 from pathlib import Path
 
-from ocg_bindings import (
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
+
+from engine.bindings import (
     ffi, load_library,
     LOCATION_DECK, LOCATION_HAND, LOCATION_EXTRA, LOCATION_GRAVE,
     POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
@@ -25,7 +28,7 @@ from ocg_bindings import (
     MSG_SHUFFLE_DECK, MSG_NEW_TURN, MSG_NEW_PHASE, MSG_MOVE,
     MSG_DRAW, MSG_CONFIRM_CARDS,
 )
-from paths import CDB_PATH, get_scripts_path
+from engine.paths import CDB_PATH, get_scripts_path
 
 
 # Script path

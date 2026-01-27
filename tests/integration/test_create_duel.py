@@ -11,9 +11,12 @@ This test validates that we can:
 """
 
 import sqlite3
+import sys
 from pathlib import Path
 
-from ocg_bindings import ffi, load_library, LOCATION_DECK, LOCATION_HAND, POS_FACEDOWN_DEFENSE
+sys.path.insert(0, str(Path(__file__).parents[2] / "src" / "ygo_combo"))
+
+from engine.bindings import ffi, load_library, LOCATION_DECK, LOCATION_HAND, POS_FACEDOWN_DEFENSE
 
 
 # Card database path

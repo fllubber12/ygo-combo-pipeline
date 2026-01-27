@@ -17,9 +17,9 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "src" / "ygo_combo"))
 
 
 def get_message_constants():
-    """Load message constants from ocg_bindings.py."""
+    """Load message constants from engine.bindings."""
     try:
-        from ocg_bindings import (
+        from engine.bindings import (
             MSG_RETRY, MSG_HINT, MSG_WIN, MSG_SELECT_BATTLECMD,
             MSG_SELECT_IDLECMD, MSG_SELECT_EFFECTYN, MSG_SELECT_YESNO,
             MSG_SELECT_OPTION, MSG_SELECT_CARD, MSG_SELECT_CHAIN,
@@ -117,25 +117,25 @@ def run_audit():
     
     print(f"\nLoaded {len(msg_names)} message type names")
     
-    # Check what's defined in ocg_bindings
-    print("\n📋 Checking ocg_bindings.py...")
+    # Check what's defined in engine.bindings
+    print("\n📋 Checking engine.bindings...")
     try:
-        import ocg_bindings
-        
+        from engine import bindings as ocg_bindings
+
         defined_msgs = []
         for name in dir(ocg_bindings):
             if name.startswith("MSG_"):
                 val = getattr(ocg_bindings, name)
                 if isinstance(val, int):
                     defined_msgs.append((name, val))
-        
+
         print(f"  Found {len(defined_msgs)} MSG_* constants defined:")
         for name, val in sorted(defined_msgs, key=lambda x: x[1]):
             print(f"    {val:3d} = {name}")
             msg_names[val] = name
-    
+
     except ImportError as e:
-        print(f"  Could not import ocg_bindings: {e}")
+        print(f"  Could not import engine.bindings: {e}")
     
     # Check combo_enumeration for handlers
     print("\n📋 Checking combo_enumeration.py for handlers...")
