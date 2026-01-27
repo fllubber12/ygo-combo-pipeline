@@ -483,29 +483,27 @@ def _parse_sum_card_16byte(data: bytes, offset: int, index: int) -> Tuple[dict, 
 def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     """Parse MSG_SELECT_SUM message for material/card selection.
 
-    Format verified against ygopro-core source (playerop.cpp:796-819, card.h:26-31):
-    - Header uses BIG-ENDIAN for target_sum and can_count
-    - Card entries are 18 bytes (including 4-byte position field)
+    CORRECT Format per ygopro-core playerop.cpp:658-685 and yugioh-ai reference:
 
     Header format:
-    - player: 1 byte (offset 0)
-    - select_mode: 1 byte (offset 1) - 0 = exactly equal, 1 = at least equal
-    - select_min: 1 byte (offset 2)
-    - select_max: 1 byte (offset 3)
-    - target_sum: 4 bytes BE (offset 4-7) - target sum
-    - must_count: 4 bytes BE (offset 8-11) - treated as can_count
-    - padding: 3 bytes (offset 12-14)
-    - cards[]: 18 bytes each starting at offset 15
+    - mode: u8 (0=exact, 1=at_least)
+    - player: u8
+    - target_sum: u32 LE (the ONLY u32 besides code/param!)
+    - min: u8 (NOT u32!)
+    - max: u8 (NOT u32!)
+    - must_count: u8 (NOT u32!)
+    - [11 bytes per must_select card]
+    - can_count: u8 (NOT u32!)
+    - [11 bytes per can_select card]
 
-    Card format (18 bytes) from ygopro-core loc_info struct:
+    Card format (11 bytes) - CORRECTED:
     - code: 4 bytes LE (card passcode)
     - controller: 1 byte
     - location: 1 byte
-    - sequence: 4 bytes LE
-    - position: 4 bytes LE (card position flags)
-    - sum_param: 4 bytes LE (level for sum calculation)
-
-    Note: sum_param encodes level in low 16 bits, optional secondary level in high 16 bits.
+    - sequence: 1 byte (NOT 4!)
+    - sum_param: 4 bytes LE
+      - Low 16 bits: primary level/value (op1)
+      - High 16 bits: secondary level (op2, for variable-level cards)
 
     Returns dict with parsed data for _handle_select_sum.
     """
@@ -514,59 +512,35 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
     try:
         offset = 0
 
-        # Header
-        player = raw_data[offset]; offset += 1
-        select_mode = raw_data[offset]; offset += 1
-        select_min = raw_data[offset]; offset += 1
-        select_max = raw_data[offset]; offset += 1
+        # CORRECT header format per ygopro-core and yugioh-ai:
+        # All fields except target_sum and sum_param are u8!
+        mode = raw_data[offset]; offset += 1                    # u8 mode
+        player = raw_data[offset]; offset += 1                   # u8 player
+        target_sum = struct.unpack_from('<I', raw_data, offset)[0]; offset += 4  # u32 LE
+        select_min = raw_data[offset]; offset += 1               # u8 min (NOT u32!)
+        select_max = raw_data[offset]; offset += 1               # u8 max (NOT u32!)
+        must_count = raw_data[offset]; offset += 1               # u8 must_count (NOT u32!)
 
-        # Note: target_sum and card count are BIG-ENDIAN u32 in this ygopro-core build
-        target_sum = struct.unpack_from('>I', raw_data, offset)[0]; offset += 4
-        # The count at offset 8-11 appears to be the selectable card count
-        can_count = struct.unpack_from('>I', raw_data, offset)[0]; offset += 4
-        must_count = 0  # No must-select cards observed in this format
-        offset += 3  # Skip padding bytes to align cards at offset 15
-
-        # Cards (all are can-select in observed data)
-        # Auto-detect card size based on message length and card count
-        # Possible sizes: 11, 16, or 18 bytes per card
-        header_size = 15
-        available_bytes = len(raw_data) - header_size
-
-        # Determine card size from available bytes and expected count
-        # NOTE: This ygopro-core build consistently uses 16-byte card format
-        # (without the 4-byte position field). The engine may pad messages to
-        # 18 bytes but sum_param is always at offset 10, not 14. So we always
-        # use 16-byte parsing and handle extra padding gracefully.
-        if can_count > 0:
-            bytes_per_card = available_bytes // can_count
-            # Always use 16-byte parser for this engine (sum_param at offset 10)
-            # Only fall back to 11-byte if there's truly not enough data
-            if bytes_per_card >= 16:
-                card_size = 16
-                parse_func = _parse_sum_card_16byte
-            else:
-                card_size = 11
-                parse_func = _parse_sum_card_11byte
-        else:
-            card_size = 16  # Default
-            parse_func = _parse_sum_card_16byte
-
-        max_complete_cards = available_bytes // card_size
-
+        # Parse must-select cards using CORRECT 11-byte format
         must_select = []
-        can_select = []
-        cards_to_parse = min(can_count, max_complete_cards)
-        for i in range(cards_to_parse):
-            card, offset = parse_func(raw_data, offset, i)
-            can_select.append(card)
+        for i in range(must_count):
+            if offset + 11 <= len(raw_data):
+                card, offset = _parse_sum_card_11byte(raw_data, offset, i)
+                must_select.append(card)
 
-        # Note: can_count in result reflects header value for selection logic
-        # Actual parsed cards may be fewer if message was truncated
+        # Read can_count - u8 (NOT u32!)
+        can_count = raw_data[offset]; offset += 1
+
+        # Parse can_select cards using CORRECT 11-byte format
+        can_select = []
+        for i in range(can_count):
+            if offset + 11 <= len(raw_data):
+                card, offset = _parse_sum_card_11byte(raw_data, offset, i)
+                can_select.append(card)
 
         return {
             'player': player,
-            'select_mode': select_mode,
+            'select_mode': mode,
             'target_sum': target_sum,
             'min': select_min,
             'max': select_max,
@@ -574,7 +548,7 @@ def parse_select_sum(data: Union[bytes, BinaryIO]) -> Dict[str, Any]:
             'must_select': must_select,
             'can_count': can_count,
             'can_select': can_select,
-            '_raw_hex': raw_data.hex(),  # DEBUG: always include for analysis
+            '_raw_hex': raw_data.hex(),  # DEBUG: include for analysis
             '_raw_len': len(raw_data),
         }
 

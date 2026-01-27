@@ -28,10 +28,7 @@ from typing import List, Dict, Any, Tuple
 
 # Import shared types to avoid circular imports
 # These are re-exported for backwards compatibility
-try:
-    from .types import Action, TerminalState
-except ImportError:
-    from types import Action, TerminalState
+from .types import Action, TerminalState
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -100,20 +97,22 @@ from .enumeration.handlers import MessageHandlerMixin
 # =============================================================================
 
 MSG_TYPE_NAMES = {
-    11: "MSG_IDLE",
+    # Values from ygopro-core/ocgapi_constants.h (verified 2026-01-27)
+    10: "MSG_SELECT_BATTLECMD",
+    11: "MSG_IDLE",  # MSG_SELECT_IDLECMD
     12: "MSG_SELECT_EFFECTYN",
     13: "MSG_SELECT_YESNO",
     14: "MSG_SELECT_OPTION",
     15: "MSG_SELECT_CARD",
     16: "MSG_SELECT_CHAIN",
-    17: "MSG_SELECT_TRIBUTE",
     18: "MSG_SELECT_PLACE",
     19: "MSG_SELECT_POSITION",
+    20: "MSG_SELECT_TRIBUTE",
     22: "MSG_SELECT_COUNTER",
-    23: "MSG_SELECT_SUM",
+    23: "MSG_SELECT_SUM",  # CRITICAL: Was mapped to 26, now correct
     24: "MSG_SELECT_DISFIELD",
     25: "MSG_SORT_CARD",
-    26: "MSG_SELECT_UNSELECT_CARD",
+    26: "MSG_SELECT_UNSELECT_CARD",  # CRITICAL: Was mapped to 25, now correct
 }
 
 

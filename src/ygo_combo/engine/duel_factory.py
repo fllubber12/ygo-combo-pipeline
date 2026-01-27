@@ -17,7 +17,7 @@ try:
         POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
     )
     from .interface import (
-        preload_utility_scripts,
+        preload_utility_scripts, set_lib,
         py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
     )
     from .paths import LOCKED_LIBRARY_PATH
@@ -28,7 +28,7 @@ except ImportError:
         POS_FACEDOWN_DEFENSE, POS_FACEUP_ATTACK,
     )
     from engine.interface import (
-        preload_utility_scripts,
+        preload_utility_scripts, set_lib,
         py_card_reader, py_card_reader_done, py_script_reader, py_log_handler,
     )
     from engine.paths import LOCKED_LIBRARY_PATH
@@ -37,6 +37,51 @@ logger = logging.getLogger(__name__)
 
 # Constants path (same directory as locked library)
 CONSTANTS_PATH = LOCKED_LIBRARY_PATH.parent / "constants.json"
+
+
+def preload_card_scripts(lib, duel, card_codes: List[int]) -> int:
+    """Preload card scripts proactively to bypass callback self_table issue.
+
+    The py_script_reader callback has an issue where calling OCG_LoadScript()
+    from within the callback loses the self_table context, causing GetID() to
+    return nil. By preloading scripts before cards are added to the duel,
+    we bypass this issue entirely.
+
+    Args:
+        lib: The ygopro-core library instance
+        duel: The duel instance
+        card_codes: List of card passcodes to preload scripts for
+
+    Returns:
+        Number of scripts successfully loaded
+    """
+    try:
+        from .interface import get_scripts_path
+    except ImportError:
+        from engine.interface import get_scripts_path
+
+    script_path = get_scripts_path()
+    loaded = 0
+    seen = set()  # Avoid loading same script twice
+
+    for code in card_codes:
+        if code in seen or code == 0:
+            continue
+        seen.add(code)
+
+        script_file = script_path / "official" / f"c{code}.lua"
+        if script_file.exists():
+            try:
+                content = script_file.read_bytes()
+                script_name = f"c{code}.lua".encode('utf-8')
+                result = lib.OCG_LoadScript(duel, content, len(content), script_name)
+                if result == 1:
+                    loaded += 1
+            except Exception as e:
+                logger.warning(f"Failed to preload script for card {code}: {e}")
+
+    logger.debug(f"Preloaded {loaded} card scripts")
+    return loaded
 
 
 def _load_constants() -> Dict[str, Any]:
@@ -121,6 +166,10 @@ def create_duel(lib, main_deck_cards: List[int], extra_deck_cards: List[int],
     Raises:
         RuntimeError: If duel creation fails
     """
+    # CRITICAL: Set the library reference for callbacks
+    # The py_script_reader callback uses a global _lib which must be set
+    set_lib(lib)
+
     options = ffi.new("OCG_DuelOptions*")
 
     # Fixed seed for reproducibility
@@ -155,6 +204,10 @@ def create_duel(lib, main_deck_cards: List[int], extra_deck_cards: List[int],
 
     duel = duel_ptr[0]
     preload_utility_scripts(lib, duel)
+
+    # NOTE: Removed card script preloading - it doesn't work because
+    # OCG_LoadScript() called outside load_card_script() has no self_table context.
+    # The callback path should work if self_table is set when the callback runs.
 
     # === HAND: Use provided hand or default ===
     if starting_hand is not None:

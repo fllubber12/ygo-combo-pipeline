@@ -370,13 +370,19 @@ def py_card_reader_done(payload, data):
 
 @ffi.callback("int(void*, OCG_Duel, const char*)")
 def py_script_reader(payload, duel, name):
-    """Callback to load Lua scripts for cards."""
+    """Callback to load Lua scripts for cards.
+
+    NOTE: This callback is triggered by the engine when it needs a script.
+    When called from within load_card_script(), self_table should be set.
+    We call OCG_LoadScript() to actually load the script content.
+    """
     global _lib
+
+    script_name = ffi.string(name).decode("utf-8")
 
     if _lib is None:
         return 0
 
-    script_name = ffi.string(name).decode("utf-8")
     script_path = get_scripts_path()
 
     # Search paths in order
@@ -404,6 +410,8 @@ def py_script_reader(payload, duel, name):
                     len(script_content),
                     name
                 )
+                if result != 1:
+                    logging.debug(f"[SCRIPT_READER] OCG_LoadScript returned {result} for {script_name}")
                 return 1 if result == 1 else 0
             except Exception as e:
                 logging.warning(f"Script load error for {script_name}: {e}")

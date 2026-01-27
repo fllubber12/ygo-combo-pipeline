@@ -458,24 +458,56 @@ class MessageHandlerMixin:
         mode_str = "exact" if select_mode == 0 else "at_least"
         self.log(f"SELECT_SUM: target={target_sum} ({mode_str}), select {min_cards}-{max_cards} cards", depth)
 
-        # Debug output
-        if self.verbose and "_raw_hex" in msg_data:
-            raw_hex = msg_data['_raw_hex']
-            raw_len = msg_data.get('_raw_len', len(raw_hex)//2)
-            self.log(f"  RAW ({raw_len} bytes): {raw_hex[:80]}{'...' if len(raw_hex) > 80 else ''}", depth)
-            if raw_len >= 33:
-                self.log(f"  Card0 bytes (offset 15): {raw_hex[30:66]}", depth)
+        # === DEBUG: Show what triggered this SELECT_SUM ===
+        if action_history:
+            last_action = action_history[-1]
+            self.log(f"  TRIGGERED BY: {last_action.action_type} - {last_action.description}", depth)
+
+        # === DEBUG: Always show raw bytes for SELECT_SUM ===
+        raw_hex = msg_data.get('_raw_hex', '')
+        raw_len = msg_data.get('_raw_len', 0)
+        if raw_hex:
+            self.log(f"  RAW BYTES ({raw_len} bytes):", depth)
+            # Show first 40 bytes in readable chunks
+            for i in range(0, min(80, len(raw_hex)), 16):
+                chunk = raw_hex[i:i+16]
+                byte_offset = i // 2
+                self.log(f"    [{byte_offset:3d}]: {chunk}", depth)
+
+            # Parse manually to verify
+            if raw_len >= 9:
+                raw_bytes = bytes.fromhex(raw_hex)
+                mode_byte = raw_bytes[0]
+                player_byte = raw_bytes[1]
+                target_bytes = raw_bytes[2:6]
+                target_u32 = int.from_bytes(target_bytes, 'little')
+                min_byte = raw_bytes[6]
+                max_byte = raw_bytes[7]
+                must_count_byte = raw_bytes[8]
+                self.log(f"  MANUAL PARSE: mode={mode_byte} player={player_byte} target={target_u32} (0x{target_u32:08x})", depth)
+                self.log(f"               min={min_byte} max={max_byte} must_count={must_count_byte}", depth)
+
+        # === DEBUG: Check if target_sum is suspiciously encoded ===
+        if target_sum > 0:
+            self.log(f"  TARGET ANALYSIS: {target_sum} = 0x{target_sum:04x} = binary {target_sum:016b}", depth)
 
         if "_parse_error" in msg_data:
             self.log(f"  PARSE ERROR: {msg_data['_parse_error']}", depth)
 
-        if self.verbose:
-            for i, card in enumerate(must_select):
-                name = get_card_name(card.get("code", 0))
-                self.log(f"  must[{i}]: {name} level={card.get('level', 0)} (sum_param=0x{card.get('sum_param', 0):08x})", depth)
-            for i, card in enumerate(can_select):
-                name = get_card_name(card.get("code", 0))
-                self.log(f"  can[{i}]: {name} level={card.get('level', 0)} (sum_param=0x{card.get('sum_param', 0):08x})", depth)
+        # === DEBUG: Always show card info for SELECT_SUM ===
+        self.log(f"  MUST_SELECT ({len(must_select)} cards):", depth)
+        for i, card in enumerate(must_select):
+            name = get_card_name(card.get("code", 0))
+            self.log(f"    [{i}]: {name} (code={card.get('code',0)}) level={card.get('level',0)} value={card.get('value',0)} sum_param=0x{card.get('sum_param',0):08x}", depth)
+
+        self.log(f"  CAN_SELECT ({len(can_select)} cards):", depth)
+        for i, card in enumerate(can_select):
+            name = get_card_name(card.get("code", 0))
+            self.log(f"    [{i}]: {name} (code={card.get('code',0)}) level={card.get('level',0)} value={card.get('value',0)} sum_param=0x{card.get('sum_param',0):08x}", depth)
+
+        # === DEBUG: Show sum of all available card values ===
+        all_values = [c.get('value', 0) for c in can_select]
+        self.log(f"  ALL VALUES: {all_values} (sum={sum(all_values)})", depth)
 
         # Branch 1: Cancel the selection
         # Mark the preceding SELECT_CARD choice as failed at its context
@@ -512,6 +544,11 @@ class MessageHandlerMixin:
                 actual_target = expected_sum
                 self.log(f"  Adjusted target: {target_sum} -> {actual_target} (card_value={first_card_value})", depth)
 
+        # === DEBUG: Show what we're asking find_valid_sum_combinations ===
+        self.log(f"  CALLING find_valid_sum_combinations:", depth)
+        self.log(f"    actual_target={actual_target}, min={min_cards}, max={max_cards}, mode={select_mode}", depth)
+        self.log(f"    can_select values: {[c.get('value',0) for c in can_select]}", depth)
+
         valid_combos = find_valid_sum_combinations(
             must_select=must_select,
             can_select=can_select,
@@ -522,6 +559,20 @@ class MessageHandlerMixin:
         )
 
         self.log(f"  Found {len(valid_combos)} valid sum combinations", depth)
+
+        # === DEBUG: If no combos found, explain why ===
+        if len(valid_combos) == 0:
+            from itertools import combinations
+            values = [c.get('value', 0) for c in can_select]
+            self.log(f"  DEBUG: Why no combos? Checking all combinations...", depth)
+            for n in range(min_cards, min(max_cards + 1, len(can_select) + 1)):
+                for combo in combinations(range(len(values)), n):
+                    combo_values = [values[i] for i in combo]
+                    combo_sum = sum(combo_values)
+                    if combo_sum == actual_target or (select_mode == 1 and combo_sum >= actual_target):
+                        self.log(f"    MISSED: indices={combo} values={combo_values} sum={combo_sum}", depth)
+                    if n == min_cards and len(list(combinations(range(len(values)), n))) <= 10:
+                        self.log(f"    combo={combo} values={combo_values} sum={combo_sum} (target={actual_target})", depth)
 
         # Deduplicate combinations by card codes
         seen_code_combos = set()
@@ -534,10 +585,14 @@ class MessageHandlerMixin:
             seen_code_combos.add(combo_codes)
 
             full_indices = list(combo_indices)
-            count = len(full_indices)
-            response = struct.pack('<iI', 0, count)
-            for idx in full_indices:
-                response += struct.pack('<I', idx)
+            # CORRECT SELECT_SUM response format per ygopro-core playerop.cpp:694-712:
+            # Raw u8 bytes: [total_count] + [must_indices] + [selected_indices]
+            # NO type prefix! All values are u8 (single bytes).
+            # total_count = must_count + selected_count
+            # must_indices are typically all 0 (indices 0..must_count-1)
+            must_count = len(must_select)
+            total_count = must_count + len(full_indices)
+            response = bytes([total_count] + [0] * must_count + full_indices)
 
             if self.verbose:
                 hex_resp = response.hex()
@@ -562,7 +617,10 @@ class MessageHandlerMixin:
         # Fallback if no valid combinations found
         if not valid_combos and can_select:
             self.log(f"  No valid combos, trying fallback (index 0)", depth)
-            fallback_response = struct.pack("<iII", 0, 1, 0)
+            # CORRECT SELECT_SUM response format: raw u8 bytes, NO type prefix
+            # Format: [total_count] + [must_indices] + [selected_indices]
+            must_count = len(must_select)
+            fallback_response = bytes([must_count + 1] + [0] * must_count + [0])
             fallback_action = Action(
                 action_type="SELECT_SUM_FALLBACK",
                 message_type=MSG_SELECT_SUM,
