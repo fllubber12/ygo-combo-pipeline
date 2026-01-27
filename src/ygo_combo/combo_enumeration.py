@@ -214,68 +214,33 @@ MSG_TYPE_NAMES = {
 
 
 # =============================================================================
-# SUM ENUMERATION - Now imported from enumeration.sum_utils
+# CONFIGURATION
 # =============================================================================
-# Functions moved to src/ygo_combo/enumeration/sum_utils.py:
-# - find_valid_sum_combinations()
-# - find_sum_combinations_flexible()
 
-
-# =============================================================================
-# CONFIGURATION - Now imported from engine.duel_factory
-# =============================================================================
-# ENGRAVER, HOLACTIE constants imported from engine.duel_factory
-# load_locked_library(), get_deck_lists(), create_duel() imported from engine.duel_factory
-
-# Limits
 MAX_DEPTH = 50          # Maximum actions per path
 MAX_PATHS = 100000      # Maximum paths to explore (safety limit)
 MAX_ITERATIONS = 1000   # Maximum engine iterations per action
 
-# =============================================================================
-# DATA STRUCTURES - Now imported from types.py
-# =============================================================================
-# Action and TerminalState are now defined in src/ygo_combo/types.py
-# to avoid circular import issues. They are imported at the top of this file
-# and re-exported for backwards compatibility.
-#
-# See: src/ygo_combo/types.py
-
-
-# =============================================================================
-# LIBRARY LOADING & DUEL CREATION - Now imported from engine.duel_factory
-# =============================================================================
-# Functions moved to src/ygo_combo/engine/duel_factory.py:
-# - load_locked_library()
-# - get_deck_lists()
-# - create_duel()
-
-
-# =============================================================================
-# MESSAGE PARSING - Moved to enumeration/parsers.py
-# =============================================================================
-# Functions: read_u8, read_u16, read_u32, read_i32, read_u64
-#            parse_idle, parse_select_card, parse_select_chain, parse_select_place,
-#            parse_select_unselect_card, parse_select_option, parse_select_tribute,
-#            parse_select_sum, find_valid_tribute_combinations
-# Import from: enumeration.parsers
-
-
-# Legacy definitions removed - now imported from enumeration submodule
-# (Keeping parse_query_response here as it uses QUERY_* constants)
-
-# Marker for parser removal start
-# (Functions removed - now imported from enumeration submodule)
-
-
-# =============================================================================
-# BOARD STATE CAPTURE - Now imported from engine.board_capture
-# =============================================================================
-# Functions moved to src/ygo_combo/engine/board_capture.py:
-# - parse_query_response()
-# - compute_board_signature()
-# - compute_idle_state_hash()
-# - capture_board_state()
+# Informational messages that don't require responses (for _explore_from_state)
+INFORMATIONAL_MESSAGES = {
+    MSG_HINT, MSG_WAITING, MSG_START, MSG_WIN, MSG_UPDATE_DATA, MSG_UPDATE_CARD,
+    MSG_CONFIRM_DECKTOP, MSG_CONFIRM_CARDS, MSG_SHUFFLE_DECK, MSG_SHUFFLE_HAND,
+    MSG_REFRESH_DECK, MSG_SWAP_GRAVE_DECK, MSG_SHUFFLE_SET_CARD, MSG_REVERSE_DECK,
+    MSG_DECK_TOP, MSG_SHUFFLE_EXTRA, MSG_NEW_TURN, MSG_NEW_PHASE, MSG_CONFIRM_EXTRATOP,
+    MSG_MOVE, MSG_POS_CHANGE, MSG_SET, MSG_SWAP, MSG_FIELD_DISABLED,
+    MSG_SUMMONING, MSG_SUMMONED, MSG_SPSUMMONING, MSG_SPSUMMONED,
+    MSG_FLIPSUMMONING, MSG_FLIPSUMMONED, MSG_CHAINING, MSG_CHAINED,
+    MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED, MSG_CHAIN_END, MSG_CHAIN_NEGATED, MSG_CHAIN_DISABLED,
+    MSG_CARD_SELECTED, MSG_RANDOM_SELECTED, MSG_BECOME_TARGET,
+    MSG_DRAW, MSG_DAMAGE, MSG_RECOVER, MSG_EQUIP, MSG_LPUPDATE, MSG_UNEQUIP,
+    MSG_CARD_TARGET, MSG_CANCEL_TARGET, MSG_PAY_LPCOST, MSG_ADD_COUNTER, MSG_REMOVE_COUNTER,
+    MSG_ATTACK, MSG_BATTLE, MSG_ATTACK_DISABLED, MSG_DAMAGE_STEP_START, MSG_DAMAGE_STEP_END,
+    MSG_MISSED_EFFECT, MSG_BE_CHAIN_TARGET, MSG_CREATE_RELATION, MSG_RELEASE_RELATION,
+    MSG_TOSS_COIN, MSG_TOSS_DICE, MSG_ROCK_PAPER_SCISSORS, MSG_HAND_RES,
+    MSG_ANNOUNCE_RACE, MSG_ANNOUNCE_ATTRIB, MSG_ANNOUNCE_CARD, MSG_ANNOUNCE_NUMBER,
+    MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME, MSG_SHOW_HINT, MSG_PLAYER_HINT,
+    MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
+}
 
 
 # =============================================================================
@@ -557,28 +522,6 @@ class EnumerationEngine(MessageHandlerMixin):
 
     def _explore_from_state(self, duel, action_history: List[Action]):
         """Explore all branches from current duel state."""
-
-        # Informational message types that don't require responses
-        INFORMATIONAL = {
-            MSG_HINT, MSG_WAITING, MSG_START, MSG_WIN, MSG_UPDATE_DATA, MSG_UPDATE_CARD,
-            MSG_CONFIRM_DECKTOP, MSG_CONFIRM_CARDS, MSG_SHUFFLE_DECK, MSG_SHUFFLE_HAND,
-            MSG_REFRESH_DECK, MSG_SWAP_GRAVE_DECK, MSG_SHUFFLE_SET_CARD, MSG_REVERSE_DECK,
-            MSG_DECK_TOP, MSG_SHUFFLE_EXTRA, MSG_NEW_TURN, MSG_NEW_PHASE, MSG_CONFIRM_EXTRATOP,
-            MSG_MOVE, MSG_POS_CHANGE, MSG_SET, MSG_SWAP, MSG_FIELD_DISABLED,
-            MSG_SUMMONING, MSG_SUMMONED, MSG_SPSUMMONING, MSG_SPSUMMONED,
-            MSG_FLIPSUMMONING, MSG_FLIPSUMMONED, MSG_CHAINING, MSG_CHAINED,
-            MSG_CHAIN_SOLVING, MSG_CHAIN_SOLVED, MSG_CHAIN_END, MSG_CHAIN_NEGATED, MSG_CHAIN_DISABLED,
-            MSG_CARD_SELECTED, MSG_RANDOM_SELECTED, MSG_BECOME_TARGET,
-            MSG_DRAW, MSG_DAMAGE, MSG_RECOVER, MSG_EQUIP, MSG_LPUPDATE, MSG_UNEQUIP,
-            MSG_CARD_TARGET, MSG_CANCEL_TARGET, MSG_PAY_LPCOST, MSG_ADD_COUNTER, MSG_REMOVE_COUNTER,
-            MSG_ATTACK, MSG_BATTLE, MSG_ATTACK_DISABLED, MSG_DAMAGE_STEP_START, MSG_DAMAGE_STEP_END,
-            MSG_MISSED_EFFECT, MSG_BE_CHAIN_TARGET, MSG_CREATE_RELATION, MSG_RELEASE_RELATION,
-            MSG_TOSS_COIN, MSG_TOSS_DICE, MSG_ROCK_PAPER_SCISSORS, MSG_HAND_RES,
-            MSG_ANNOUNCE_RACE, MSG_ANNOUNCE_ATTRIB, MSG_ANNOUNCE_CARD, MSG_ANNOUNCE_NUMBER,
-            MSG_CARD_HINT, MSG_TAG_SWAP, MSG_RELOAD_FIELD, MSG_AI_NAME, MSG_SHOW_HINT, MSG_PLAYER_HINT,
-            MSG_MATCH_KILL, MSG_CUSTOM_MSG, MSG_REMOVE_CARDS,
-        }
-
         for iteration in range(MAX_ITERATIONS):
             status = self.lib.OCG_DuelProcess(duel)
             messages = self._get_messages(duel)
@@ -588,7 +531,7 @@ class EnumerationEngine(MessageHandlerMixin):
             for msg_type, msg_data in messages:
 
                 # Skip informational messages
-                if msg_type in INFORMATIONAL:
+                if msg_type in INFORMATIONAL_MESSAGES:
                     continue
 
                 if msg_type == MSG_IDLE:
