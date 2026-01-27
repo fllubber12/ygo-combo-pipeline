@@ -488,6 +488,100 @@ class TestTranspositionTable(unittest.TestCase):
         result = tt.lookup("state_x")
         self.assertEqual(result.visit_count, 5)  # 1 initial + 4 lookups
 
+    def test_size_history_tracking(self):
+        """Size history is recorded when track_history=True."""
+        tt = TranspositionTable(max_size=10000, track_history=True)
+        tt._snapshot_interval = 10  # Record every 10 stores for testing
+
+        # Store enough entries to trigger snapshots
+        for i in range(25):
+            entry = TranspositionEntry(f"state_{i}", "", 0.0, 0, 1)
+            tt.store(f"state_{i}", entry)
+
+        history = tt.get_size_history()
+        self.assertGreater(len(history), 0)
+
+        # History entries should be (timestamp, size) tuples
+        for timestamp, size in history:
+            self.assertIsInstance(timestamp, float)
+            self.assertIsInstance(size, int)
+            self.assertGreater(size, 0)
+
+    def test_size_history_disabled_by_default(self):
+        """Size history is not tracked by default."""
+        tt = TranspositionTable(max_size=10000)
+
+        for i in range(100):
+            entry = TranspositionEntry(f"state_{i}", "", 0.0, 0, 1)
+            tt.store(f"state_{i}", entry)
+
+        history = tt.get_size_history()
+        self.assertEqual(len(history), 0)
+
+    def test_growth_rate_calculation(self):
+        """Growth rate is calculated correctly."""
+        tt = TranspositionTable(max_size=10000, track_history=True)
+        tt._snapshot_interval = 5
+
+        # Store entries to get at least 2 snapshots
+        for i in range(15):
+            entry = TranspositionEntry(f"state_{i}", "", 0.0, 0, 1)
+            tt.store(f"state_{i}", entry)
+
+        growth_rate = tt.get_growth_rate()
+        # Growth rate should be positive (we added entries)
+        self.assertGreaterEqual(growth_rate, 0.0)
+
+    def test_growth_rate_no_history(self):
+        """Growth rate returns 0 when no history."""
+        tt = TranspositionTable(max_size=10000, track_history=False)
+        growth_rate = tt.get_growth_rate()
+        self.assertEqual(growth_rate, 0.0)
+
+    def test_clear_resets_history(self):
+        """Clear resets size history."""
+        tt = TranspositionTable(max_size=10000, track_history=True)
+        tt._snapshot_interval = 5
+
+        for i in range(20):
+            entry = TranspositionEntry(f"state_{i}", "", 0.0, 0, 1)
+            tt.store(f"state_{i}", entry)
+
+        self.assertGreater(len(tt.get_size_history()), 0)
+
+        tt.clear()
+
+        self.assertEqual(len(tt.get_size_history()), 0)
+        self.assertEqual(len(tt), 0)
+
+    def test_print_report_runs(self):
+        """print_report executes without error."""
+        import io
+        import sys
+
+        tt = TranspositionTable(max_size=100, track_history=True)
+        tt._snapshot_interval = 5
+
+        # Add some data
+        for i in range(20):
+            entry = TranspositionEntry(f"state_{i}", "", float(i), i % 5, 1)
+            tt.store(f"state_{i}", entry)
+            tt.lookup(f"state_{i}")
+
+        # Capture output
+        captured = io.StringIO()
+        sys.stdout = captured
+        try:
+            tt.print_report("Test Report")
+        finally:
+            sys.stdout = sys.__stdout__
+
+        output = captured.getvalue()
+        self.assertIn("Test Report", output)
+        self.assertIn("SIZE METRICS", output)
+        self.assertIn("CACHE PERFORMANCE", output)
+        self.assertIn("Hit rate", output)
+
 
 class TestIntegration(unittest.TestCase):
     """Integration tests combining multiple components."""

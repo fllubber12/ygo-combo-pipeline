@@ -5,8 +5,9 @@ Uses Zobrist hashing for O(1) incremental updates when available,
 with fallback to string hashes for backwards compatibility.
 """
 
-from typing import Dict, Optional, Union
-from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass, field
+import time
 
 
 @dataclass
@@ -49,13 +50,14 @@ class TranspositionTable:
         misses: Number of failed lookups
     """
 
-    def __init__(self, max_size: int = 1_000_000):
+    def __init__(self, max_size: int = 1_000_000, track_history: bool = False):
         """
         Initialize the transposition table.
 
         Args:
             max_size: Maximum entries before eviction triggers.
                      Default 1M entries ≈ 100-200MB depending on entry size.
+            track_history: If True, record size snapshots over time for analysis.
         """
         self.table: Dict[Union[int, str], TranspositionEntry] = {}
         self.max_size = max_size
@@ -65,6 +67,13 @@ class TranspositionTable:
         self.evicted_entries = 0
         self.stores = 0
         self.overwrites = 0
+
+        # Size history tracking
+        self.track_history = track_history
+        self.size_history: List[Tuple[float, int]] = []  # (timestamp, size)
+        self._start_time = time.time()
+        self._last_snapshot_size = 0
+        self._snapshot_interval = 1000  # Record every N stores
 
     def lookup(self, state_hash: Union[int, str]) -> Optional[TranspositionEntry]:
         """
@@ -100,6 +109,10 @@ class TranspositionTable:
             self._evict()
         self.table[state_hash] = entry
 
+        # Record size history periodically
+        if self.track_history and self.stores % self._snapshot_interval == 0:
+            self._record_snapshot()
+
     def _evict(self):
         """
         Remove least valuable entries when full.
@@ -129,6 +142,106 @@ class TranspositionTable:
         for key, _ in sorted_entries[:to_remove]:
             del self.table[key]
 
+    def _record_snapshot(self):
+        """Record current table size with timestamp."""
+        elapsed = time.time() - self._start_time
+        current_size = len(self.table)
+        self.size_history.append((elapsed, current_size))
+        self._last_snapshot_size = current_size
+
+    def get_size_history(self) -> List[Tuple[float, int]]:
+        """
+        Get recorded size history.
+
+        Returns:
+            List of (elapsed_seconds, table_size) tuples.
+        """
+        return self.size_history.copy()
+
+    def get_growth_rate(self) -> float:
+        """
+        Calculate average growth rate (entries per second).
+
+        Returns:
+            Average entries added per second, or 0.0 if no history.
+        """
+        if len(self.size_history) < 2:
+            return 0.0
+        first_time, first_size = self.size_history[0]
+        last_time, last_size = self.size_history[-1]
+        time_delta = last_time - first_time
+        if time_delta <= 0:
+            return 0.0
+        return (last_size - first_size) / time_delta
+
+    def print_report(self, title: str = "Transposition Table Report"):
+        """
+        Print a formatted report of transposition table statistics.
+
+        Args:
+            title: Title for the report header.
+        """
+        stats = self.stats()
+
+        print(f"\n{'=' * 60}")
+        print(f"{title:^60}")
+        print(f"{'=' * 60}")
+
+        # Size metrics
+        print(f"\n{'SIZE METRICS':^60}")
+        print(f"{'-' * 60}")
+        print(f"  Current entries:     {stats['size']:>12,}")
+        print(f"  Maximum capacity:    {stats['max_size']:>12,}")
+        print(f"  Utilization:         {stats['size'] / stats['max_size'] * 100:>11.1f}%")
+
+        # Cache performance
+        print(f"\n{'CACHE PERFORMANCE':^60}")
+        print(f"{'-' * 60}")
+        print(f"  Hits:                {stats['hits']:>12,}")
+        print(f"  Misses:              {stats['misses']:>12,}")
+        print(f"  Hit rate:            {stats['hit_rate'] * 100:>11.1f}%")
+
+        # Write operations
+        print(f"\n{'WRITE OPERATIONS':^60}")
+        print(f"{'-' * 60}")
+        print(f"  Total stores:        {stats['stores']:>12,}")
+        print(f"  Overwrites:          {stats['overwrites']:>12,}")
+        print(f"  Eviction rounds:     {stats['evictions']:>12,}")
+        print(f"  Entries evicted:     {stats['evicted_entries']:>12,}")
+
+        # Depth analysis
+        print(f"\n{'DEPTH ANALYSIS':^60}")
+        print(f"{'-' * 60}")
+        print(f"  Average depth:       {stats['avg_depth']:>12.1f}")
+        depth_dist = stats['depth_distribution']
+        if depth_dist:
+            print(f"  Depth range:         {min(depth_dist.keys()):>5} - {max(depth_dist.keys())}")
+            # Show top 5 depths by count
+            top_depths = sorted(depth_dist.items(), key=lambda x: -x[1])[:5]
+            print(f"  Top depths:          ", end="")
+            print(", ".join(f"d{d}:{c}" for d, c in top_depths))
+
+        # Visit analysis
+        print(f"\n{'VISIT ANALYSIS':^60}")
+        print(f"{'-' * 60}")
+        print(f"  Max visits:          {stats['max_visits']:>12,}")
+        print(f"  Avg visits:          {stats['avg_visits']:>12.2f}")
+
+        # Growth history (if tracked)
+        if self.size_history:
+            print(f"\n{'GROWTH HISTORY':^60}")
+            print(f"{'-' * 60}")
+            print(f"  Snapshots recorded:  {len(self.size_history):>12,}")
+            growth_rate = self.get_growth_rate()
+            print(f"  Growth rate:         {growth_rate:>10.1f} entries/sec")
+            if self.size_history:
+                first_t, first_s = self.size_history[0]
+                last_t, last_s = self.size_history[-1]
+                print(f"  Initial size:        {first_s:>12,} @ {first_t:.1f}s")
+                print(f"  Final size:          {last_s:>12,} @ {last_t:.1f}s")
+
+        print(f"\n{'=' * 60}\n")
+
     def clear(self):
         """Clear all entries and reset statistics."""
         self.table.clear()
@@ -138,6 +251,9 @@ class TranspositionTable:
         self.evicted_entries = 0
         self.stores = 0
         self.overwrites = 0
+        self.size_history.clear()
+        self._start_time = time.time()
+        self._last_snapshot_size = 0
 
     def stats(self) -> dict:
         """
