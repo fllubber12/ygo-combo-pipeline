@@ -35,7 +35,8 @@ CDB_PATH = PROJECT_ROOT / "cards.cdb"
 # BUILD ARTIFACTS
 # =============================================================================
 
-BUILD_DIR = Path(__file__).parent / "build"
+# Build directory is at src/ygo_combo/build/ (one level up from engine/)
+BUILD_DIR = Path(__file__).parent.parent / "build"
 
 
 def get_lib_extension() -> str:

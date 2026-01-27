@@ -7,7 +7,10 @@ import io
 import struct
 from typing import Union, Dict, Any, Tuple, List, BinaryIO
 
-from ..cards.validator import CardValidator
+try:
+    from ..cards.validator import CardValidator
+except ImportError:
+    from cards.validator import CardValidator
 
 
 # =============================================================================
