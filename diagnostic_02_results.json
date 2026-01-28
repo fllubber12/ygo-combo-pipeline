@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-01-27T18:03:26.199673",
+  "params": {
+    "max_depth": 40,
+    "max_paths": 5000
+  },
+  "stats": {
+    "terminals": 553,
+    "paths_explored": 5000,
+    "max_depth_seen": 39,
+    "elapsed_seconds": 141.031316
+  },
+  "targets": {
+    "caesar_found": 9,
+    "abaoaqu_found": 0,
+    "both_found": 0,
+    "gold_standard_achieved": false
+  },
+  "depth_distribution": {
+    "25": 4,
+    "35": 20,
+    "34": 28,
+    "28": 7,
+    "33": 9,
+    "40": 333,
+    "36": 36,
+    "37": 21,
+    "30": 3,
+    "27": 3,
+    "26": 2,
+    "22": 3,
+    "24": 1,
+    "19": 1,
+    "38": 17,
+    "32": 7,
+    "29": 5,
+    "39": 40,
+    "31": 7,
+    "20": 1,
+    "16": 1,
+    "12": 1,
+    "9": 1,
+    "3": 1,
+    "1": 1
+  }
+}

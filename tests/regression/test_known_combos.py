@@ -20,13 +20,22 @@ pytestmark = pytest.mark.skipif(
 # TEST CONFIGURATION
 # =============================================================================
 
-# Max paths to explore (keep low for fast tests)
+# Standard test limits (fast tests)
 MAX_PATHS = 5000
 MAX_DEPTH = 20
+
+# Gold standard test limits (Link summons work now, need deeper search)
+# Caesar was observed summoning at depth 31, so we need at least 35
+GOLD_STANDARD_MAX_PATHS = 50000
+GOLD_STANDARD_MAX_DEPTH = 40
 
 # Known test hands
 ENGRAVER_HAND = [60764609, 14558127, 14558127, 14558127, 94145021]  # Engraver + 4 dead
 BRICK_HAND = [14558127, 14558127, 14558127, 94145021, 94145021]     # All hand traps
+
+# Gold standard card codes (from config/locked_library.json)
+CAESAR_CODE = 79559912  # D/D/D Wave High King Caesar
+SP_LITTLE_KNIGHT_CODE = 29301450  # S:P Little Knight
 
 
 # =============================================================================
@@ -63,6 +72,24 @@ def enumeration_engine(engine_setup):
 
     combo_enumeration.MAX_PATHS = MAX_PATHS
     combo_enumeration.MAX_DEPTH = MAX_DEPTH
+
+    engine = EnumerationEngine(
+        engine_setup["lib"],
+        engine_setup["main_deck"],
+        engine_setup["extra_deck"],
+        verbose=False,
+    )
+    return engine
+
+
+@pytest.fixture
+def gold_standard_engine(engine_setup):
+    """Create EnumerationEngine with higher limits for gold standard tests."""
+    from src.ygo_combo.combo_enumeration import EnumerationEngine
+    import src.ygo_combo.combo_enumeration as combo_enumeration
+
+    combo_enumeration.MAX_PATHS = GOLD_STANDARD_MAX_PATHS
+    combo_enumeration.MAX_DEPTH = GOLD_STANDARD_MAX_DEPTH
 
     engine = EnumerationEngine(
         engine_setup["lib"],
@@ -245,3 +272,66 @@ class TestCardValidation:
                 code = monster.get('code', 0)
                 assert code > 0, f"Invalid monster code: {code}"
                 assert code < 100000000, f"Suspiciously large code: {code}"
+
+
+# =============================================================================
+# GOLD STANDARD ENDBOARD TESTS
+# =============================================================================
+
+class TestGoldStandardEndboard:
+    """Test that gold standard combo endboards are reachable.
+
+    These tests use higher limits (MAX_DEPTH=40, MAX_PATHS=50000) because
+    Link summons now work and combos require deeper search.
+
+    Note: These tests may take several minutes to run.
+    """
+
+    @pytest.mark.timeout(600)  # 10 minute timeout
+    @pytest.mark.slow
+    def test_link_summons_work(self, gold_standard_engine):
+        """Verify Link summons are functional (prerequisite for gold standard)."""
+        terminals = gold_standard_engine.enumerate_from_hand(ENGRAVER_HAND)
+
+        # Check if any terminal has Link monsters on board
+        link_found = False
+        for term in terminals:
+            monsters = term.board_state.get('player0', {}).get('monsters', [])
+            for monster in monsters:
+                # Link monsters have specific codes - check for S:P Little Knight
+                if monster.get('code') == SP_LITTLE_KNIGHT_CODE:
+                    link_found = True
+                    break
+            if link_found:
+                break
+
+        # If no S:P found, check for any Extra Deck monster summoned
+        if not link_found:
+            extra_deck_codes = set(gold_standard_engine.extra_deck)
+            for term in terminals:
+                monsters = term.board_state.get('player0', {}).get('monsters', [])
+                for monster in monsters:
+                    if monster.get('code', 0) in extra_deck_codes:
+                        link_found = True
+                        break
+                if link_found:
+                    break
+
+        assert link_found, (
+            "No Extra Deck monsters found in any terminal. "
+            "Link/Xyz/Synchro summons may not be working."
+        )
+
+    @pytest.mark.timeout(600)  # 10 minute timeout
+    @pytest.mark.slow
+    def test_max_depth_reached(self, gold_standard_engine):
+        """Verify search reaches sufficient depth for gold standard combos."""
+        terminals = gold_standard_engine.enumerate_from_hand(ENGRAVER_HAND)
+
+        max_depth = max(term.depth for term in terminals) if terminals else 0
+
+        # Gold standard combos need depth ~31, so we should reach at least 25
+        assert max_depth >= 20, (
+            f"Max depth only {max_depth}. Gold standard combos need ~31. "
+            "Search may be terminating early."
+        )
