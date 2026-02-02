@@ -332,6 +332,21 @@ def _parse_sum_card_11byte(data: bytes, offset: int, index: int) -> Tuple[dict, 
     # Use level1 as primary value; level2 is for variable-level monsters
     effective_level = level1 if 1 <= level1 <= 12 else 0
 
+    # If sum_param is 0 or invalid, try to look up from verified cards
+    if effective_level == 0:
+        try:
+            validator = _get_card_validator()
+            verified = validator.get_card(code)
+            if verified and 'level' in verified:
+                effective_level = verified['level']
+            elif verified and 'rank' in verified:
+                effective_level = verified['rank']  # For Xyz monsters
+            elif verified and 'link_rating' in verified:
+                effective_level = verified['link_rating']  # For Link monsters
+        except FileNotFoundError:
+            # verified_cards.json not found - use sum_param as-is
+            pass
+
     card = {
         'index': index,
         'code': code,
