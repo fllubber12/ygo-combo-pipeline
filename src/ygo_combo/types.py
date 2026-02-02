@@ -10,7 +10,10 @@ Types:
 """
 
 from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ygo_combo.engine.board_types import BoardState
 
 
 @dataclass
@@ -52,14 +55,14 @@ class TerminalState:
 
     Attributes:
         action_sequence: List of actions that led to this state
-        board_state: Captured board state at termination
+        board_state: Validated BoardState at termination (prevents hallucination errors)
         depth: Number of actions taken to reach this state
         state_hash: Hash of the intermediate game state
         termination_reason: Why enumeration stopped ("PASS", "NO_ACTIONS", "MAX_DEPTH")
         board_hash: BoardSignature hash for grouping similar endpoints
     """
     action_sequence: List[Action]
-    board_state: Dict
+    board_state: Union[Dict, "BoardState"]  # BoardState preferred, Dict for backwards compat
     depth: int
     state_hash: str
     termination_reason: str   # "PASS", "NO_ACTIONS", "MAX_DEPTH"
@@ -67,9 +70,14 @@ class TerminalState:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
+        # Handle both BoardState and Dict for backwards compatibility
+        if hasattr(self.board_state, 'to_dict'):
+            board_dict = self.board_state.to_dict()
+        else:
+            board_dict = self.board_state
         return {
             "action_sequence": [a.to_dict() for a in self.action_sequence],
-            "board_state": self.board_state,
+            "board_state": board_dict,
             "depth": self.depth,
             "state_hash": self.state_hash,
             "termination_reason": self.termination_reason,

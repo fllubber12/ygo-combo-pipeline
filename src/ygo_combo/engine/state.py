@@ -15,7 +15,7 @@ Design decisions (based on analysis):
 """
 
 from dataclasses import dataclass
-from typing import FrozenSet, Tuple, List, Dict, Any, Optional
+from typing import FrozenSet, Tuple, List, Dict, Any, Optional, Union
 import hashlib
 import io
 import struct
@@ -26,6 +26,7 @@ from .bindings import (
     LOCATION_GRAVE, LOCATION_REMOVED, LOCATION_EXTRA,
     QUERY_CODE, QUERY_POSITION, QUERY_EQUIP_CARD, QUERY_END,
 )
+from .board_types import BoardState
 
 
 @dataclass(frozen=True)
@@ -102,8 +103,11 @@ class BoardSignature:
         )
 
     @classmethod
-    def from_board_state(cls, board_state: dict) -> "BoardSignature":
-        """Convert existing board_state dict to BoardSignature."""
+    def from_board_state(cls, board_state: Union[dict, BoardState]) -> "BoardSignature":
+        """Convert existing board_state (dict or BoardState) to BoardSignature."""
+        # Convert BoardState to dict if needed
+        if isinstance(board_state, BoardState):
+            board_state = board_state.to_dict()
         p0 = board_state.get("player0", {})
 
         def extract_codes(cards: list) -> FrozenSet[int]:
@@ -500,11 +504,11 @@ def evaluate_board_quality(sig: BoardSignature) -> dict:
 # SIMPLE ENDBOARD EVALUATION
 # =============================================================================
 
-def evaluate_endboard(board_state: dict) -> int:
+def evaluate_endboard(board_state: Union[dict, BoardState]) -> int:
     """
     Simple additive scoring for terminal board evaluation.
 
-    Works directly with board_state dict (legacy format).
+    Works with both dict and BoardState (converts BoardState to dict internally).
     Higher score = better endboard.
 
     Scoring:
@@ -519,6 +523,10 @@ def evaluate_endboard(board_state: dict) -> int:
     """
     if not board_state:
         return 0
+
+    # Convert BoardState to dict if needed
+    if isinstance(board_state, BoardState):
+        board_state = board_state.to_dict()
 
     score = 0
     p0 = board_state.get("player0", {})

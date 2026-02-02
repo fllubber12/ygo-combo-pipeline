@@ -27,11 +27,12 @@ Usage:
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Callable, Tuple
+from typing import List, Dict, Any, Optional, Callable, Tuple, Union
 from enum import Enum
 
 from .types import TerminalState, Action
 from .engine.state import BoardSignature, evaluate_board_quality
+from .engine.board_types import BoardState
 
 
 class SortKey(str, Enum):
@@ -155,8 +156,14 @@ class ComboRanker:
         """
         board_state = terminal.board_state
 
+        # Convert BoardState to dict if needed for legacy access patterns
+        if isinstance(board_state, BoardState):
+            board_dict = board_state.to_dict()
+        else:
+            board_dict = board_state
+
         # Extract board info
-        player_data = board_state.get("player0", {})
+        player_data = board_dict.get("player0", {})
         monsters = player_data.get("monsters", [])
         hand = player_data.get("hand", [])
         graveyard = player_data.get("graveyard", [])
@@ -214,8 +221,11 @@ class ComboRanker:
             details=details,
         )
 
-    def _board_state_to_signature(self, board_state: dict) -> BoardSignature:
-        """Convert board_state dict to BoardSignature for evaluation."""
+    def _board_state_to_signature(self, board_state: Union[dict, BoardState]) -> BoardSignature:
+        """Convert board_state (dict or BoardState) to BoardSignature for evaluation."""
+        # Convert BoardState to dict if needed
+        if isinstance(board_state, BoardState):
+            board_state = board_state.to_dict()
         player_data = board_state.get("player0", {})
 
         monsters = frozenset(m.get("code", 0) for m in player_data.get("monsters", []))
@@ -535,7 +545,11 @@ class ComboRanker:
             print(f"       Efficiency={score.efficiency:.1f} | Resilience={score.resilience:.1f}")
 
             # Show key cards on board
-            monsters = score.terminal.board_state.get("player0", {}).get("monsters", [])
+            bs = score.terminal.board_state
+            if isinstance(bs, BoardState):
+                monsters = [{"code": c.code, "name": c.name} for c in bs.player0.monsters]
+            else:
+                monsters = bs.get("player0", {}).get("monsters", [])
             if monsters:
                 names = [m.get("name", f"ID:{m.get('code')}") for m in monsters[:3]]
                 if len(monsters) > 3:

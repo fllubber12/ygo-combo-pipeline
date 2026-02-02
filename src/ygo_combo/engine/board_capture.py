@@ -8,7 +8,7 @@ computing board signatures for deduplication, and parsing query responses.
 import io
 import logging
 import struct
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 
 # Support both relative imports (package) and absolute imports (sys.path)
 try:
@@ -20,6 +20,7 @@ try:
     )
     from .interface import get_card_name
     from .state import BoardSignature, IntermediateState
+    from .board_types import BoardState
     from ..enumeration.parsers import read_u32, read_i32
 except ImportError:
     from engine.bindings import (
@@ -30,6 +31,7 @@ except ImportError:
     )
     from engine.interface import get_card_name
     from engine.state import BoardSignature, IntermediateState
+    from engine.board_types import BoardState
     from enumeration.parsers import read_u32, read_i32
 
 logger = logging.getLogger(__name__)
@@ -109,7 +111,7 @@ def parse_query_response(data: bytes) -> List[Optional[Dict[str, Any]]]:
     return cards
 
 
-def compute_board_signature(board_state: Dict[str, Any]) -> str:
+def compute_board_signature(board_state: Union[Dict[str, Any], BoardState]) -> str:
     """Compute a unique signature for a board state.
 
     Used to detect duplicate board states reached via different paths.
@@ -118,16 +120,19 @@ def compute_board_signature(board_state: Dict[str, Any]) -> str:
     Uses BoardSignature from state_representation for structured representation.
 
     Args:
-        board_state: Dict with player0/player1 zones
+        board_state: Dict or BoardState with player0/player1 zones
 
     Returns:
         MD5 hash string of the board state
     """
+    # Convert BoardState to dict if needed (BoardSignature expects dict)
+    if isinstance(board_state, BoardState):
+        board_state = board_state.to_dict()
     sig = BoardSignature.from_board_state(board_state)
     return sig.hash()
 
 
-def compute_idle_state_hash(idle_data: Dict[str, Any], board_state: Dict[str, Any]) -> str:
+def compute_idle_state_hash(idle_data: Dict[str, Any], board_state: Union[Dict[str, Any], BoardState]) -> str:
     """Compute a unique hash for an intermediate game state at MSG_IDLE.
 
     This hash captures:
@@ -141,26 +146,30 @@ def compute_idle_state_hash(idle_data: Dict[str, Any], board_state: Dict[str, An
 
     Args:
         idle_data: Parsed MSG_IDLE data with available actions
-        board_state: Current board state dict
+        board_state: Current board state (Dict or BoardState)
 
     Returns:
         MD5 hash string of the intermediate state
     """
+    # Convert BoardState to dict if needed (IntermediateState expects dict)
+    if isinstance(board_state, BoardState):
+        board_state = board_state.to_dict()
     state = IntermediateState.from_idle_data(idle_data, board_state)
     return state.hash()
 
 
-def capture_board_state(lib, duel) -> Dict[str, Any]:
+def capture_board_state(lib, duel) -> BoardState:
     """Capture complete board state at current duel position.
 
     Queries all relevant zones for both players and extracts card information.
+    Returns a validated BoardState object that prevents invalid field access.
 
     Args:
         lib: CFFI library handle
         duel: Duel handle from OCG_CreateDuel
 
     Returns:
-        Dict with player0/player1 keys, each containing zone lists
+        Validated BoardState with player0/player1 zones
     """
     state: Dict[str, Any] = {
         "player0": {
@@ -223,7 +232,8 @@ def capture_board_state(lib, duel) -> Dict[str, Any]:
                             card_entry["def"] = card["defense"]
                         state[player_key][loc_name].append(card_entry)
 
-    return state
+    # Validate and return as BoardState (this is the anti-hallucination boundary)
+    return BoardState.from_dict(state)
 
 
 __all__ = [
@@ -231,4 +241,5 @@ __all__ = [
     'compute_board_signature',
     'compute_idle_state_hash',
     'capture_board_state',
+    'BoardState',
 ]

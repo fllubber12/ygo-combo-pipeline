@@ -596,10 +596,9 @@ class EnumerationEngine(MessageHandlerMixin):
         self.terminals.append(terminal)
 
         if self.verbose:
-            # Show board summary
-            p0 = board_state.get("player0", {})
-            monsters = [c["name"] for c in p0.get("monsters", [])]
-            gy = [c["name"] for c in p0.get("graveyard", [])]
+            # Show board summary (board_state is now BoardState, not Dict)
+            monsters = [c.name for c in board_state.player0.monsters]
+            gy = [c.name for c in board_state.player0.graveyard]
             print(f"  TERMINAL [{reason}] depth={len(action_history)}: "
                   f"Field={monsters}, GY={gy}")
 
@@ -682,9 +681,8 @@ def enumerate_from_hand(
             # Evaluate board quality if we have board state
             if terminal.board_state:
                 try:
-                    # Build signature for evaluation
-                    player_data = terminal.board_state.get("player0", {})
-                    monsters = frozenset(m.get("code", 0) for m in player_data.get("monsters", []))
+                    # Build signature for evaluation (BoardState has direct accessors)
+                    monsters = frozenset(terminal.board_state.get_monster_codes())
                     sig = BoardSignature(
                         monsters=monsters,
                         spells=frozenset(),

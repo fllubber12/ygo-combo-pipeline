@@ -220,12 +220,9 @@ class TestGoldStandardEndboard:
         # Check if any terminal has A Bao A Qu on field
         found_abaoaqu = False
         for term in terminals:
-            monsters = term.board_state.get('player0', {}).get('monsters', [])
-            for monster in monsters:
-                if monster.get('code') == A_BAO_A_QU:
-                    found_abaoaqu = True
-                    break
-            if found_abaoaqu:
+            # board_state is now BoardState, use accessor methods
+            if term.board_state.has_monster(A_BAO_A_QU):
+                found_abaoaqu = True
                 break
 
         assert found_abaoaqu, \
@@ -239,12 +236,9 @@ class TestGoldStandardEndboard:
         # Check if any terminal has Caesar on field
         found_caesar = False
         for term in terminals:
-            monsters = term.board_state.get('player0', {}).get('monsters', [])
-            for monster in monsters:
-                if monster.get('code') == CAESAR:
-                    found_caesar = True
-                    break
-            if found_caesar:
+            # board_state is now BoardState, use accessor methods
+            if term.board_state.has_monster(CAESAR):
+                found_caesar = True
                 break
 
         assert found_caesar, \
@@ -260,10 +254,8 @@ class TestGoldStandardEndboard:
         gold_standard_depth = None
 
         for term in terminals:
-            monsters = term.board_state.get('player0', {}).get('monsters', [])
-            monster_codes = {m.get('code') for m in monsters}
-
-            if A_BAO_A_QU in monster_codes and CAESAR in monster_codes:
+            # board_state is now BoardState, use accessor methods
+            if term.board_state.has_monster(A_BAO_A_QU) and term.board_state.has_monster(CAESAR):
                 found_gold_standard = True
                 gold_standard_depth = term.depth
                 break

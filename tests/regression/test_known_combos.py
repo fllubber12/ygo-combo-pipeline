@@ -267,9 +267,9 @@ class TestCardValidation:
         terminals = enumeration_engine.enumerate_from_hand(ENGRAVER_HAND)
 
         for term in terminals:
-            monsters = term.board_state.get('player0', {}).get('monsters', [])
-            for monster in monsters:
-                code = monster.get('code', 0)
+            # board_state is now BoardState, use accessor methods
+            codes = term.board_state.get_monster_codes()
+            for code in codes:
                 assert code > 0, f"Invalid monster code: {code}"
                 assert code < 100000000, f"Suspiciously large code: {code}"
 
@@ -296,25 +296,20 @@ class TestGoldStandardEndboard:
         # Check if any terminal has Link monsters on board
         link_found = False
         for term in terminals:
-            monsters = term.board_state.get('player0', {}).get('monsters', [])
-            for monster in monsters:
-                # Link monsters have specific codes - check for S:P Little Knight
-                if monster.get('code') == SP_LITTLE_KNIGHT_CODE:
-                    link_found = True
-                    break
-            if link_found:
+            # board_state is now BoardState, use accessor methods
+            codes = term.board_state.get_monster_codes()
+            # Link monsters have specific codes - check for S:P Little Knight
+            if SP_LITTLE_KNIGHT_CODE in codes:
+                link_found = True
                 break
 
         # If no S:P found, check for any Extra Deck monster summoned
         if not link_found:
             extra_deck_codes = set(gold_standard_engine.extra_deck)
             for term in terminals:
-                monsters = term.board_state.get('player0', {}).get('monsters', [])
-                for monster in monsters:
-                    if monster.get('code', 0) in extra_deck_codes:
-                        link_found = True
-                        break
-                if link_found:
+                codes = term.board_state.get_monster_codes()
+                if any(code in extra_deck_codes for code in codes):
+                    link_found = True
                     break
 
         assert link_found, (
