@@ -27,9 +27,9 @@ from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
-# Path to verified cards JSON
-VERIFIED_CARDS_PATH = Path(__file__).parent.parent.parent / "config" / "verified_cards.json"
-CDB_PATH = Path(__file__).parent.parent.parent / "cards.cdb"
+# Path to verified cards JSON (relative to project root, not src/)
+VERIFIED_CARDS_PATH = Path(__file__).parent.parent.parent.parent / "config" / "verified_cards.json"
+CDB_PATH = Path(__file__).parent.parent.parent.parent / "cards.cdb"
 
 
 class CardNotVerifiedError(Exception):
