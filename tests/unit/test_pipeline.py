@@ -105,9 +105,9 @@ class TestDeckLoading:
         deck_file = tmp_path / "library.json"
         deck_data = {
             "cards": {
-                "1": {"count": 3, "is_extra": False},
-                "2": {"count": 2, "is_extra": False},
-                "100": {"count": 1, "is_extra": True},
+                "1": {"count": 3, "is_extra_deck": False},
+                "2": {"count": 2, "is_extra_deck": False},
+                "100": {"count": 1, "is_extra_deck": True},
             }
         }
         deck_file.write_text(json.dumps(deck_data))
