@@ -833,3 +833,377 @@ class TestActionHistoryChaining:
         # Original should be unchanged
         assert len(original) == 1
         assert original == original_copy
+
+
+# =============================================================================
+# Tests for _handle_select_sum
+# =============================================================================
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectSumCancel:
+    """Tests for SELECT_SUM_CANCEL branch in _handle_select_sum."""
+
+    def test_cancel_branch_always_created(self):
+        """Cancel branch should always be created, even with valid combos."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 6},
+                {"code": 222, "value": 6},
+            ],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Should have cancel + valid combo branches
+        assert len(harness.recorded_recurses) >= 1
+        cancel_action = harness.recorded_recurses[0][0]
+        assert cancel_action.action_type == "SELECT_SUM_CANCEL"
+
+    def test_cancel_branch_first(self):
+        """Cancel branch should be explored before valid combos."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 6},
+                {"code": 222, "value": 6},
+            ],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        first_action = harness.recorded_recurses[0][0]
+        assert first_action.action_type == "SELECT_SUM_CANCEL"
+
+    def test_cancel_response_format(self):
+        """Cancel response should be struct.pack('<i', -1)."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [{"code": 111, "value": 6}],
+            "target_sum": 6,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        cancel_action = harness.recorded_recurses[0][0]
+        assert cancel_action.response_value == -1
+        assert struct.unpack("<i", cancel_action.response_bytes)[0] == -1
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectSumBasicCombinations:
+    """Tests for basic combination finding in _handle_select_sum."""
+
+    def test_single_valid_combo(self):
+        """Two cards summing to target should create one combo branch."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 6},
+                {"code": 222, "value": 6},
+            ],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Cancel + 1 combo
+        assert len(harness.recorded_recurses) == 2
+        combo_action = harness.recorded_recurses[1][0]
+        assert combo_action.action_type == "SELECT_SUM"
+
+    def test_multiple_valid_combos(self):
+        """Three cards with C(3,2) valid combos should create 3 branches."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 6},
+                {"code": 222, "value": 6},
+                {"code": 333, "value": 6},
+            ],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Cancel + 3 combos (C(3,2) = 3)
+        assert len(harness.recorded_recurses) == 4
+        combo_actions = [r[0] for r in harness.recorded_recurses[1:]]
+        assert all(a.action_type == "SELECT_SUM" for a in combo_actions)
+
+    def test_no_valid_combos_only_cancel(self):
+        """When no combos possible, only cancel branch (+ fallback) created."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 3},
+                {"code": 222, "value": 4},
+            ],
+            "target_sum": 100,  # Impossible
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Cancel + fallback (when no valid combos)
+        assert len(harness.recorded_recurses) >= 1
+        assert harness.recorded_recurses[0][0].action_type == "SELECT_SUM_CANCEL"
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectSumDeduplication:
+    """Tests for deduplication by card code in _handle_select_sum."""
+
+    def test_deduplication_by_code(self):
+        """Duplicate code pairs should result in one combo branch."""
+        harness = HandlerHarness()
+        # Setup: 3 copies of same card (code 111), value 4 each
+        # Valid combos (indices): [0,1], [0,2], [1,2] all sum to 8
+        # After dedup by sorted codes: all produce (111, 111), so only 1 unique
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 4},
+                {"code": 111, "value": 4},
+                {"code": 111, "value": 4},
+            ],
+            "target_sum": 8,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Should have only 1 unique combo after dedup (all combos are (111, 111))
+        combo_actions = [r[0] for r in harness.recorded_recurses if r[0].action_type == "SELECT_SUM"]
+        assert len(combo_actions) == 1
+
+    def test_different_codes_different_branches(self):
+        """Different card codes should create separate branches."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 6},
+                {"code": 222, "value": 6},
+                {"code": 333, "value": 6},
+            ],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        combo_actions = [r[0] for r in harness.recorded_recurses if r[0].action_type == "SELECT_SUM"]
+        # C(3,2) = 3 unique combinations
+        assert len(combo_actions) == 3
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectSumFailedCardMarking:
+    """Tests for failed card marking in _handle_select_sum."""
+
+    def test_marks_preceding_select_card_failed(self):
+        """Should mark preceding SELECT_CARD as failed at its context."""
+        harness = HandlerHarness()
+
+        # Create action history with SELECT_CARD
+        select_action = Action(
+            action_type="SELECT_CARD",
+            message_type=0,
+            response_value=[0],
+            response_bytes=b"",
+            description="Select card",
+            card_code=12345,
+            context_hash=999,
+        )
+        action_history = [select_action]
+
+        msg_data = {
+            "can_select": [{"code": 111, "value": 6}],
+            "target_sum": 6,
+        }
+
+        harness._handle_select_sum(None, action_history, msg_data)
+
+        # Should have marked the card as failed
+        assert len(harness.marked_failed) == 1
+        assert harness.marked_failed[0] == (999, 12345)
+
+    def test_no_marking_without_select_card(self):
+        """Should not mark anything if no preceding SELECT_CARD."""
+        harness = HandlerHarness()
+
+        # Action history without SELECT_CARD
+        other_action = Action(
+            action_type="ACTIVATE",
+            message_type=0,
+            response_value=0,
+            response_bytes=b"",
+            description="Activate",
+        )
+        action_history = [other_action]
+
+        msg_data = {
+            "can_select": [{"code": 111, "value": 6}],
+            "target_sum": 6,
+        }
+
+        harness._handle_select_sum(None, action_history, msg_data)
+
+        # Should not have marked anything
+        assert len(harness.marked_failed) == 0
+
+    def test_no_marking_without_context_hash(self):
+        """Should not mark if SELECT_CARD has no context_hash."""
+        harness = HandlerHarness()
+
+        select_action = Action(
+            action_type="SELECT_CARD",
+            message_type=0,
+            response_value=[0],
+            response_bytes=b"",
+            description="Select card",
+            card_code=12345,
+            context_hash=None,  # No context hash
+        )
+        action_history = [select_action]
+
+        msg_data = {
+            "can_select": [{"code": 111, "value": 6}],
+            "target_sum": 6,
+        }
+
+        harness._handle_select_sum(None, action_history, msg_data)
+
+        # Should not have marked anything
+        assert len(harness.marked_failed) == 0
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectSumFallback:
+    """Tests for fallback behavior in _handle_select_sum."""
+
+    def test_fallback_when_no_valid_combos(self):
+        """Should create fallback branch when no valid combinations."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 3},
+            ],
+            "target_sum": 100,  # Impossible
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Should have cancel + fallback
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert "SELECT_SUM_CANCEL" in action_types
+        assert "SELECT_SUM_FALLBACK" in action_types
+
+    def test_no_fallback_when_valid_combos(self):
+        """Should not create fallback when valid combinations exist."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 6},
+                {"code": 222, "value": 6},
+            ],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert "SELECT_SUM_FALLBACK" not in action_types
+
+    def test_no_fallback_when_empty_can_select(self):
+        """Should not create fallback when can_select is empty."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert "SELECT_SUM_FALLBACK" not in action_types
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectSumResponseFormat:
+    """Tests for SELECT_SUM response format."""
+
+    def test_response_is_raw_u8_bytes(self):
+        """Response should be raw u8 bytes, not struct-packed."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [
+                {"code": 111, "value": 6},
+                {"code": 222, "value": 6},
+            ],
+            "target_sum": 12,
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Get the SELECT_SUM action (not cancel)
+        combo_action = None
+        for r in harness.recorded_recurses:
+            if r[0].action_type == "SELECT_SUM":
+                combo_action = r[0]
+                break
+
+        assert combo_action is not None
+        # Response format: [total_count] + [must_indices] + [selected_indices]
+        # For 2 cards, no must_select: [2, 0, 1]
+        response = combo_action.response_bytes
+        assert len(response) == 3  # total_count + 2 indices
+        assert response[0] == 2  # total count
+
+    def test_response_includes_must_count(self):
+        """Response should include must_select indices."""
+        harness = HandlerHarness()
+        msg_data = {
+            "must_select": [{"code": 100, "value": 2}],
+            "can_select": [
+                {"code": 111, "value": 6},
+            ],
+            "target_sum": 8,
+            "min": 2,  # Need at least 2 cards (1 must + 1 can)
+            "max": 2,  # Allow 2 cards total
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        # Find SELECT_SUM action
+        combo_action = None
+        for r in harness.recorded_recurses:
+            if r[0].action_type == "SELECT_SUM":
+                combo_action = r[0]
+                break
+
+        assert combo_action is not None
+        response = combo_action.response_bytes
+        # Format: [total_count=2] + [must_index=0] + [selected_index=0]
+        assert response[0] == 2  # total count (1 must + 1 selected)
+        assert response[1] == 0  # must index 0
+
+    def test_fallback_response_format(self):
+        """Fallback response should also use raw u8 format."""
+        harness = HandlerHarness()
+        msg_data = {
+            "can_select": [{"code": 111, "value": 3}],
+            "target_sum": 100,  # Impossible
+        }
+
+        harness._handle_select_sum(None, [], msg_data)
+
+        fallback_action = None
+        for r in harness.recorded_recurses:
+            if r[0].action_type == "SELECT_SUM_FALLBACK":
+                fallback_action = r[0]
+                break
+
+        assert fallback_action is not None
+        response = fallback_action.response_bytes
+        # Format: [total_count=1] + [selected_index=0]
+        assert response[0] == 1  # total count
+        assert response[1] == 0  # card index 0
