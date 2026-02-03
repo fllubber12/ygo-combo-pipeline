@@ -69,6 +69,7 @@ class ParallelConfig:
         checkpoint_interval: Hands between checkpoint saves (default: 100).
         resume: Whether to resume from existing checkpoint (default: True).
         save_results: Whether to include full ComboResult in checkpoint (default: False).
+        fixed_hands: Optional list of specific hands to enumerate (bypasses C(n,k) generation).
     """
     deck: List[int]
     hand_size: int = 5
@@ -82,6 +83,7 @@ class ParallelConfig:
     checkpoint_interval: int = 100
     resume: bool = True
     save_results: bool = False
+    fixed_hands: Optional[List[Tuple[int, ...]]] = None
 
     def __post_init__(self):
         if self.num_workers is None:
@@ -93,6 +95,8 @@ class ParallelConfig:
 
     def _calculate_total_hands(self) -> int:
         """Calculate total number of unique starting hands."""
+        if self.fixed_hands is not None:
+            return len(self.fixed_hands)
         from math import comb
         return comb(len(self.deck), self.hand_size)
 
@@ -347,8 +351,8 @@ def _enumerate_hand(hand: Tuple[int, ...]) -> ComboResult:
     _init_worker_engine()
 
     try:
-        # Import enumeration logic (use absolute import for worker processes)
-        from src.ygo_combo.combo_enumeration import enumerate_from_hand
+        # Import enumeration logic (use relative import within package)
+        from ..combo_enumeration import enumerate_from_hand
 
         # Run enumeration
         result = enumerate_from_hand(
@@ -428,9 +432,13 @@ def parallel_enumerate(config: ParallelConfig) -> ParallelResult:
     """
     start_time = time.perf_counter()
 
-    # Generate all starting hands
-    logger.info(f"Generating starting hands (deck size: {len(config.deck)}, hand size: {config.hand_size})")
-    all_hands = generate_all_hands(config.deck, config.hand_size)
+    # Generate or use fixed starting hands
+    if config.fixed_hands is not None:
+        logger.info(f"Using {len(config.fixed_hands)} fixed hand(s)")
+        all_hands = list(config.fixed_hands)
+    else:
+        logger.info(f"Generating starting hands (deck size: {len(config.deck)}, hand size: {config.hand_size})")
+        all_hands = generate_all_hands(config.deck, config.hand_size)
     total_hands = len(all_hands)
     logger.info(f"Total hands to process: {total_hands:,}")
 

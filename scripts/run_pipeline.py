@@ -21,6 +21,7 @@ Example workflow:
 import argparse
 import json
 import logging
+import sqlite3
 import sys
 import time
 from dataclasses import dataclass
@@ -65,6 +66,9 @@ class PipelineConfig:
     # Deck source
     deck_path: Optional[Path] = None
     roles_path: Optional[Path] = None
+
+    # Fixed hand (skips sampling)
+    fixed_hand: Optional[str] = None
 
     # Sampling
     total_samples: int = 100
@@ -185,6 +189,223 @@ def load_classifier(roles_path: Optional[Path] = None) -> CardRoleClassifier:
         logger.warning("No card roles file found. Using heuristic classification.")
 
     return classifier
+
+
+# =============================================================================
+# CARD LOOKUP
+# =============================================================================
+
+def lookup_card_by_name(name: str, db_path: Path) -> Optional[int]:
+    """Look up a card's passcode by its name in the card database.
+
+    Args:
+        name: Card name to search for.
+        db_path: Path to cards.cdb database.
+
+    Returns:
+        Card passcode if found, None otherwise.
+    """
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.execute(
+            "SELECT id FROM texts WHERE name = ? COLLATE NOCASE",
+            (name,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return row[0]
+    except sqlite3.Error:
+        pass
+    return None
+
+
+def lookup_card_by_name_fuzzy(name: str, db_path: Path) -> List[Tuple[int, str]]:
+    """Fuzzy search for cards by name.
+
+    Args:
+        name: Partial card name to search for.
+        db_path: Path to cards.cdb database.
+
+    Returns:
+        List of (passcode, name) tuples that match.
+    """
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.execute(
+            "SELECT id, name FROM texts WHERE name LIKE ? COLLATE NOCASE LIMIT 10",
+            (f"%{name}%",)
+        )
+        results = cursor.fetchall()
+        conn.close()
+        return results
+    except sqlite3.Error:
+        return []
+
+
+def resolve_hand_spec(hand_spec: str, db_path: Path) -> Tuple[List[int], List[str]]:
+    """Resolve a hand specification to card codes.
+
+    Args:
+        hand_spec: Comma-separated list of card codes or names.
+        db_path: Path to cards.cdb database.
+
+    Returns:
+        Tuple of (resolved_codes, resolved_names).
+
+    Raises:
+        ValueError: If any card cannot be resolved.
+    """
+    items = [item.strip() for item in hand_spec.split(",")]
+    codes = []
+    names = []
+    errors = []
+
+    for item in items:
+        if not item:
+            continue
+
+        # Try as integer passcode first
+        try:
+            code = int(item)
+            # Verify it exists in DB
+            conn = sqlite3.connect(db_path)
+            cursor = conn.execute(
+                "SELECT name FROM texts WHERE id = ?", (code,)
+            )
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                codes.append(code)
+                names.append(row[0])
+            else:
+                errors.append(f"Unknown card code: {code}")
+            continue
+        except ValueError:
+            pass
+
+        # Try as card name
+        code = lookup_card_by_name(item, db_path)
+        if code:
+            codes.append(code)
+            names.append(item)
+        else:
+            # Try fuzzy match for suggestions
+            matches = lookup_card_by_name_fuzzy(item, db_path)
+            if matches:
+                suggestions = ", ".join(f'"{m[1]}"' for m in matches[:3])
+                errors.append(f'Card not found: "{item}". Did you mean: {suggestions}?')
+            else:
+                errors.append(f'Card not found: "{item}"')
+
+    if errors:
+        raise ValueError("\n".join(errors))
+
+    return codes, names
+
+
+# =============================================================================
+# FIXED HAND ENUMERATION
+# =============================================================================
+
+def run_fixed_hand(
+    hand_codes: List[int],
+    hand_names: List[str],
+    deck: List[int],
+    config: PipelineConfig,
+) -> PipelineResult:
+    """Run enumeration for a specific fixed hand.
+
+    Args:
+        hand_codes: List of card passcodes for the hand.
+        hand_names: List of card names (for display).
+        deck: Full deck list.
+        config: Pipeline configuration.
+
+    Returns:
+        PipelineResult with enumeration results.
+    """
+    start_time = time.perf_counter()
+
+    logger.info("=" * 60)
+    logger.info("FIXED HAND ENUMERATION")
+    logger.info("=" * 60)
+    logger.info(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # Print resolved hand
+    logger.info("\nResolved hand:")
+    for i, (code, name) in enumerate(zip(hand_codes, hand_names), 1):
+        logger.info(f"  {i}. {name} ({code})")
+
+    # Determine checkpoint path
+    checkpoint_path = None
+    if config.checkpoint_dir:
+        config.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        checkpoint_path = config.checkpoint_dir / "fixed_hand_checkpoint"
+
+    # Create parallel config for single hand
+    parallel_config = ParallelConfig(
+        deck=deck,
+        hand_size=len(hand_codes),
+        num_workers=config.num_workers,
+        max_depth=config.max_depth,
+        max_paths_per_hand=config.max_paths_per_hand,
+        checkpoint_path=checkpoint_path,
+        checkpoint_interval=config.checkpoint_interval,
+        resume=config.resume,
+        fixed_hands=[tuple(hand_codes)],  # Only enumerate this hand
+    )
+
+    logger.info(f"\nEnumerating fixed hand with {parallel_config.num_workers} workers")
+    logger.info(f"Max depth: {config.max_depth}, Max paths: {config.max_paths_per_hand or 'unlimited'}")
+
+    if checkpoint_path:
+        logger.info(f"Checkpoints: {checkpoint_path}")
+
+    # Run enumeration
+    logger.info("\n=== Enumeration ===")
+    enum_result = parallel_enumerate(parallel_config)
+
+    logger.info(f"Hands processed: {enum_result.total_hands:,}")
+    logger.info(f"Unique terminals: {enum_result.total_terminals:,}")
+    logger.info(f"Total paths explored: {enum_result.total_paths:,}")
+    logger.info(f"Duration: {enum_result.duration_seconds:.1f}s")
+
+    if enum_result.best_hand:
+        logger.info(f"\nBest hand found: {enum_result.best_hand}")
+        logger.info(f"Best score: {enum_result.best_score:.1f}")
+
+    total_time = time.perf_counter() - start_time
+
+    # Build result
+    result = PipelineResult(
+        total_hand_space=1,  # Fixed hand = 1 hand
+        hands_sampled=1,
+        strata_count=1,
+        playable_fraction=1.0,
+        hands_processed=enum_result.total_hands,
+        unique_terminals=enum_result.total_terminals,
+        total_paths=enum_result.total_paths,
+        enumeration_time=enum_result.duration_seconds,
+        top_combos=[],
+        tier_distribution={},
+        total_time=total_time,
+    )
+
+    # Final summary
+    logger.info("\n" + "=" * 60)
+    logger.info("FIXED HAND ENUMERATION COMPLETE")
+    logger.info("=" * 60)
+    logger.info(f"Total time: {total_time:.1f}s")
+    logger.info(f"Unique terminals: {result.unique_terminals:,}")
+    logger.info(f"Total paths: {result.total_paths:,}")
+
+    # Save output if requested
+    if config.output_path:
+        save_report(result, config.output_path)
+        logger.info(f"Report saved to: {config.output_path}")
+
+    return result
 
 
 # =============================================================================
@@ -508,6 +729,15 @@ def main():
         help="Path to card roles JSON (default: config/card_roles.json)",
     )
 
+    # Fixed hand option (skips sampling)
+    parser.add_argument(
+        "--hand",
+        type=str,
+        help="Comma-separated card codes or names for a fixed starting hand "
+             "(e.g., 'Engraver of the Mark,Ash Blossom,Ash Blossom,Ash Blossom,Droll & Lock Bird'). "
+             "Skips random sampling when provided.",
+    )
+
     # Sampling options
     parser.add_argument(
         "--samples", "-n",
@@ -575,6 +805,7 @@ def main():
     config = PipelineConfig(
         deck_path=args.deck,
         roles_path=args.roles,
+        fixed_hand=args.hand,
         total_samples=args.samples,
         sample_seed=args.seed,
         num_workers=args.workers,
@@ -588,7 +819,32 @@ def main():
     )
 
     try:
-        result = run_pipeline(config)
+        # Use fixed hand mode or standard pipeline
+        if config.fixed_hand:
+            # Resolve the hand specification
+            db_path = Path(__file__).parents[1] / "cards.cdb"
+            if not db_path.exists():
+                logger.error(f"Card database not found at {db_path}")
+                return 1
+
+            try:
+                hand_codes, hand_names = resolve_hand_spec(config.fixed_hand, db_path)
+            except ValueError as e:
+                logger.error(f"Error resolving hand:\n{e}")
+                return 1
+
+            # Validate hand size
+            if len(hand_codes) != 5:
+                logger.error(f"Hand must have exactly 5 cards, got {len(hand_codes)}")
+                return 1
+
+            # Load deck for enumeration
+            main_deck, extra_deck = load_deck(config.deck_path)
+            full_deck = main_deck + extra_deck
+
+            result = run_fixed_hand(hand_codes, hand_names, full_deck, config)
+        else:
+            result = run_pipeline(config)
         return 0
     except KeyboardInterrupt:
         logger.info("\nPipeline interrupted by user")
