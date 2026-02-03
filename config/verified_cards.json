@@ -4,9 +4,9 @@
     "audit_date": "2026-01-26",
     "verified_by": "Triple-pass audit against YGOProDeck API",
     "lock_status": "LOCKED",
-    "lock_date": "2026-01-26T23:09:40.129769+00:00",
-    "lock_checksum": "e2b35842fded76909a821323951628139a92f3049d4eb9c0c212c64153201381",
-    "card_count": 48,
+    "lock_date": "2026-02-03T05:55:08.047374+00:00",
+    "lock_checksum": "27fec6853a17ee719949c0b60dc0fee7ab172547dfe08f99907552c5b8e34b8c",
+    "card_count": 46,
     "audit_passes": 3,
     "notes": "DO NOT MODIFY without explicit user approval and re-verification"
   },
@@ -68,18 +68,6 @@
       "name": "Crystal Bond",
       "card_type": "Spell",
       "spell_type": "Normal",
-      "is_main_deck": true,
-      "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
-    },
-    "9674034": {
-      "name": "Snake-Eye Ash",
-      "attribute": "FIRE",
-      "type": "Pyro/Effect",
-      "level": 1,
-      "atk": 800,
-      "def": 1000,
       "is_main_deck": true,
       "verified": true,
       "verification_source": "cards.cdb",
@@ -309,18 +297,6 @@
       "atk": 1900,
       "def": 0,
       "is_main_deck": false,
-      "verified": true,
-      "verification_source": "cards.cdb",
-      "verified_date": "2026-01-26"
-    },
-    "48452496": {
-      "name": "Snake-Eyes Flamberge Dragon",
-      "attribute": "FIRE",
-      "type": "Dragon/Effect",
-      "level": 8,
-      "atk": 3000,
-      "def": 2500,
-      "is_main_deck": true,
       "verified": true,
       "verification_source": "cards.cdb",
       "verified_date": "2026-01-26"
@@ -559,7 +535,6 @@
       "58699500 - Cherubini, Ebon Angel of the Burning Abyss",
       "46772449 - Evilswarm Exciton Knight",
       "88942504 - Melomelody the Brass Djinn",
-      "48452496 - Snake-Eyes Flamberge Dragon",
       "45445571 - The Duke of Demise",
       "50277355 - Cross-Sheep",
       "71593652 - Mutiny in the Sky",
@@ -569,7 +544,6 @@
       "53932291 - Speedroid Taketomborg",
       "81035362 - Fiendish Rhino Warrior",
       "28143384 - Aerial Eater",
-      "9674034 - Snake-Eye Ash",
       "Crystal Beast package"
     ]
   },

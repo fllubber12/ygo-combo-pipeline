@@ -212,16 +212,6 @@
       "name": "S:P Little Knight",
       "count": 1
     },
-    "9674034": {
-      "is_extra_deck": false,
-      "name": "Snake-Eye Ash",
-      "count": 1
-    },
-    "48452496": {
-      "is_extra_deck": false,
-      "name": "Snake-Eyes Flamberge Dragon",
-      "count": 1
-    },
     "45409943": {
       "is_extra_deck": true,
       "name": "Luce the Dusk's Dark",
@@ -239,12 +229,12 @@
     }
   },
   "_meta": {
-    "main_deck_total": 50,
-    "main_deck_unique": 27,
+    "main_deck_total": 48,
+    "main_deck_unique": 25,
     "extra_deck_total": 19,
     "verified": true,
     "locked": true,
-    "last_modified": "2026-01-26",
+    "last_modified": "2026-02-03",
     "converted_from": "config/cb_fiendsmith_library.json"
   }
 }
