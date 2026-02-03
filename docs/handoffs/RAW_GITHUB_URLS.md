@@ -98,7 +98,6 @@ https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_com
 ```
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/cards/roles.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/cards/validator.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/cards/verification.py
 ```
 
 ## Source - Other
@@ -161,7 +160,6 @@ https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_com
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/search/transposition.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/cards/roles.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/cards/validator.py
-https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/cards/verification.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/ranking.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/sampling.py
 https://raw.githubusercontent.com/fllubber12/ygo-combo-pipeline/main/src/ygo_combo/checkpoint.py

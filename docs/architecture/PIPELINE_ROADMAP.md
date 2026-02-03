@@ -585,7 +585,7 @@ class ActionSpec:
 }
 ```
 
-#### verification_run.json
+#### Enumeration Output Format (*.json)
 ```json
 {
   "meta": {
@@ -1607,8 +1607,7 @@ Option 3: **Breadth-first at low depths**
 
 | File | Contents |
 |------|----------|
-| `src/ygo_combo/verification_run.json` | Latest enumeration results |
-| `src/ygo_combo/enumeration_results.json` | Historical results |
+| `enumeration_*.json` | Enumeration output files (not committed) |
 
 ### External Dependencies
 

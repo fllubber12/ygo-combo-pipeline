@@ -60,7 +60,6 @@
 | `enumeration_depth25.json` | 3.6 MB | JSON | Enumeration output (depth 25) |
 | `enumeration_depth30.json` | 3.0 MB | JSON | Enumeration output (depth 30) |
 | `build/libygo.dylib` | 2.7 MB | Binary | ygopro-core shared library |
-| `verification_run.json` | 1.7 MB | JSON | Latest verification results |
 
 ### Large Files in Parent Directory
 
@@ -116,7 +115,6 @@ All JSON files in this category are **outputs from enumeration runs** - not sour
 | `enumeration_depth25.json` | 3.6 MB | Jan 24 16:26 | `6b681bd0...` | Depth 25 run |
 | `enumeration_depth30.json` | 3.0 MB | Jan 24 16:27 | `f0880eed...` | Depth 30 run |
 | `enumeration_results.json` | 255 KB | Jan 24 15:45 | `feeb2249...` | Earlier results |
-| `verification_run.json` | 1.7 MB | Jan 24 20:48 | `7b8ed3d0...` | Latest verification |
 
 **Note:** All hashes are unique - no duplicate content detected.
 
@@ -231,7 +229,6 @@ Multiple timestamped handoff archives exist. These are **intentional backups** f
 | `enumeration_depth25.json` | Depth 25 test run | Keep for comparison |
 | `enumeration_depth30.json` | Depth 30 test run | Keep for comparison |
 | `enumeration_results.json` | Earlier results | **Consider removing** - superseded |
-| `verification_run.json` | Latest verification | Keep as primary |
 
 ### Excel Duplicates (Parent Directory)
 
@@ -253,7 +250,6 @@ SIZE       MODIFIED         FILE
 3,781,972  2026-01-24 16:26  enumeration_depth25.json
 3,164,897  2026-01-24 16:27  enumeration_depth30.json
 2,790,560  2026-01-24 08:57  build/libygo.dylib
-1,789,547  2026-01-24 20:48  verification_run.json
   334,904  2026-01-23 23:38  deps/lua-5.3.5/src/liblua.a
   327,398  2018-06-26        deps/lua-5.3.5/doc/manual.html
   260,613  2026-01-24 15:45  enumeration_results.json
@@ -304,8 +300,7 @@ SIZE       MODIFIED         FILE
 - `build/smoke_test_*.py` (2 files)
 
 ### Generated Output
-- `enumeration_*.json` (4 files)
-- `verification_run.json`
+- `enumeration_*.json` (output files, not committed)
 
 ### Third-Party Dependencies
 - `deps/lua-5.3.5/` (entire directory)

@@ -81,6 +81,9 @@ results/
 # Reports batch output (regeneratable)
 reports/batch/*
 
+# Sphinx documentation build
+docs/api/_build/
+
 # Compiled binaries (should be built locally)
 *.dylib
 *.so
