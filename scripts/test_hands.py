@@ -192,10 +192,6 @@ def run_hand_test(hand: List[int], max_depth: int = 25, verbose: bool = False):
     # Run with specific hand
     try:
         terminals = engine.enumerate_from_hand(hand)
-    except NotImplementedError:
-        print("\n❌ ERROR: enumerate_from_hand() not implemented!")
-        print("   Run: python scripts/patch_configurable_hand.py --apply")
-        return None
     except Exception as e:
         print(f"\n❌ ERROR: {e}")
         import traceback
