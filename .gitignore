@@ -1,6 +1,16 @@
 # ===== Environment =====
 .env
 
+# ===== Claude Context =====
+.claude/
+
+# ===== Process Files =====
+enumeration.pid
+
+# ===== Backup Files =====
+*.bak
+*_backup.json
+
 # ===== Python =====
 __pycache__/
 *.py[cod]
