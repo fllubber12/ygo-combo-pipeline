@@ -28,7 +28,7 @@ from typing import List, Dict, Any, Tuple
 
 # Import shared types to avoid circular imports
 # These are re-exported for backwards compatibility
-from .types import Action, TerminalState
+from .types import Action, TerminalState, HashValue
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -179,7 +179,7 @@ class EnumerationEngine(MessageHandlerMixin):
         self.transposition_table = TranspositionTable(max_size=1_000_000)
 
         # Group terminals by board signature
-        self.terminal_boards: Dict[str, List] = {}  # board_hash -> list of action sequences
+        self.terminal_boards: Dict[HashValue, List] = {}  # board_hash -> list of action sequences
 
         self.duplicate_boards_skipped = 0  # Counter for stats
         self.intermediate_states_pruned = 0  # Counter for intermediate pruning
@@ -569,7 +569,7 @@ class EnumerationEngine(MessageHandlerMixin):
         board_hash = None
         if board_state:
             sig = BoardSignature.from_board_state(board_state)
-            board_hash = sig.hash()
+            board_hash = sig.zobrist_hash()
 
             # Group by board signature
             if board_hash not in self.terminal_boards:
@@ -675,7 +675,7 @@ def enumerate_from_hand(
 
         # Collect terminal hashes and find best score
         for terminal in terminals:
-            if terminal.board_hash:
+            if terminal.board_hash is not None:
                 terminal_hashes.append(terminal.board_hash)
 
             # Evaluate board quality if we have board state

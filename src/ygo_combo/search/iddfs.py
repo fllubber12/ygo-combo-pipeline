@@ -388,7 +388,9 @@ class IterativeDeepeningSearch:
 
         for terminal in terminals:
             # Skip if already seen
-            terminal_hash = terminal.get("board_hash") or terminal.get("state_hash", "")
+            terminal_hash = terminal.get("board_hash")
+            if terminal_hash is None:
+                terminal_hash = terminal.get("state_hash", "")
             if terminal_hash in self.all_terminal_hashes:
                 continue
 

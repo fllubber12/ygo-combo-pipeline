@@ -97,9 +97,9 @@ class MessageHandlerMixin:
 
         # Intermediate state pruning using transposition table
         if self.dedupe_intermediate:
-            # Compute intermediate state hash
+            # Compute intermediate state hash (Zobrist for O(1) lookups)
             state = IntermediateState.from_engine(self.lib, duel, idle_data, capture_board_state)
-            state_hash = state.hash()
+            state_hash = state.zobrist_hash()
 
             # Check transposition table
             cached = self.transposition_table.lookup(state_hash)

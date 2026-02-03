@@ -457,7 +457,7 @@ class ComboRanker:
         """
         groups: Dict[str, List[ComboScore]] = {}
         for score in scores:
-            board_hash = score.terminal.board_hash or "unknown"
+            board_hash = score.terminal.board_hash if score.terminal.board_hash is not None else "unknown"
             if board_hash not in groups:
                 groups[board_hash] = []
             groups[board_hash].append(score)

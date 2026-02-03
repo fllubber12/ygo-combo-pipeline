@@ -15,6 +15,9 @@ from typing import List, Dict, Any, Optional, Union, TYPE_CHECKING
 if TYPE_CHECKING:
     from ygo_combo.engine.board_types import BoardState
 
+# Type alias for hash values - supports both MD5 (str) and Zobrist (int)
+HashValue = Union[str, int]
+
 
 @dataclass
 class Action:
@@ -64,9 +67,9 @@ class TerminalState:
     action_sequence: List[Action]
     board_state: Union[Dict, "BoardState"]  # BoardState preferred, Dict for backwards compat
     depth: int
-    state_hash: str
+    state_hash: HashValue
     termination_reason: str   # "PASS", "NO_ACTIONS", "MAX_DEPTH"
-    board_hash: Optional[str] = None  # BoardSignature hash for grouping
+    board_hash: Optional[HashValue] = None  # BoardSignature hash for grouping
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -85,4 +88,4 @@ class TerminalState:
         }
 
 
-__all__ = ['Action', 'TerminalState']
+__all__ = ['Action', 'TerminalState', 'HashValue']
