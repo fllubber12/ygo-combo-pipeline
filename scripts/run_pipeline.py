@@ -154,7 +154,7 @@ def load_deck(deck_path: Optional[Path] = None) -> Tuple[List[int], List[int]]:
         for code_str, card_data in cards.items():
             code = int(code_str)
             count = card_data.get("count", 1)
-            is_extra = card_data.get("is_extra", False)
+            is_extra = card_data.get("is_extra_deck", False)
             for _ in range(count):
                 if is_extra:
                     extra_deck.append(code)

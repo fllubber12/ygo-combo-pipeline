@@ -7,6 +7,41 @@
   "name": "Crystal Beast Fiendsmith Library",
   "description": "Crystal Beast Fiendsmith deck for combo analysis - LOCKED",
   "cards": {
+    "14558127": {
+      "is_extra_deck": false,
+      "name": "Ash Blossom & Joyous Spring",
+      "count": 3
+    },
+    "24224830": {
+      "is_extra_deck": false,
+      "name": "Called by the Grave",
+      "count": 1
+    },
+    "24299458": {
+      "is_extra_deck": false,
+      "name": "Forbidden Droplet",
+      "count": 3
+    },
+    "25311006": {
+      "is_extra_deck": false,
+      "name": "Triple Tactics Talent",
+      "count": 1
+    },
+    "42141493": {
+      "is_extra_deck": false,
+      "name": "Mulcharmy Fuwalos",
+      "count": 3
+    },
+    "87475570": {
+      "is_extra_deck": false,
+      "name": "Crystal Master",
+      "count": 3
+    },
+    "94145021": {
+      "is_extra_deck": false,
+      "name": "Droll & Lock Bird",
+      "count": 2
+    },
     "53932291": {
       "is_extra_deck": false,
       "name": "Speedroid Taketomborg",
@@ -75,7 +110,7 @@
     "71593652": {
       "is_extra_deck": false,
       "name": "Mutiny in the Sky",
-      "count": 3
+      "count": 1
     },
     "60764609": {
       "is_extra_deck": false,
@@ -117,22 +152,12 @@
       "name": "Rainbow Bridge of the Heart",
       "count": 3
     },
-    "81035362": {
-      "is_extra_deck": false,
-      "name": "Fiendish Rhino Warrior",
-      "count": 1
-    },
-    "99989863": {
+        "99989863": {
       "is_extra_deck": false,
       "name": "Fiendsmith in Paradise",
       "count": 1
     },
-    "14469229": {
-      "is_extra_deck": false,
-      "name": "Crystal Keeper",
-      "count": 3
-    },
-    "5611760": {
+        "5611760": {
       "is_extra_deck": false,
       "name": "Rainbow Bridge of Salvation",
       "count": 1
@@ -226,11 +251,21 @@
       "is_extra_deck": true,
       "name": "Cross-Sheep",
       "count": 1
+    },
+    "71607202": {
+      "is_extra_deck": true,
+      "name": "Muckraker From the Underworld",
+      "count": 1
+    },
+    "58071334": {
+      "is_extra_deck": true,
+      "name": "Snake-Eyes Doomed Dragon",
+      "count": 1
     }
   },
   "_meta": {
-    "main_deck_total": 48,
-    "main_deck_unique": 25,
+    "main_deck_total": 60,
+    "main_deck_unique": 32,
     "extra_deck_total": 19,
     "verified": true,
     "locked": true,

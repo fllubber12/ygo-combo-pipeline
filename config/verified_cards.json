@@ -4,13 +4,89 @@
     "audit_date": "2026-01-26",
     "verified_by": "Triple-pass audit against YGOProDeck API",
     "lock_status": "LOCKED",
-    "lock_date": "2026-02-03T05:55:08.047374+00:00",
-    "lock_checksum": "27fec6853a17ee719949c0b60dc0fee7ab172547dfe08f99907552c5b8e34b8c",
-    "card_count": 46,
+    "lock_date": "2026-02-03T07:09:17.215324+00:00",
+    "lock_checksum": "5f137f0c680d031a02a7b6355c1d10f3bb25eb37aa5d7de7ba2ba34d9e68ed67",
+    "card_count": 55,
     "audit_passes": 3,
     "notes": "DO NOT MODIFY without explicit user approval and re-verification"
   },
   "cards": {
+    "14558127": {
+      "name": "Ash Blossom & Joyous Spring",
+      "attribute": "FIRE",
+      "type": "Zombie/Tuner/Effect",
+      "level": 3,
+      "atk": 0,
+      "def": 1800,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
+    "24224830": {
+      "name": "Called by the Grave",
+      "card_type": "Spell",
+      "spell_type": "Quick-Play",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
+    "24299458": {
+      "name": "Forbidden Droplet",
+      "card_type": "Spell",
+      "spell_type": "Quick-Play",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
+    "25311006": {
+      "name": "Triple Tactics Talent",
+      "card_type": "Spell",
+      "spell_type": "Normal",
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
+    "42141493": {
+      "name": "Mulcharmy Fuwalos",
+      "attribute": "WIND",
+      "type": "Winged Beast/Effect",
+      "level": 4,
+      "atk": 100,
+      "def": 600,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
+    "87475570": {
+      "name": "Crystal Master",
+      "attribute": "DARK",
+      "type": "Spellcaster/Pendulum/Effect",
+      "level": 3,
+      "pendulum_scale": 5,
+      "atk": 1300,
+      "def": 1000,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
+    "94145021": {
+      "name": "Droll & Lock Bird",
+      "attribute": "WIND",
+      "type": "Winged Beast/Effect",
+      "level": 1,
+      "atk": 0,
+      "def": 0,
+      "is_main_deck": true,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
     "2463794": {
       "name": "Fiendsmith's Requiem",
       "attribute": "LIGHT",
@@ -525,6 +601,29 @@
       "verification_source": "cards.cdb",
       "verified_date": "2026-01-26",
       "notes": "Filler card - cannot be normal summoned, ATK/DEF are ? (represented as -2 in CDB)"
+    },
+    "71607202": {
+      "name": "Muckraker From the Underworld",
+      "attribute": "DARK",
+      "type": "Fiend/Link/Effect",
+      "link_rating": 2,
+      "atk": 1000,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
+    },
+    "58071334": {
+      "name": "Snake-Eyes Doomed Dragon",
+      "attribute": "FIRE",
+      "type": "Dragon/Fusion/Effect",
+      "level": 8,
+      "atk": 3000,
+      "def": 2500,
+      "is_main_deck": false,
+      "verified": true,
+      "verification_source": "YGOProDeck API",
+      "verified_date": "2026-02-03"
     }
   },
   "unverified_cards": {

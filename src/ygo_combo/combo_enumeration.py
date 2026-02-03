@@ -612,6 +612,7 @@ def enumerate_from_hand(
     deck: List[int] = None,
     max_depth: int = 25,
     max_paths: int = 0,
+    include_traces: bool = False,
 ) -> Dict[str, Any]:
     """Enumerate all combos from a specific starting hand.
 
@@ -623,6 +624,7 @@ def enumerate_from_hand(
         deck: Full deck list (optional, uses locked library if None).
         max_depth: Maximum search depth.
         max_paths: Maximum paths to explore (0 = unlimited).
+        include_traces: If True, include full action traces for pattern mining.
 
     Returns:
         Dict with:
@@ -630,6 +632,8 @@ def enumerate_from_hand(
             - best_score: Highest board evaluation score
             - paths_explored: Number of paths explored
             - max_depth_reached: Deepest point in search tree
+            - action_traces: (if include_traces=True) List of terminal traces with
+              full action sequences, board states, scores, and termination reasons
     """
     global MAX_DEPTH, MAX_PATHS
 
@@ -643,6 +647,7 @@ def enumerate_from_hand(
     best_score = 0.0
     paths_explored = 0
     max_depth_reached = 0
+    terminals: List[TerminalState] = []  # Preserve for action trace export
 
     try:
         # Initialize card database if not already done
@@ -707,12 +712,52 @@ def enumerate_from_hand(
         MAX_DEPTH = original_max_depth
         MAX_PATHS = original_max_paths
 
-    return {
+    result = {
         "terminal_hashes": terminal_hashes,
         "best_score": best_score,
         "paths_explored": paths_explored,
         "max_depth_reached": max_depth_reached,
     }
+
+    # Include full action traces if requested (for pattern mining)
+    if include_traces and terminals:
+        action_traces = []
+        for terminal in terminals:
+            trace = {
+                "actions": [a.to_dict() for a in terminal.action_sequence],
+                "depth": terminal.depth,
+                "termination_reason": terminal.termination_reason,
+                "board_hash": terminal.board_hash,
+            }
+            # Include board state if available
+            if terminal.board_state:
+                if hasattr(terminal.board_state, 'to_dict'):
+                    trace["board_state"] = terminal.board_state.to_dict()
+                else:
+                    trace["board_state"] = terminal.board_state
+                # Calculate score for this terminal
+                try:
+                    monsters = frozenset(terminal.board_state.get_monster_codes())
+                    sig = BoardSignature(
+                        monsters=monsters,
+                        spells=frozenset(),
+                        graveyard=frozenset(),
+                        hand=frozenset(),
+                        banished=frozenset(),
+                        extra_deck=frozenset(),
+                        equips=frozenset(),
+                    )
+                    eval_result = evaluate_board_quality(sig)
+                    trace["score"] = eval_result.get("score", 0.0)
+                except Exception:
+                    trace["score"] = 0.0
+            else:
+                trace["board_state"] = None
+                trace["score"] = 0.0
+            action_traces.append(trace)
+        result["action_traces"] = action_traces
+
+    return result
 
 
 # =============================================================================
