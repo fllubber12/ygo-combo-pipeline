@@ -1207,3 +1207,510 @@ class TestHandleSelectSumResponseFormat:
         # Format: [total_count=1] + [selected_index=0]
         assert response[0] == 1  # total count
         assert response[1] == 0  # card index 0
+
+
+# =============================================================================
+# Tests for _handle_idle
+# =============================================================================
+
+class MockIntermediateState:
+    """Mock IntermediateState for testing transposition table behavior."""
+
+    def __init__(self, hash_value=12345):
+        self._hash_value = hash_value
+
+    def zobrist_hash(self):
+        return self._hash_value
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleIdleBranching:
+    """Tests for _handle_idle branching on different action types."""
+
+    def test_branches_on_activatable(self):
+        """Handler should create one branch per activatable card."""
+        harness = HandlerHarness()
+        idle_data = {
+            "activatable": [
+                {"code": 111, "loc": 2, "desc": 0},
+                {"code": 222, "loc": 4, "desc": 1},
+            ],
+            "spsummon": [],
+            "summonable": [],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        # Should have 2 branches for activatable cards
+        assert len(harness.recorded_recurses) == 2
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert action_types == ["ACTIVATE", "ACTIVATE"]
+
+    def test_branches_on_spsummon(self):
+        """Handler should create one branch per special summon."""
+        harness = HandlerHarness()
+        idle_data = {
+            "activatable": [],
+            "spsummon": [
+                {"code": 333},
+                {"code": 444},
+                {"code": 555},
+            ],
+            "summonable": [],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        assert len(harness.recorded_recurses) == 3
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert action_types == ["SPSUMMON", "SPSUMMON", "SPSUMMON"]
+
+    def test_branches_on_summonable(self):
+        """Handler should create one branch per normal summon."""
+        harness = HandlerHarness()
+        idle_data = {
+            "activatable": [],
+            "spsummon": [],
+            "summonable": [{"code": 666}],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        assert len(harness.recorded_recurses) == 1
+        assert harness.recorded_recurses[0][0].action_type == "SUMMON"
+        assert harness.recorded_recurses[0][0].card_code == 666
+
+    def test_pass_when_to_ep_true(self):
+        """Handler should create PASS terminal when to_ep is true."""
+        harness = HandlerHarness()
+        idle_data = {
+            "activatable": [],
+            "spsummon": [],
+            "summonable": [],
+            "to_ep": True,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        # PASS should be recorded as terminal, not recurse
+        assert len(harness.recorded_terminals) == 1
+        action = harness.recorded_terminals[0][0][0]  # (history, reason)[0][0]
+        assert action.action_type == "PASS"
+        assert "End Phase" in action.description
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleIdleActionFormat:
+    """Tests for _handle_idle action response formats."""
+
+    def test_activate_action_format(self):
+        """ACTIVATE action should have correct response format."""
+        harness = HandlerHarness()
+        idle_data = {
+            "activatable": [{"code": 12345, "loc": 2, "desc": 3}],
+            "spsummon": [],
+            "summonable": [],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        action = harness.recorded_recurses[0][0]
+        assert action.action_type == "ACTIVATE"
+        assert action.card_code == 12345
+        assert action.card_name == "Card_12345"
+        # Response: (index << 16) | 5 (IDLE_RESPONSE_ACTIVATE)
+        expected_value = (0 << 16) | 5
+        assert action.response_value == expected_value
+        assert struct.unpack("<I", action.response_bytes)[0] == expected_value
+
+    def test_spsummon_action_format(self):
+        """SPSUMMON action should have response_value = (i << 16) | 1."""
+        harness = HandlerHarness()
+        idle_data = {
+            "activatable": [],
+            "spsummon": [{"code": 111}, {"code": 222}],
+            "summonable": [],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        # Check second SPSUMMON (index 1)
+        action = harness.recorded_recurses[1][0]
+        assert action.action_type == "SPSUMMON"
+        expected_value = (1 << 16) | 1  # index 1, SPSUMMON type
+        assert action.response_value == expected_value
+        assert struct.unpack("<I", action.response_bytes)[0] == expected_value
+
+    def test_summon_action_format(self):
+        """SUMMON action should have response_value = (i << 16) | 0."""
+        harness = HandlerHarness()
+        idle_data = {
+            "activatable": [],
+            "spsummon": [],
+            "summonable": [{"code": 333}, {"code": 444}],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        # Check second SUMMON (index 1)
+        action = harness.recorded_recurses[1][0]
+        assert action.action_type == "SUMMON"
+        expected_value = (1 << 16) | 0  # index 1, SUMMON type
+        assert action.response_value == expected_value
+        assert struct.unpack("<I", action.response_bytes)[0] == expected_value
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleIdleDeduplication:
+    """Tests for _handle_idle transposition table deduplication."""
+
+    @patch('src.ygo_combo.enumeration.handlers.IntermediateState')
+    def test_deduplication_enabled_skips_duplicate_state(self, mock_state_class):
+        """Handler should skip processing when state is already in transposition table."""
+        harness = HandlerHarness(dedupe_intermediate=True)
+
+        # Set up mock to return a state with known hash
+        mock_state = MockIntermediateState(hash_value=99999)
+        mock_state_class.from_engine.return_value = mock_state
+
+        # Pre-populate transposition table with this hash
+        harness.transposition_table.stored[99999] = "existing_entry"
+
+        idle_data = {
+            "activatable": [{"code": 111, "loc": 2, "desc": 0}],
+            "spsummon": [],
+            "summonable": [],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        # Should return early - no branches created
+        assert len(harness.recorded_recurses) == 0
+        assert harness.intermediate_states_pruned == 1
+
+    @patch('src.ygo_combo.enumeration.handlers.IntermediateState')
+    def test_deduplication_disabled_no_pruning(self, mock_state_class):
+        """Handler should not prune when dedupe_intermediate is False."""
+        harness = HandlerHarness(dedupe_intermediate=False)
+
+        idle_data = {
+            "activatable": [{"code": 111, "loc": 2, "desc": 0}],
+            "spsummon": [],
+            "summonable": [],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        # Should process - IntermediateState.from_engine never called
+        mock_state_class.from_engine.assert_not_called()
+        assert len(harness.recorded_recurses) == 1
+
+    @patch('src.ygo_combo.enumeration.handlers.IntermediateState')
+    def test_stores_state_in_transposition_table(self, mock_state_class):
+        """Handler should store new states in transposition table."""
+        harness = HandlerHarness(dedupe_intermediate=True)
+
+        mock_state = MockIntermediateState(hash_value=77777)
+        mock_state_class.from_engine.return_value = mock_state
+
+        idle_data = {
+            "activatable": [{"code": 111, "loc": 2, "desc": 0}],
+            "spsummon": [],
+            "summonable": [],
+            "to_ep": False,
+        }
+
+        harness._handle_idle(None, [], idle_data)
+
+        # State should be stored
+        assert 77777 in harness.transposition_table.stored
+        # Branch should be created
+        assert len(harness.recorded_recurses) == 1
+
+
+# =============================================================================
+# Tests for _handle_select_unselect_card
+# =============================================================================
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectUnselectCardBasic:
+    """Tests for _handle_select_unselect_card basic functionality."""
+
+    def test_branches_on_each_unique_card(self):
+        """Handler should create one branch per unique card code."""
+        harness = HandlerHarness()
+        msg_data = {
+            "finishable": 0,
+            "select_cards": [
+                {"code": 111},
+                {"code": 222},
+                {"code": 333},
+            ],
+            "unselect_cards": [],
+        }
+
+        harness._handle_select_unselect_card(None, [], msg_data)
+
+        assert len(harness.recorded_recurses) == 3
+        codes = [r[0].card_code for r in harness.recorded_recurses]
+        assert set(codes) == {111, 222, 333}
+
+    def test_finish_option_when_finishable_with_unselect(self):
+        """Handler should create finish branch when finishable=True with unselect cards."""
+        harness = HandlerHarness()
+        msg_data = {
+            "finishable": 1,
+            "select_cards": [{"code": 111}],
+            "unselect_cards": [{"code": 999}],  # Has unselect cards
+        }
+
+        harness._handle_select_unselect_card(None, [], msg_data)
+
+        # Should have finish + select branches
+        assert len(harness.recorded_recurses) == 2
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert "SELECT_UNSELECT_FINISH" in action_types
+        assert "SELECT_UNSELECT_SELECT" in action_types
+
+        # Finish should be first
+        assert harness.recorded_recurses[0][0].action_type == "SELECT_UNSELECT_FINISH"
+        assert harness.recorded_recurses[0][0].response_value == -1
+
+    def test_no_finish_when_not_finishable(self):
+        """Handler should not create finish branch when finishable=False."""
+        harness = HandlerHarness()
+        msg_data = {
+            "finishable": 0,
+            "select_cards": [{"code": 111}],
+            "unselect_cards": [{"code": 999}],
+        }
+
+        harness._handle_select_unselect_card(None, [], msg_data)
+
+        # Only select branches
+        assert len(harness.recorded_recurses) == 1
+        assert harness.recorded_recurses[0][0].action_type == "SELECT_UNSELECT_SELECT"
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectUnselectCardDeduplication:
+    """Tests for _handle_select_unselect_card deduplication behavior."""
+
+    def test_duplicate_codes_one_branch(self):
+        """Duplicate card codes should create only one branch."""
+        harness = HandlerHarness()
+        msg_data = {
+            "finishable": 0,
+            "select_cards": [
+                {"code": 111},
+                {"code": 111},  # Duplicate
+                {"code": 222},
+                {"code": 111},  # Another duplicate
+            ],
+            "unselect_cards": [],
+        }
+
+        harness._handle_select_unselect_card(None, [], msg_data)
+
+        # Should dedupe to 2 unique codes
+        assert len(harness.recorded_recurses) == 2
+        codes = [r[0].card_code for r in harness.recorded_recurses]
+        assert set(codes) == {111, 222}
+
+    def test_response_format_correct(self):
+        """Response should be struct.pack('<ii', 1, index)."""
+        harness = HandlerHarness()
+        msg_data = {
+            "finishable": 0,
+            "select_cards": [
+                {"code": 111},
+                {"code": 222},  # index 1
+            ],
+            "unselect_cards": [],
+        }
+
+        harness._handle_select_unselect_card(None, [], msg_data)
+
+        # Check second card response (index 1)
+        action = harness.recorded_recurses[1][0]
+        assert action.action_type == "SELECT_UNSELECT_SELECT"
+        count, index = struct.unpack("<ii", action.response_bytes)
+        assert count == 1
+        assert index == 1  # Second card
+
+
+# =============================================================================
+# Tests for _handle_select_tribute
+# =============================================================================
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectTributeBasic:
+    """Tests for _handle_select_tribute basic functionality."""
+
+    @patch('src.ygo_combo.enumeration.handlers.find_valid_tribute_combinations')
+    def test_creates_tribute_branches(self, mock_find_combos):
+        """Handler should create one branch per valid tribute combination."""
+        mock_find_combos.return_value = [[0], [1], [0, 1]]
+
+        harness = HandlerHarness()
+        msg_data = {
+            "cards": [
+                {"index": 0, "code": 111, "release_param": 1},
+                {"index": 1, "code": 222, "release_param": 1},
+            ],
+            "min": 1,
+            "max": 2,
+            "cancelable": False,
+        }
+
+        harness._handle_select_tribute(None, [], msg_data)
+
+        # Should have 3 branches (3 unique combos)
+        assert len(harness.recorded_recurses) == 3
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert all(t == "SELECT_TRIBUTE" for t in action_types)
+
+    @patch('src.ygo_combo.enumeration.handlers.find_valid_tribute_combinations')
+    def test_cancel_when_cancelable(self, mock_find_combos):
+        """Handler should create cancel branch when cancelable=True."""
+        mock_find_combos.return_value = [[0]]
+
+        harness = HandlerHarness()
+        msg_data = {
+            "cards": [{"index": 0, "code": 111, "release_param": 1}],
+            "min": 1,
+            "max": 1,
+            "cancelable": True,
+        }
+
+        harness._handle_select_tribute(None, [], msg_data)
+
+        # Should have tribute + cancel
+        assert len(harness.recorded_recurses) == 2
+        action_types = [r[0].action_type for r in harness.recorded_recurses]
+        assert "SELECT_TRIBUTE" in action_types
+        assert "SELECT_TRIBUTE_CANCEL" in action_types
+
+    @patch('src.ygo_combo.enumeration.handlers.find_valid_tribute_combinations')
+    def test_no_cancel_when_not_cancelable(self, mock_find_combos):
+        """Handler should not create cancel branch when cancelable=False."""
+        mock_find_combos.return_value = [[0]]
+
+        harness = HandlerHarness()
+        msg_data = {
+            "cards": [{"index": 0, "code": 111, "release_param": 1}],
+            "min": 1,
+            "max": 1,
+            "cancelable": False,
+        }
+
+        harness._handle_select_tribute(None, [], msg_data)
+
+        # Only tribute branch
+        assert len(harness.recorded_recurses) == 1
+        assert harness.recorded_recurses[0][0].action_type == "SELECT_TRIBUTE"
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectTributeDeduplication:
+    """Tests for _handle_select_tribute deduplication behavior."""
+
+    @patch('src.ygo_combo.enumeration.handlers.find_valid_tribute_combinations')
+    def test_dedupe_by_sorted_codes(self, mock_find_combos):
+        """Same card codes should produce one branch (deduplication)."""
+        # Two combos with same codes but different indices
+        mock_find_combos.return_value = [[0, 2], [1, 3]]  # Both produce (111, 111)
+
+        harness = HandlerHarness()
+        msg_data = {
+            "cards": [
+                {"index": 0, "code": 111, "release_param": 1},
+                {"index": 1, "code": 111, "release_param": 1},
+                {"index": 2, "code": 111, "release_param": 1},
+                {"index": 3, "code": 111, "release_param": 1},
+            ],
+            "min": 2,
+            "max": 2,
+            "cancelable": False,
+        }
+
+        harness._handle_select_tribute(None, [], msg_data)
+
+        # Should dedupe to 1 branch (all same codes)
+        assert len(harness.recorded_recurses) == 1
+        assert harness.recorded_recurses[0][0].action_type == "SELECT_TRIBUTE"
+
+    @patch('src.ygo_combo.enumeration.handlers.find_valid_tribute_combinations')
+    def test_different_codes_different_branches(self, mock_find_combos):
+        """Different card codes should produce separate branches."""
+        mock_find_combos.return_value = [[0], [1]]  # Different codes
+
+        harness = HandlerHarness()
+        msg_data = {
+            "cards": [
+                {"index": 0, "code": 111, "release_param": 1},
+                {"index": 1, "code": 222, "release_param": 1},
+            ],
+            "min": 1,
+            "max": 1,
+            "cancelable": False,
+        }
+
+        harness._handle_select_tribute(None, [], msg_data)
+
+        # 2 unique code combos
+        assert len(harness.recorded_recurses) == 2
+
+
+@patch('src.ygo_combo.enumeration.handlers.get_card_name', mock_get_card_name)
+class TestHandleSelectTributeFallback:
+    """Tests for _handle_select_tribute fallback behavior."""
+
+    @patch('src.ygo_combo.enumeration.handlers.find_valid_tribute_combinations')
+    def test_fallback_when_no_valid_combos(self, mock_find_combos):
+        """Handler should create fallback when no valid combos and not cancelable."""
+        mock_find_combos.return_value = []  # No valid combos
+
+        harness = HandlerHarness()
+        msg_data = {
+            "cards": [
+                {"index": 0, "code": 111, "release_param": 1},
+                {"index": 1, "code": 222, "release_param": 1},
+            ],
+            "min": 1,
+            "max": 2,
+            "cancelable": False,
+        }
+
+        harness._handle_select_tribute(None, [], msg_data)
+
+        assert len(harness.recorded_recurses) == 1
+        assert harness.recorded_recurses[0][0].action_type == "SELECT_TRIBUTE_FALLBACK"
+        assert "Fallback" in harness.recorded_recurses[0][0].description
+
+    @patch('src.ygo_combo.enumeration.handlers.find_valid_tribute_combinations')
+    def test_no_fallback_when_cancelable(self, mock_find_combos):
+        """Handler should not create fallback when cancelable (cancel option exists)."""
+        mock_find_combos.return_value = []  # No valid combos
+
+        harness = HandlerHarness()
+        msg_data = {
+            "cards": [{"index": 0, "code": 111, "release_param": 1}],
+            "min": 1,
+            "max": 1,
+            "cancelable": True,
+        }
+
+        harness._handle_select_tribute(None, [], msg_data)
+
+        # Should have cancel only, no fallback
+        assert len(harness.recorded_recurses) == 1
+        assert harness.recorded_recurses[0][0].action_type == "SELECT_TRIBUTE_CANCEL"
