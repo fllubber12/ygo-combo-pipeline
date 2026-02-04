@@ -334,7 +334,7 @@ class EnumerationEngine(MessageHandlerMixin):
         self.max_depth_seen = max(self.max_depth_seen, len(action_history))
 
         if self.paths_explored % 100 == 0:
-            print(f"  Progress: {self.paths_explored} paths, {len(self.terminals)} terminals")
+            print(f"  Progress: {self.paths_explored} paths, {len(self.terminals)} terminals", flush=True)
 
         # Create fresh duel (with optional starting hand)
         duel = create_duel(self.lib, self.main_deck, self.extra_deck,

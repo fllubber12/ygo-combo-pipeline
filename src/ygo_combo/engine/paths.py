@@ -64,16 +64,27 @@ def get_library_path() -> Path:
 # =============================================================================
 
 def get_scripts_path() -> Path:
-    """Get ygopro-core scripts directory from environment.
+    """Get ygopro-core scripts directory from environment or Windows fallback.
 
-    Requires YGOPRO_SCRIPTS_PATH environment variable to be set.
+    Checks YGOPRO_SCRIPTS_PATH environment variable first.
+    On Windows, falls back to known default location if env var not set
+    (helps with multiprocessing workers that may not inherit env vars).
 
     Raises:
-        EnvironmentError: If YGOPRO_SCRIPTS_PATH is not set.
+        EnvironmentError: If YGOPRO_SCRIPTS_PATH is not set and no fallback exists.
     """
     env_path = os.environ.get("YGOPRO_SCRIPTS_PATH")
     if env_path:
         return Path(env_path)
+
+    # Windows fallback: check common location for this machine
+    # This helps multiprocessing workers on Windows that may not inherit env vars
+    import platform
+    if platform.system() == "Windows":
+        windows_fallback = Path(r"C:\Users\19259\edopro_temp\ProjectIgnis\script")
+        if windows_fallback.exists():
+            return windows_fallback
+
     raise EnvironmentError(
         "YGOPRO_SCRIPTS_PATH environment variable must be set.\n"
         "Example: export YGOPRO_SCRIPTS_PATH=/path/to/ygopro-core/script\n"
