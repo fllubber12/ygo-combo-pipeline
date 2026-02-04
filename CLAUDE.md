@@ -206,6 +206,17 @@ python -m pytest tests/ --cov=src/ygo_combo --cov-report=html
 
 ## Audit History
 
+### Windows Port (February 2026) - COMPLETED
+
+Ported enumeration pipeline to Windows PC:
+
+| Component | Status |
+|-----------|--------|
+| `libygo.dll` | Built with MinGW-w64 GCC 15.2.0 |
+| `cards.cdb` | Updated to BabelCDB latest (14,237 cards) |
+| Lua scripts | Downloaded missing scripts (Buio, Luce, Mutiny) |
+| `.venv` activation | Auto-sets YGOPRO_SCRIPTS_PATH |
+
 ### Deck Setup Tools (January 2026) - COMPLETED
 
 Added Crystal Beast Fiendsmith deck setup scripts:
